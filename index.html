@@ -3,106 +3,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Field Officer Mission Log</title>
+    <title>Field Officer Dashboard</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Field Officer Mission Log</h1>
-            <nav>
-                <button id="viewLogsBtn" class="nav-btn">View Mission Logs</button>
-            </nav>
+        <header class="header">
+            <h1>Field Officer Dashboard</h1>
+            <div class="user-info">
+                <span id="guard-name">Officer Name</span>
+                <button id="edit-profile-btn" class="btn btn-secondary">Edit Profile</button>
+            </div>
         </header>
 
-        <main id="mainContent">
-            <div class="mission-selection">
+        <main class="main-content">
+            <!-- Profile Setup Modal -->
+            <div id="profile-modal" class="modal">
+                <div class="modal-content">
+                    <h2>Officer Profile</h2>
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label for="officer-name">Full Name:</label>
+                            <input type="text" id="officer-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="badge-number">Badge Number:</label>
+                            <input type="text" id="badge-number" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="department">Department:</label>
+                            <input type="text" id="department" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="supervisor">Supervisor:</label>
+                            <input type="text" id="supervisor">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save Profile</button>
+                            <button type="button" id="cancel-profile" class="btn btn-secondary">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Mission Selection -->
+            <section class="mission-selection" id="mission-selection">
                 <h2>Select Mission Type</h2>
                 <div class="mission-cards">
                     <div class="mission-card" data-mission="standing">
-                        <div class="mission-icon">🛡️</div>
-                        <h3>Standing</h3>
+                        <h3>Standing Guard</h3>
                         <p>Fixed position security duty</p>
+                        <button class="btn btn-primary">Start Standing Mission</button>
                     </div>
                     <div class="mission-card" data-mission="patrol">
-                        <div class="mission-icon">🚶</div>
                         <h3>Patrol</h3>
-                        <p>Mobile security patrol with multiple stops</p>
+                        <p>Mobile security patrol duty</p>
+                        <button class="btn btn-primary">Start Patrol Mission</button>
                     </div>
                     <div class="mission-card" data-mission="desk">
-                        <div class="mission-icon">💻</div>
-                        <h3>Desk</h3>
-                        <p>Administrative or monitoring duty</p>
+                        <h3>Desk Duty</h3>
+                        <p>Administrative and monitoring duty</p>
+                        <button class="btn btn-primary">Start Desk Mission</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mission Logs Link -->
+            <section class="quick-actions">
+                <button id="view-logs-btn" class="btn btn-outline">View Mission Logs</button>
+            </section>
+
+            <!-- Patrol Dashboard (Hidden initially) -->
+            <section class="patrol-dashboard hidden" id="patrol-dashboard">
+                <div class="dashboard-header">
+                    <h2>Patrol Mission Dashboard</h2>
+                    <div class="mission-status">
+                        <span id="mission-status">Mission Not Started</span>
+                        <span id="current-time"></span>
+                    </div>
+                </div>
+
+                <div class="dashboard-controls">
+                    <div class="mission-controls">
+                        <button id="start-mission-btn" class="btn btn-success">Start Mission</button>
+                        <button id="end-mission-btn" class="btn btn-danger hidden">End Mission</button>
+                        <button id="mission-report-btn" class="btn btn-warning hidden">Mission Report</button>
+                    </div>
+
+                    <div class="patrol-controls hidden" id="patrol-controls">
+                        <button id="on-site-btn" class="btn btn-primary">Go On-Site</button>
+                        <button id="off-site-btn" class="btn btn-secondary hidden">Go Off-Site</button>
+                        <button id="incident-report-btn" class="btn btn-warning">File Incident Report</button>
+                    </div>
+                </div>
+
+                <div class="current-activity" id="current-activity">
+                    <h3>Current Activity</h3>
+                    <div id="activity-status">No active patrol</div>
+                </div>
+
+                <div class="patrol-log" id="patrol-log">
+                    <h3>Today's Patrol Log</h3>
+                    <div id="patrol-entries"></div>
+                </div>
+            </div>
+
+            <!-- Standing Dashboard (Hidden initially) -->
+            <section class="standing-dashboard hidden" id="standing-dashboard">
+                <div class="dashboard-header">
+                    <h2>Standing Guard Dashboard</h2>
+                    <div class="mission-status">
+                        <span id="standing-mission-status">Mission Not Started</span>
+                        <span id="standing-current-time"></span>
+                    </div>
+                </div>
+
+                <div class="dashboard-controls">
+                    <button id="start-standing-btn" class="btn btn-success">Start Standing Duty</button>
+                    <button id="end-standing-btn" class="btn btn-danger hidden">End Standing Duty</button>
+                    <button id="standing-incident-btn" class="btn btn-warning">File Incident Report</button>
+                    <button id="standing-report-btn" class="btn btn-info hidden">Generate Report</button>
+                </div>
+
+                <div class="activity-log">
+                    <h3>Activity Log</h3>
+                    <div id="standing-entries"></div>
+                </div>
+            </section>
+
+            <!-- Desk Dashboard (Hidden initially) -->
+            <section class="desk-dashboard hidden" id="desk-dashboard">
+                <div class="dashboard-header">
+                    <h2>Desk Duty Dashboard</h2>
+                    <div class="mission-status">
+                        <span id="desk-mission-status">Mission Not Started</span>
+                        <span id="desk-current-time"></span>
+                    </div>
+                </div>
+
+                <div class="dashboard-controls">
+                    <button id="start-desk-btn" class="btn btn-success">Start Desk Duty</button>
+                    <button id="end-desk-btn" class="btn btn-danger hidden">End Desk Duty</button>
+                    <button id="desk-incident-btn" class="btn btn-warning">File Incident Report</button>
+                    <button id="desk-report-btn" class="btn btn-info hidden">Generate Report</button>
+                </div>
+
+                <div class="activity-log">
+                    <h3>Activity Log</h3>
+                    <div id="desk-entries"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Mission Start Modal -->
+        <div id="mission-start-modal" class="modal">
+            <div class="modal-content">
+                <h2>Start Mission</h2>
+                <form id="mission-start-form">
+                    <div class="form-group">
+                        <label for="mission-name">Mission Name:</label>
+                        <input type="text" id="mission-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="start-time">Start Time:</label>
+                        <input type="datetime-local" id="start-time" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="end-time">Expected End Time:</label>
+                        <input type="datetime-local" id="end-time" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="patrol-stops">Planned Patrol Stops (optional):</label>
+                        <textarea id="patrol-stops" rows="4" placeholder="List planned patrol locations..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="mission-details">Mission Details:</label>
+                        <textarea id="mission-details" rows="4" placeholder="Additional mission information..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Start Mission</button>
+                        <button type="button" id="cancel-mission-start" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Location Modal -->
+        <div id="location-modal" class="modal">
+            <div class="modal-content">
+                <h2 id="location-modal-title">Location Details</h2>
+                <form id="location-form">
+                    <div class="form-group">
+                        <label for="location-name">Location:</label>
+                        <input type="text" id="location-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="location-details">Details:</label>
+                        <textarea id="location-details" rows="4" placeholder="Location details, observations, etc..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="checkpoint-name">Checkpoint (optional):</label>
+                        <input type="text" id="checkpoint-name" placeholder="Checkpoint identifier">
+                    </div>
+                    <div class="form-group">
+                        <label for="checkpoint-details">Checkpoint Details:</label>
+                        <textarea id="checkpoint-details" rows="3" placeholder="Checkpoint status, observations..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="location-submit">Submit</button>
+                        <button type="button" id="cancel-location" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Incident Report Modal -->
+        <div id="incident-modal" class="modal">
+            <div class="modal-content">
+                <h2>Incident Report</h2>
+                <form id="incident-form">
+                    <div class="form-group">
+                        <label for="incident-type">Incident Type:</label>
+                        <select id="incident-type" required>
+                            <option value="">Select incident type</option>
+                            <option value="security">Security Breach</option>
+                            <option value="maintenance">Maintenance Issue</option>
+                            <option value="medical">Medical Emergency</option>
+                            <option value="fire">Fire/Safety</option>
+                            <option value="suspicious">Suspicious Activity</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="incident-location">Location:</label>
+                        <input type="text" id="incident-location" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="incident-time">Time:</label>
+                        <input type="datetime-local" id="incident-time" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="incident-description">Description:</label>
+                        <textarea id="incident-description" rows="6" required placeholder="Detailed description of the incident..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="incident-action">Action Taken:</label>
+                        <textarea id="incident-action" rows="4" placeholder="Actions taken to address the incident..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">File Report</button>
+                        <button type="button" id="cancel-incident" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Mission Report Modal -->
+        <div id="mission-report-modal" class="modal">
+            <div class="modal-content large">
+                <h2>Mission Report</h2>
+                <div class="report-content">
+                    <div id="generated-report"></div>
+                    <div class="form-actions">
+                        <button id="copy-report-btn" class="btn btn-primary">Copy Report</button>
+                        <button id="save-report-btn" class="btn btn-success">Save Report</button>
+                        <button id="close-report-btn" class="btn btn-secondary">Close</button>
                     </div>
                 </div>
             </div>
-        </main>
-
-        <!-- Mission Logs List (hidden by default) -->
-        <div id="missionLogsList" class="hidden">
-            <div class="logs-header">
-                <h2>Mission Logs</h2>
-                <button id="backToMainBtn" class="back-btn">← Back to Main</button>
-            </div>
-            <div id="logsContainer">
-                <!-- Logs will be populated here -->
-            </div>
         </div>
 
-        <!-- Standing Mission Dashboard -->
-        <div id="standingDashboard" class="dashboard hidden">
-            <div class="dashboard-header">
-                <h2>Standing Mission Dashboard</h2>
-                <button class="back-btn" onclick="backToMain()">← Back to Main</button>
+        <!-- Early End Modal -->
+        <div id="early-end-modal" class="modal">
+            <div class="modal-content">
+                <h2>Early Mission End</h2>
+                <p>You are ending your mission 15+ minutes early. Please provide details:</p>
+                <form id="early-end-form">
+                    <div class="form-group">
+                        <label for="early-reason">Reason for Early End:</label>
+                        <textarea id="early-reason" rows="4" required placeholder="Explain why you are ending early..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="replacement-info">Replacement/Cover Information:</label>
+                        <textarea id="replacement-info" rows="3" placeholder="Who is covering? Badge number, name, etc..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-warning">Confirm Early End</button>
+                        <button type="button" id="cancel-early-end" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
             </div>
-            <div class="mission-controls">
-                <button id="startStandingBtn" class="start-btn">Start Mission</button>
-                <button id="endStandingBtn" class="end-btn hidden">End Mission</button>
-            </div>
-            <div id="standingContent" class="mission-content">
-                <!-- Standing mission content will be populated here -->
-            </div>
-        </div>
-
-        <!-- Patrol Mission Dashboard -->
-        <div id="patrolDashboard" class="dashboard hidden">
-            <div class="dashboard-header">
-                <h2>Patrol Mission Dashboard</h2>
-                <button class="back-btn" onclick="backToMain()">← Back to Main</button>
-            </div>
-            <div class="mission-controls">
-                <button id="startPatrolBtn" class="start-btn">Start Mission</button>
-                <button id="endPatrolBtn" class="end-btn hidden">End Mission</button>
-                <button id="onSiteBtn" class="site-btn hidden">Go On Site</button>
-                <button id="offSiteBtn" class="site-btn hidden">Go Off Site</button>
-                <button id="incidentReportBtn" class="incident-btn hidden">File Incident Report</button>
-                <button id="missionReportBtn" class="report-btn hidden">Mission Report</button>
-            </div>
-            <div id="patrolContent" class="mission-content">
-                <!-- Patrol mission content will be populated here -->
-            </div>
-        </div>
-
-        <!-- Desk Mission Dashboard -->
-        <div id="deskDashboard" class="dashboard hidden">
-            <div class="dashboard-header">
-                <h2>Desk Mission Dashboard</h2>
-                <button class="back-btn" onclick="backToMain()">← Back to Main</button>
-            </div>
-            <div class="mission-controls">
-                <button id="startDeskBtn" class="start-btn">Start Mission</button>
-                <button id="endDeskBtn" class="end-btn hidden">End Mission</button>
-            </div>
-            <div id="deskContent" class="mission-content">
-                <!-- Desk mission content will be populated here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Modals -->
-    <div id="modalOverlay" class="modal-overlay hidden">
-        <div id="modalContent" class="modal-content">
-            <!-- Modal content will be populated dynamically -->
         </div>
     </div>
 
