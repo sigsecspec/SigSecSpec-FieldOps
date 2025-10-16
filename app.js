@@ -21,6 +21,7 @@ class FieldOfficerApp {
         }
         this.startAutoSave();
         this.addBeforeUnloadListener();
+        this.addNavigationPrevention();
         this.addPoliceTerminalFeatures();
     }
     
@@ -173,7 +174,7 @@ class FieldOfficerApp {
                         <h2>Mobile Patrol Operation</h2>
                         <div class="mission-status status-inactive" id="missionStatus">Inactive</div>
                     </div>
-                    <button class="nav-btn" onclick="app.loadMainPage()">← Back to Home</button>
+                    <button class="nav-btn" onclick="app.attemptNavigateHome()">← Back to Home</button>
                 </div>
 
                 <div class="dashboard-controls">
@@ -224,7 +225,7 @@ class FieldOfficerApp {
                         <h2>${typeTitle} Operation</h2>
                         <div class="mission-status status-inactive" id="missionStatus">Inactive</div>
                     </div>
-                    <button class="nav-btn" onclick="app.loadMainPage()">← Back to Home</button>
+                    <button class="nav-btn" onclick="app.attemptNavigateHome()">← Back to Home</button>
                 </div>
 
                 <div class="dashboard-controls">
@@ -336,8 +337,11 @@ class FieldOfficerApp {
             document.getElementById('onSiteBtn').disabled = false;
         }
         
+        // Add navigation restriction indicator
+        this.addNavigationWarning();
+        
         this.closeModal();
-        this.showNotification('Mission started successfully!');
+        this.showNotification('Mission started successfully! Navigation is now restricted.');
     }
 
     goOnSite() {
@@ -790,8 +794,11 @@ class FieldOfficerApp {
         // Clear current mission from storage
         this.clearCurrentMission();
         
+        // Remove navigation restriction indicator
+        this.removeNavigationWarning();
+        
         this.closeModal();
-        this.showNotification('Mission completed successfully!');
+        this.showNotification('Mission completed successfully! Navigation restrictions removed.');
         
         // Show completion summary
         setTimeout(() => {
@@ -819,7 +826,7 @@ class FieldOfficerApp {
                 
                 <div class="form-actions">
                     <button type="button" class="btn-primary" onclick="app.copyToClipboard('missionReportText')">Copy Report</button>
-                    <button type="button" class="btn-secondary" onclick="app.closeModal(); app.loadMainPage();">Return to Home</button>
+                    <button type="button" class="btn-secondary" onclick="app.closeModal(); app.attemptNavigateHome();">Return to Home</button>
                 </div>
             </div>
         `;
@@ -1251,6 +1258,9 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                         document.getElementById('onSiteBtn').disabled = this.isOnSite || !!this.currentMission.report;
                         document.getElementById('offSiteBtn').disabled = !this.isOnSite;
                     }
+                    
+                    // Restore navigation warning for active missions
+                    this.addNavigationWarning();
                 }
                 
                 const savedAt = state.savedAt ? new Date(state.savedAt).toLocaleString() : 'unknown time';
@@ -1275,6 +1285,10 @@ Report Generated: ${this.formatDateTime(new Date())}`;
         } catch (e) {
             console.error('Error clearing current mission:', e);
         }
+        
+        // Remove navigation warning
+        this.removeNavigationWarning();
+        
         this.currentMission = null;
         this.isOnSite = false;
         this.currentSiteStartTime = null;
@@ -1339,12 +1353,147 @@ Report Generated: ${this.formatDateTime(new Date())}`;
         }, 30000); // 30 seconds
     }
 
+    addNavigationPrevention() {
+        // Prevent browser back button during active missions
+        window.addEventListener('popstate', (e) => {
+            if (this.isMissionActive()) {
+                // Push the current state back to prevent navigation
+                history.pushState(null, null, window.location.href);
+                this.showNavigationBlockedNotification();
+            }
+        });
+
+        // Push initial state to enable popstate detection
+        history.pushState(null, null, window.location.href);
+    }
+
+    attemptNavigateHome() {
+        if (this.isMissionActive()) {
+            this.showNavigationConfirmDialog();
+        } else {
+            this.loadMainPage();
+        }
+    }
+
+    isMissionActive() {
+        return this.currentMission && this.currentMission.status === 'active';
+    }
+
+    showNavigationBlockedNotification() {
+        this.showNotification('Navigation blocked: Active mission in progress. Complete or end mission first.', 'error');
+    }
+
+    showNavigationConfirmDialog() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>⚠️ Active Mission Warning</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🚨</div>
+                    <h3 style="color: #ff3333; margin-bottom: 16px;">MISSION IN PROGRESS</h3>
+                    <p><strong>You have an active mission that has not been completed.</strong></p>
+                    <p>Leaving now may result in data loss and incomplete mission records.</p>
+                </div>
+                
+                <div style="background: rgba(255, 51, 51, 0.1); border: 1px solid #ff3333; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                    <p><strong>Current Mission Status:</strong></p>
+                    <p>• Type: ${this.currentMission.type.charAt(0).toUpperCase() + this.currentMission.type.slice(1)}</p>
+                    <p>• Status: ${this.currentMission.status}</p>
+                    <p>• Started: ${this.formatDateTime(this.currentMission.startTime)}</p>
+                    ${this.isOnSite ? '<p>• Currently on site</p>' : ''}
+                </div>
+                
+                <p style="margin-top: 16px;"><strong>Recommended actions:</strong></p>
+                <ul style="margin-left: 20px; margin-bottom: 20px;">
+                    <li>Complete your mission report</li>
+                    <li>End the mission properly</li>
+                    <li>Ensure all data is saved</li>
+                </ul>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="app.closeModal()">Stay on Mission</button>
+                    <button type="button" class="btn-danger" onclick="app.forceNavigateHome()">Force Exit (Not Recommended)</button>
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'block';
+    }
+
+    forceNavigateHome() {
+        // Show final warning and save data
+        if (this.currentMission && this.currentMission.status === 'active') {
+            this.saveCurrentMission();
+            this.showNotification('Mission data saved. Please resume mission as soon as possible.', 'warning');
+        }
+        this.closeModal();
+        this.loadMainPage();
+    }
+
+    addNavigationWarning() {
+        // Remove existing warning if present
+        this.removeNavigationWarning();
+        
+        const warning = document.createElement('div');
+        warning.id = 'navigationWarning';
+        warning.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ff3333;
+            color: white;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+            z-index: 10001;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease-out;
+        `;
+        warning.innerHTML = '🚨 MISSION ACTIVE - NAVIGATION RESTRICTED 🚨';
+        
+        // Add CSS animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideDown {
+                from { transform: translateY(-100%); }
+                to { transform: translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        document.body.appendChild(warning);
+        
+        // Adjust main content to account for warning bar
+        document.body.style.paddingTop = '40px';
+    }
+
+    removeNavigationWarning() {
+        const warning = document.getElementById('navigationWarning');
+        if (warning) {
+            warning.remove();
+        }
+        document.body.style.paddingTop = '0';
+    }
+
     addBeforeUnloadListener() {
-        // Save data before page closes/refreshes
+        // Save data and warn before page closes/refreshes during active missions
         window.addEventListener('beforeunload', (e) => {
             if (this.currentMission && this.currentMission.status === 'active') {
                 this.saveCurrentMission();
                 console.log('Saved before page unload');
+                
+                // Show browser warning for active missions
+                const message = 'You have an active mission in progress. Leaving may result in data loss.';
+                e.preventDefault();
+                e.returnValue = message;
+                return message;
             }
         });
         
