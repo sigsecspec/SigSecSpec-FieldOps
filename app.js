@@ -8,6 +8,8 @@ class FieldOfficerApp {
         this.missionLogs = [];
         this.isOnSite = false;
         this.currentLocation = null;
+        this.personsOfInterest = [];
+        this.sites = [];
         
         this.initializeApp();
         this.loadData();
@@ -37,10 +39,22 @@ class FieldOfficerApp {
             this.currentMission = JSON.parse(savedCurrentMission);
             this.resumeMission();
         }
+
+        const savedPOI = localStorage.getItem('personsOfInterest');
+        if (savedPOI) {
+            this.personsOfInterest = JSON.parse(savedPOI);
+        }
+
+        const savedSites = localStorage.getItem('sites');
+        if (savedSites) {
+            this.sites = JSON.parse(savedSites);
+        }
     }
 
     saveData() {
         localStorage.setItem('missionLogs', JSON.stringify(this.missionLogs));
+        localStorage.setItem('personsOfInterest', JSON.stringify(this.personsOfInterest));
+        localStorage.setItem('sites', JSON.stringify(this.sites));
         if (this.currentMission) {
             localStorage.setItem('currentMission', JSON.stringify(this.currentMission));
         } else {
@@ -87,7 +101,42 @@ class FieldOfficerApp {
 
         // View logs
         document.getElementById('view-logs-btn').addEventListener('click', () => {
-            this.showMissionLogs();
+            this.showMissionLogsPage();
+        });
+
+        // POI Management
+        document.getElementById('poi-management-btn').addEventListener('click', () => {
+            this.showPOIManagementPage();
+        });
+
+        // Sites Management
+        document.getElementById('sites-management-btn').addEventListener('click', () => {
+            this.showSitesManagementPage();
+        });
+
+        // Back to main dashboard buttons
+        document.getElementById('back-to-main-btn').addEventListener('click', () => {
+            this.showMainDashboard();
+        });
+
+        document.getElementById('back-to-main-poi-btn').addEventListener('click', () => {
+            this.showMainDashboard();
+        });
+
+        document.getElementById('back-to-main-sites-btn').addEventListener('click', () => {
+            this.showMainDashboard();
+        });
+
+        document.getElementById('back-to-main-patrol-btn').addEventListener('click', () => {
+            this.showMainDashboard();
+        });
+
+        document.getElementById('back-to-main-standing-btn').addEventListener('click', () => {
+            this.showMainDashboard();
+        });
+
+        document.getElementById('back-to-main-desk-btn').addEventListener('click', () => {
+            this.showMainDashboard();
         });
 
         // Patrol mission controls
@@ -200,6 +249,34 @@ class FieldOfficerApp {
 
         document.getElementById('cancel-early-end').addEventListener('click', () => {
             this.hideModal('early-end-modal');
+        });
+
+        // POI Modal
+        document.getElementById('add-poi-btn').addEventListener('click', () => {
+            this.showAddPOIModal();
+        });
+
+        document.getElementById('poi-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitPOI();
+        });
+
+        document.getElementById('cancel-poi').addEventListener('click', () => {
+            this.hideModal('poi-modal');
+        });
+
+        // Sites Modal
+        document.getElementById('add-site-btn').addEventListener('click', () => {
+            this.showAddSiteModal();
+        });
+
+        document.getElementById('sites-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitSite();
+        });
+
+        document.getElementById('cancel-sites').addEventListener('click', () => {
+            this.hideModal('sites-modal');
         });
     }
 
@@ -337,6 +414,27 @@ class FieldOfficerApp {
         document.getElementById('location-details').value = '';
         document.getElementById('checkpoint-name').value = '';
         document.getElementById('checkpoint-details').value = '';
+        
+        // Populate sites dropdown
+        const locationSelect = document.getElementById('location-select');
+        locationSelect.innerHTML = '<option value="">Or select from sites...</option>';
+        this.sites.forEach(site => {
+            const option = document.createElement('option');
+            option.value = site.name;
+            option.textContent = `${site.name} (${site.type})`;
+            locationSelect.appendChild(option);
+        });
+        
+        // Add event listener for site selection
+        locationSelect.onchange = (e) => {
+            if (e.target.value) {
+                document.getElementById('location-name').value = e.target.value;
+                const selectedSite = this.sites.find(site => site.name === e.target.value);
+                if (selectedSite && selectedSite.notes) {
+                    document.getElementById('location-details').value = selectedSite.notes;
+                }
+            }
+        };
         
         this.showModal('location-modal');
     }
@@ -632,71 +730,182 @@ class FieldOfficerApp {
         alert('Report saved successfully!');
     }
 
-    showMissionLogs() {
-        // Create a simple mission logs page
-        const logsWindow = window.open('', '_blank');
-        let logsHtml = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Mission Logs</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 20px; }
-                    .log-entry { border: 1px solid #ddd; margin: 10px 0; padding: 15px; border-radius: 5px; }
-                    .log-header { font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
-                    .log-details { color: #666; }
-                    button { margin: 5px; padding: 8px 15px; cursor: pointer; }
-                </style>
-            </head>
-            <body>
-                <h1>Mission Logs</h1>
-        `;
+    showMainDashboard() {
+        // Hide all pages
+        document.getElementById('mission-logs-page').classList.add('hidden');
+        document.getElementById('poi-management-page').classList.add('hidden');
+        document.getElementById('sites-management-page').classList.add('hidden');
+        document.getElementById('patrol-dashboard').classList.add('hidden');
+        document.getElementById('standing-dashboard').classList.add('hidden');
+        document.getElementById('desk-dashboard').classList.add('hidden');
+        
+        // Show mission selection
+        document.getElementById('mission-selection').classList.remove('hidden');
+    }
+
+    showMissionLogsPage() {
+        // Hide mission selection and show logs page
+        document.getElementById('mission-selection').classList.add('hidden');
+        document.getElementById('mission-logs-page').classList.remove('hidden');
+        
+        this.populateMissionLogs();
+    }
+
+    populateMissionLogs() {
+        const container = document.getElementById('logs-container');
         
         if (this.missionLogs.length === 0) {
-            logsHtml += '<p>No mission logs found.</p>';
-        } else {
-            this.missionLogs.forEach((log, index) => {
-                logsHtml += `
-                    <div class="log-entry">
-                        <div class="log-header">
-                            ${log.name} (${log.type.toUpperCase()}) - ${log.actualStartTime ? new Date(log.actualStartTime).toLocaleDateString() : 'N/A'}
-                        </div>
-                        <div class="log-details">
-                            Status: ${log.status}<br>
-                            Start: ${log.actualStartTime ? new Date(log.actualStartTime).toLocaleString() : 'N/A'}<br>
-                            End: ${log.actualEndTime ? new Date(log.actualEndTime).toLocaleString() : 'Ongoing'}<br>
-                            Patrol Stops: ${log.patrolStops ? log.patrolStops.length : 0}<br>
-                            Incidents: ${log.incidents ? log.incidents.length : 0}
-                        </div>
-                        <button onclick="viewReport(${index})">View Full Report</button>
-                        <button onclick="copyReport(${index})">Copy Report</button>
+            container.innerHTML = `
+                <div class="empty-state">
+                    <h3>No Mission Logs</h3>
+                    <p>No completed missions found.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = this.missionLogs.map((log, index) => `
+            <div class="log-card">
+                <div class="log-card-header">
+                    <div>
+                        <div class="log-card-title">${log.name} (${log.type.toUpperCase()})</div>
+                        <div class="log-card-date">${log.actualStartTime ? new Date(log.actualStartTime).toLocaleDateString() : 'N/A'}</div>
                     </div>
-                `;
+                    <div class="log-card-actions">
+                        <button class="btn btn-primary btn-small" onclick="app.viewMissionReport(${index})">View Report</button>
+                        <button class="btn btn-success btn-small" onclick="app.copyMissionReport(${index})">Copy Report</button>
+                    </div>
+                </div>
+                <div class="log-card-details">
+                    <strong>Status:</strong> ${log.status}<br>
+                    <strong>Start:</strong> ${log.actualStartTime ? new Date(log.actualStartTime).toLocaleString() : 'N/A'}<br>
+                    <strong>End:</strong> ${log.actualEndTime ? new Date(log.actualEndTime).toLocaleString() : 'Ongoing'}
+                </div>
+                <div class="log-card-stats">
+                    <div class="log-stat">
+                        <div class="log-stat-number">${log.patrolStops ? log.patrolStops.length : 0}</div>
+                        <div class="log-stat-label">Stops</div>
+                    </div>
+                    <div class="log-stat">
+                        <div class="log-stat-number">${log.incidents ? log.incidents.length : 0}</div>
+                        <div class="log-stat-label">Incidents</div>
+                    </div>
+                    <div class="log-stat">
+                        <div class="log-stat-number">${log.actualEndTime && log.actualStartTime ? Math.round((new Date(log.actualEndTime) - new Date(log.actualStartTime)) / (1000 * 60 * 60)) : 0}</div>
+                        <div class="log-stat-label">Hours</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    viewMissionReport(index) {
+        const log = this.missionLogs[index];
+        const report = this.generateReportForLog(log);
+        
+        document.getElementById('generated-report').textContent = report;
+        this.showModal('mission-report-modal');
+    }
+
+    copyMissionReport(index) {
+        const log = this.missionLogs[index];
+        const report = this.generateReportForLog(log);
+        
+        navigator.clipboard.writeText(report).then(() => {
+            alert('Mission report copied to clipboard!');
+        }).catch(() => {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = report;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert('Mission report copied to clipboard!');
+        });
+    }
+
+    generateReportForLog(log) {
+        const profile = log.officer || this.getProfile();
+        
+        let report = `FIELD OFFICER MISSION REPORT\n`;
+        report += `=====================================\n\n`;
+        report += `Officer: ${profile.name}\n`;
+        report += `Badge Number: ${profile.badgeNumber}\n`;
+        report += `Department: ${profile.department}\n`;
+        report += `Supervisor: ${profile.supervisor}\n\n`;
+        
+        report += `MISSION DETAILS\n`;
+        report += `---------------\n`;
+        report += `Mission Name: ${log.name}\n`;
+        report += `Mission Type: ${log.type.toUpperCase()}\n`;
+        report += `Start Time: ${log.actualStartTime ? new Date(log.actualStartTime).toLocaleString() : 'N/A'}\n`;
+        report += `Expected End: ${log.expectedEndTime ? new Date(log.expectedEndTime).toLocaleString() : 'N/A'}\n`;
+        
+        if (log.actualEndTime) {
+            report += `Actual End: ${new Date(log.actualEndTime).toLocaleString()}\n`;
+        }
+        
+        report += `Status: ${log.status.toUpperCase()}\n\n`;
+        
+        if (log.details) {
+            report += `Mission Details: ${log.details}\n\n`;
+        }
+        
+        if (log.plannedStops) {
+            report += `Planned Stops:\n${log.plannedStops}\n\n`;
+        }
+        
+        if (log.patrolStops && log.patrolStops.length > 0) {
+            report += `PATROL STOPS\n`;
+            report += `------------\n`;
+            log.patrolStops.forEach((stop, index) => {
+                report += `${index + 1}. ${stop.name}\n`;
+                report += `   Arrival: ${new Date(stop.startTime).toLocaleString()}\n`;
+                if (stop.endTime) {
+                    report += `   Departure: ${new Date(stop.endTime).toLocaleString()}\n`;
+                    report += `   Duration: ${Math.round(stop.duration / 60000)} minutes\n`;
+                }
+                if (stop.details) {
+                    report += `   Details: ${stop.details}\n`;
+                }
+                if (stop.checkpoint) {
+                    report += `   Checkpoint: ${stop.checkpoint}\n`;
+                    if (stop.checkpointDetails) {
+                        report += `   Checkpoint Details: ${stop.checkpointDetails}\n`;
+                    }
+                }
+                report += `\n`;
             });
         }
         
-        logsHtml += `
-                <script>
-                    const missionLogs = ${JSON.stringify(this.missionLogs)};
-                    
-                    function viewReport(index) {
-                        const log = missionLogs[index];
-                        // Generate report for this log
-                        alert('Report viewing functionality would be implemented here');
-                    }
-                    
-                    function copyReport(index) {
-                        const log = missionLogs[index];
-                        // Copy report functionality would be implemented here
-                        alert('Report copying functionality would be implemented here');
-                    }
-                </script>
-            </body>
-            </html>
-        `;
+        if (log.incidents && log.incidents.length > 0) {
+            report += `INCIDENTS\n`;
+            report += `---------\n`;
+            log.incidents.forEach((incident, index) => {
+                report += `${index + 1}. ${incident.type.toUpperCase()}\n`;
+                report += `   Location: ${incident.location}\n`;
+                report += `   Time: ${new Date(incident.time).toLocaleString()}\n`;
+                report += `   Description: ${incident.description}\n`;
+                if (incident.action) {
+                    report += `   Action Taken: ${incident.action}\n`;
+                }
+                report += `\n`;
+            });
+        }
         
-        logsWindow.document.write(logsHtml);
-        logsWindow.document.close();
+        if (log.earlyEnd) {
+            report += `EARLY END DETAILS\n`;
+            report += `-----------------\n`;
+            report += `Reason: ${log.earlyEnd.reason}\n`;
+            report += `Replacement Info: ${log.earlyEnd.replacement}\n`;
+            report += `End Time: ${new Date(log.earlyEnd.actualEndTime).toLocaleString()}\n\n`;
+        }
+        
+        report += `Report Generated: ${new Date().toLocaleString()}\n`;
+        report += `Generated by: Field Officer App v1.0\n`;
+        
+        return report;
     }
 
     // Standing and Desk mission methods (simplified versions)
@@ -860,9 +1069,253 @@ class FieldOfficerApp {
         
         return `${year}-${month}-${day}T${hours}:${minutes}`;
     }
+
+    // POI Management Methods
+    showPOIManagementPage() {
+        document.getElementById('mission-selection').classList.add('hidden');
+        document.getElementById('poi-management-page').classList.remove('hidden');
+        
+        this.populatePOIList();
+    }
+
+    populatePOIList() {
+        const container = document.getElementById('poi-list');
+        
+        if (this.personsOfInterest.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <h3>No Persons Of Interest</h3>
+                    <p>No POI records found. Click "Add POI" to create the first entry.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = this.personsOfInterest.map((poi, index) => `
+            <div class="poi-card">
+                <div class="poi-card-header">
+                    <div>
+                        <div class="poi-name">${poi.name}</div>
+                        <div class="poi-reason">${poi.reason.charAt(0).toUpperCase() + poi.reason.slice(1)}</div>
+                    </div>
+                    <div class="poi-alert-level alert-${poi.alertLevel}">${poi.alertLevel.toUpperCase()}</div>
+                </div>
+                <div class="poi-description">
+                    <strong>Description:</strong> ${poi.description || 'No description provided'}<br>
+                    <strong>Notes:</strong> ${poi.notes || 'No additional notes'}
+                </div>
+                <div class="poi-actions">
+                    <button class="btn btn-warning btn-small" onclick="app.editPOI(${index})">Edit</button>
+                    <button class="btn btn-danger btn-small" onclick="app.deletePOI(${index})">Remove</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    showAddPOIModal() {
+        document.getElementById('poi-modal-title').textContent = 'Add Person Of Interest';
+        document.getElementById('poi-submit-btn').textContent = 'Add POI';
+        
+        // Clear form
+        document.getElementById('poi-name').value = '';
+        document.getElementById('poi-description').value = '';
+        document.getElementById('poi-reason').value = '';
+        document.getElementById('poi-notes').value = '';
+        document.getElementById('poi-alert-level').value = 'low';
+        
+        // Remove edit mode data attribute
+        document.getElementById('poi-form').removeAttribute('data-edit-index');
+        
+        this.showModal('poi-modal');
+    }
+
+    editPOI(index) {
+        const poi = this.personsOfInterest[index];
+        
+        document.getElementById('poi-modal-title').textContent = 'Edit Person Of Interest';
+        document.getElementById('poi-submit-btn').textContent = 'Update POI';
+        
+        // Fill form with existing data
+        document.getElementById('poi-name').value = poi.name;
+        document.getElementById('poi-description').value = poi.description || '';
+        document.getElementById('poi-reason').value = poi.reason;
+        document.getElementById('poi-notes').value = poi.notes || '';
+        document.getElementById('poi-alert-level').value = poi.alertLevel;
+        
+        // Set edit mode
+        document.getElementById('poi-form').setAttribute('data-edit-index', index);
+        
+        this.showModal('poi-modal');
+    }
+
+    submitPOI() {
+        const form = document.getElementById('poi-form');
+        const editIndex = form.getAttribute('data-edit-index');
+        
+        const poiData = {
+            id: editIndex !== null ? this.personsOfInterest[editIndex].id : Date.now(),
+            name: document.getElementById('poi-name').value,
+            description: document.getElementById('poi-description').value,
+            reason: document.getElementById('poi-reason').value,
+            notes: document.getElementById('poi-notes').value,
+            alertLevel: document.getElementById('poi-alert-level').value,
+            createdAt: editIndex !== null ? this.personsOfInterest[editIndex].createdAt : new Date(),
+            updatedAt: new Date(),
+            createdBy: this.getProfile()
+        };
+
+        if (editIndex !== null) {
+            // Update existing POI
+            this.personsOfInterest[editIndex] = poiData;
+        } else {
+            // Add new POI
+            this.personsOfInterest.push(poiData);
+        }
+        
+        this.saveData();
+        this.populatePOIList();
+        this.hideModal('poi-modal');
+        
+        const action = editIndex !== null ? 'updated' : 'added';
+        alert(`Person of Interest ${action} successfully!`);
+    }
+
+    deletePOI(index) {
+        const poi = this.personsOfInterest[index];
+        if (confirm(`Are you sure you want to remove ${poi.name} from the POI list?`)) {
+            this.personsOfInterest.splice(index, 1);
+            this.saveData();
+            this.populatePOIList();
+            alert('Person of Interest removed successfully!');
+        }
+    }
+
+    // Sites Management Methods
+    showSitesManagementPage() {
+        document.getElementById('mission-selection').classList.add('hidden');
+        document.getElementById('sites-management-page').classList.remove('hidden');
+        
+        this.populateSitesList();
+    }
+
+    populateSitesList() {
+        const container = document.getElementById('sites-list');
+        
+        if (this.sites.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <h3>No Sites</h3>
+                    <p>No site records found. Click "Add Site" to create the first entry.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = this.sites.map((site, index) => `
+            <div class="site-card">
+                <div class="site-card-header">
+                    <div>
+                        <div class="site-name">${site.name}</div>
+                        <div class="site-type">${site.type.charAt(0).toUpperCase() + site.type.slice(1)}</div>
+                    </div>
+                </div>
+                <div class="site-details">
+                    <strong>Address:</strong> ${site.address || 'No address provided'}<br>
+                    <strong>Contact:</strong> ${site.contact || 'No contact provided'}<br>
+                    <strong>Access:</strong> ${site.access || 'No access instructions'}<br>
+                    <strong>Notes:</strong> ${site.notes || 'No additional notes'}
+                </div>
+                <div class="site-actions">
+                    <button class="btn btn-warning btn-small" onclick="app.editSite(${index})">Edit</button>
+                    <button class="btn btn-danger btn-small" onclick="app.deleteSite(${index})">Remove</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    showAddSiteModal() {
+        document.getElementById('sites-modal-title').textContent = 'Add Site';
+        document.getElementById('sites-submit-btn').textContent = 'Add Site';
+        
+        // Clear form
+        document.getElementById('site-name').value = '';
+        document.getElementById('site-address').value = '';
+        document.getElementById('site-type').value = '';
+        document.getElementById('site-contact').value = '';
+        document.getElementById('site-access').value = '';
+        document.getElementById('site-notes').value = '';
+        
+        // Remove edit mode data attribute
+        document.getElementById('sites-form').removeAttribute('data-edit-index');
+        
+        this.showModal('sites-modal');
+    }
+
+    editSite(index) {
+        const site = this.sites[index];
+        
+        document.getElementById('sites-modal-title').textContent = 'Edit Site';
+        document.getElementById('sites-submit-btn').textContent = 'Update Site';
+        
+        // Fill form with existing data
+        document.getElementById('site-name').value = site.name;
+        document.getElementById('site-address').value = site.address || '';
+        document.getElementById('site-type').value = site.type;
+        document.getElementById('site-contact').value = site.contact || '';
+        document.getElementById('site-access').value = site.access || '';
+        document.getElementById('site-notes').value = site.notes || '';
+        
+        // Set edit mode
+        document.getElementById('sites-form').setAttribute('data-edit-index', index);
+        
+        this.showModal('sites-modal');
+    }
+
+    submitSite() {
+        const form = document.getElementById('sites-form');
+        const editIndex = form.getAttribute('data-edit-index');
+        
+        const siteData = {
+            id: editIndex !== null ? this.sites[editIndex].id : Date.now(),
+            name: document.getElementById('site-name').value,
+            address: document.getElementById('site-address').value,
+            type: document.getElementById('site-type').value,
+            contact: document.getElementById('site-contact').value,
+            access: document.getElementById('site-access').value,
+            notes: document.getElementById('site-notes').value,
+            createdAt: editIndex !== null ? this.sites[editIndex].createdAt : new Date(),
+            updatedAt: new Date(),
+            createdBy: this.getProfile()
+        };
+
+        if (editIndex !== null) {
+            // Update existing site
+            this.sites[editIndex] = siteData;
+        } else {
+            // Add new site
+            this.sites.push(siteData);
+        }
+        
+        this.saveData();
+        this.populateSitesList();
+        this.hideModal('sites-modal');
+        
+        const action = editIndex !== null ? 'updated' : 'added';
+        alert(`Site ${action} successfully!`);
+    }
+
+    deleteSite(index) {
+        const site = this.sites[index];
+        if (confirm(`Are you sure you want to remove ${site.name} from the sites list?`)) {
+            this.sites.splice(index, 1);
+            this.saveData();
+            this.populateSitesList();
+            alert('Site removed successfully!');
+        }
+    }
 }
 
 // Initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new FieldOfficerApp();
+    window.app = new FieldOfficerApp();
 });

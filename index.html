@@ -71,6 +71,49 @@
             <!-- Mission Logs Link -->
             <section class="quick-actions">
                 <button id="view-logs-btn" class="btn btn-outline">View Mission Logs</button>
+                <button id="poi-management-btn" class="btn btn-outline">Person Of Interest</button>
+                <button id="sites-management-btn" class="btn btn-outline">Sites Management</button>
+            </section>
+
+            <!-- Mission Logs Page (Hidden initially) -->
+            <section class="mission-logs-page hidden" id="mission-logs-page">
+                <div class="dashboard-header">
+                    <h2>Mission Logs</h2>
+                    <div class="dashboard-actions">
+                        <button id="back-to-main-btn" class="btn btn-secondary">Back to Dashboard</button>
+                    </div>
+                </div>
+                <div class="logs-container" id="logs-container">
+                    <!-- Mission logs will be populated here -->
+                </div>
+            </section>
+
+            <!-- POI Management Page (Hidden initially) -->
+            <section class="poi-management-page hidden" id="poi-management-page">
+                <div class="dashboard-header">
+                    <h2>Person Of Interest Management</h2>
+                    <div class="dashboard-actions">
+                        <button id="add-poi-btn" class="btn btn-success">Add POI</button>
+                        <button id="back-to-main-poi-btn" class="btn btn-secondary">Back to Dashboard</button>
+                    </div>
+                </div>
+                <div class="poi-list" id="poi-list">
+                    <!-- POI list will be populated here -->
+                </div>
+            </section>
+
+            <!-- Sites Management Page (Hidden initially) -->
+            <section class="sites-management-page hidden" id="sites-management-page">
+                <div class="dashboard-header">
+                    <h2>Sites Management</h2>
+                    <div class="dashboard-actions">
+                        <button id="add-site-btn" class="btn btn-success">Add Site</button>
+                        <button id="back-to-main-sites-btn" class="btn btn-secondary">Back to Dashboard</button>
+                    </div>
+                </div>
+                <div class="sites-list" id="sites-list">
+                    <!-- Sites list will be populated here -->
+                </div>
             </section>
 
             <!-- Patrol Dashboard (Hidden initially) -->
@@ -80,6 +123,9 @@
                     <div class="mission-status">
                         <span id="mission-status">Mission Not Started</span>
                         <span id="current-time"></span>
+                    </div>
+                    <div class="dashboard-actions">
+                        <button id="back-to-main-patrol-btn" class="btn btn-secondary">Back to Dashboard</button>
                     </div>
                 </div>
 
@@ -116,6 +162,9 @@
                         <span id="standing-mission-status">Mission Not Started</span>
                         <span id="standing-current-time"></span>
                     </div>
+                    <div class="dashboard-actions">
+                        <button id="back-to-main-standing-btn" class="btn btn-secondary">Back to Dashboard</button>
+                    </div>
                 </div>
 
                 <div class="dashboard-controls">
@@ -138,6 +187,9 @@
                     <div class="mission-status">
                         <span id="desk-mission-status">Mission Not Started</span>
                         <span id="desk-current-time"></span>
+                    </div>
+                    <div class="dashboard-actions">
+                        <button id="back-to-main-desk-btn" class="btn btn-secondary">Back to Dashboard</button>
                     </div>
                 </div>
 
@@ -196,6 +248,9 @@
                     <div class="form-group">
                         <label for="location-name">Location:</label>
                         <input type="text" id="location-name" required>
+                        <select id="location-select" style="margin-top: 10px;">
+                            <option value="">Or select from sites...</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="location-details">Details:</label>
@@ -290,6 +345,98 @@
                     <div class="form-actions">
                         <button type="submit" class="btn btn-warning">Confirm Early End</button>
                         <button type="button" id="cancel-early-end" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- POI Modal -->
+        <div id="poi-modal" class="modal">
+            <div class="modal-content">
+                <h2 id="poi-modal-title">Add Person Of Interest</h2>
+                <form id="poi-form">
+                    <div class="form-group">
+                        <label for="poi-name">Full Name:</label>
+                        <input type="text" id="poi-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="poi-description">Physical Description:</label>
+                        <textarea id="poi-description" rows="3" placeholder="Height, build, hair color, distinguishing features..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="poi-reason">Reason for Interest:</label>
+                        <select id="poi-reason" required>
+                            <option value="">Select reason</option>
+                            <option value="trespassing">Trespassing</option>
+                            <option value="suspicious">Suspicious Activity</option>
+                            <option value="banned">Banned from Property</option>
+                            <option value="theft">Theft/Shoplifting</option>
+                            <option value="harassment">Harassment</option>
+                            <option value="vandalism">Vandalism</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="poi-notes">Additional Notes:</label>
+                        <textarea id="poi-notes" rows="4" placeholder="Additional information, incident details, etc..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="poi-alert-level">Alert Level:</label>
+                        <select id="poi-alert-level" required>
+                            <option value="low">Low - Monitor</option>
+                            <option value="medium">Medium - Approach with Caution</option>
+                            <option value="high">High - Do Not Approach, Call Supervisor</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="poi-submit-btn">Add POI</button>
+                        <button type="button" id="cancel-poi" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sites Modal -->
+        <div id="sites-modal" class="modal">
+            <div class="modal-content">
+                <h2 id="sites-modal-title">Add Site</h2>
+                <form id="sites-form">
+                    <div class="form-group">
+                        <label for="site-name">Site Name:</label>
+                        <input type="text" id="site-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="site-address">Address:</label>
+                        <textarea id="site-address" rows="2" placeholder="Full address or location description..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="site-type">Site Type:</label>
+                        <select id="site-type" required>
+                            <option value="">Select site type</option>
+                            <option value="office">Office Building</option>
+                            <option value="retail">Retail Store</option>
+                            <option value="warehouse">Warehouse</option>
+                            <option value="residential">Residential Complex</option>
+                            <option value="industrial">Industrial Facility</option>
+                            <option value="parking">Parking Structure</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="site-contact">Primary Contact:</label>
+                        <input type="text" id="site-contact" placeholder="Name and phone number">
+                    </div>
+                    <div class="form-group">
+                        <label for="site-access">Access Instructions:</label>
+                        <textarea id="site-access" rows="3" placeholder="Key codes, entry procedures, special instructions..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="site-notes">Additional Notes:</label>
+                        <textarea id="site-notes" rows="3" placeholder="Special considerations, hazards, etc..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="sites-submit-btn">Add Site</button>
+                        <button type="button" id="cancel-sites" class="btn btn-secondary">Cancel</button>
                     </div>
                 </form>
             </div>
