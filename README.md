@@ -1,109 +1,92 @@
-# Field Officer Dashboard
+# Field Officer Mission Log App
 
-A comprehensive web application for field officers to manage their shifts, missions, and reports.
+A comprehensive web application for field officers to log their shift activities during Standing, Patrol, or Desk missions.
 
 ## Features
 
-### Profile Management
-- Set up officer profile with name, badge number, department, and supervisor
-- Profile information is automatically included in all reports
-- Edit profile at any time
-
 ### Mission Types
-- **Standing Guard**: Fixed position security duty
-- **Patrol**: Mobile security patrol with location tracking
-- **Desk Duty**: Administrative and monitoring duty
+- **Standing**: Fixed position security duty
+- **Patrol**: Mobile security patrol with multiple stops
+- **Desk**: Administrative and monitoring duties
 
-### Patrol Mission Features
-- Mission start/stop with detailed planning
-- On-site/Off-site tracking with location logging
-- Checkpoint recording and status updates
-- Real-time activity status monitoring
-- Patrol stop logging with timestamps and duration
+### Core Functionality
 
-### Incident Reporting
-- File incident reports at any time during missions
-- Categorized incident types (Security, Maintenance, Medical, Fire/Safety, etc.)
-- Automatic location detection when on-site
-- Detailed description and action taken fields
+#### Mission Management
+- Start mission with officer details, start/end times, and optional notes
+- Mission report required before ending mission
+- Early end protection (15-minute warning) with excuse form
+- Local storage for all mission logs
+- Copy-to-clipboard functionality for reports
 
-### Mission Reports
-- Comprehensive mission reports with all activities
-- Copy reports to clipboard for easy sharing
-- Include all patrol stops, incidents, and checkpoint data
-- Professional formatting for official documentation
+#### Patrol-Specific Features
+- **On-Site/Off-Site Tracking**: Guards can mark when they arrive at and leave patrol stops
+- **Patrol Stops**: Automatically logged with arrival/departure times, location, and details
+- **Checkpoints**: Add checkpoint inspections during patrol stops
+- **In-Transit Status**: Shows when guard is between sites
+- **Mission Report Lock**: Once mission report is completed, cannot visit new sites
 
-### Early Mission End
-- Special handling for missions ending 15+ minutes early
-- Excuse form with reason and replacement information
-- Automatic flagging in mission reports
+#### Incident Reporting
+- File incident reports anytime (even outside patrol stops)
+- Multiple incident types: Security Breach, Suspicious Activity, Medical Emergency, etc.
+- Incidents automatically categorized by patrol stop or general mission
 
-### Mission Logs
-- View all completed missions in a separate page
-- Access historical reports and data
-- Copy previous reports for reference
+#### Mission Reports
+Contains:
+- Full mission details (start/end times, duration)
+- All patrol stops with timestamps
+- Checkpoint details within each patrol stop
+- Incident reports (categorized by location)
+- Mission summary, observations, and recommendations
+- Early end documentation (if applicable)
 
-### Data Persistence
-- All data stored locally in browser
-- Resume interrupted missions
-- Persistent mission logs and profile data
+### Data Management
+- All missions saved to browser's local storage
+- View all past mission logs
+- Copy any report to clipboard for email/reporting
+- Mission logs accessible from main page
 
 ## How to Use
 
-1. **First Time Setup**
-   - Open `index.html` in a web browser
-   - Fill out your officer profile information
-   - Save your profile
+1. **Open** `index.html` in a web browser
+2. **Select** your mission type (Standing, Patrol, or Desk)
+3. **Start Mission** by filling in officer details and mission parameters
 
-2. **Starting a Mission**
-   - Select your mission type from the dashboard
-   - For patrol missions, fill out mission details including:
-     - Mission name
-     - Start and end times
-     - Planned patrol stops (optional)
-     - Mission details
+### For Patrol Missions:
+1. Click "Start Mission" and fill in details
+2. Click "Go On Site" when arriving at a location
+3. While on site:
+   - Add checkpoints
+   - File incident reports
+   - Add updates and notes
+4. Click "Leave Site" when departing (logs patrol stop)
+5. Repeat steps 2-4 for all patrol stops
+6. Click "Mission Report" to complete the mission report (required)
+7. Click "End Mission" when shift is complete
 
-3. **During Patrol Missions**
-   - Use "Go On-Site" when arriving at a location
-   - Add location details and checkpoint information
-   - File incident reports as needed
-   - Use "Go Off-Site" when leaving a location
-   - Continue patrol stops throughout your shift
+### Ending Mission Early:
+- If ending >15 minutes early, system requires:
+  - Reason for early end
+  - Coverage/replacement information
+  - Additional documentation in final report
 
-4. **Ending a Mission**
-   - Click "End Mission" when your shift is complete
-   - If ending early, fill out the excuse form
-   - Generate and copy your mission report
+### Viewing Past Missions:
+- Click "View Mission Logs" button
+- View details of any past mission
+- Copy reports to clipboard
 
-5. **Viewing Mission Logs**
-   - Click "View Mission Logs" from the main dashboard
-   - Access all historical mission data
-   - Copy previous reports for reference
+## Technical Details
+- Pure HTML/CSS/JavaScript (no dependencies)
+- Local storage for data persistence
+- Responsive design for mobile/tablet use
+- No server required - runs entirely in browser
 
-## Technical Requirements
-
-- Modern web browser with JavaScript enabled
-- Local storage support for data persistence
-- No internet connection required (fully offline capable)
-
-## File Structure
-
-- `index.html` - Main application interface
-- `styles.css` - Application styling and responsive design
-- `app.js` - Core application logic and functionality
-- `README.md` - This documentation file
+## Files
+- `index.html` - Main application page
+- `app.js` - Application logic
+- `styles.css` - Styling and layout
 
 ## Browser Compatibility
-
-- Chrome 60+
-- Firefox 55+
-- Safari 12+
-- Edge 79+
-
-## Data Storage
-
-All data is stored locally in your browser's localStorage. Data persists between sessions but is tied to the specific browser and device. For backup purposes, you can copy mission reports to external storage.
-
-## Security Note
-
-This application stores all data locally and does not transmit any information over the internet. All officer and mission data remains on the local device.
+- Chrome/Edge (recommended)
+- Firefox
+- Safari
+- Any modern browser with localStorage support
