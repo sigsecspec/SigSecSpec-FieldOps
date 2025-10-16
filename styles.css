@@ -194,12 +194,19 @@ body {
 .quick-actions {
     text-align: center;
     margin-bottom: 30px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 /* Dashboard Styles */
 .patrol-dashboard,
 .standing-dashboard,
-.desk-dashboard {
+.desk-dashboard,
+.mission-logs-page,
+.poi-management-page,
+.sites-management-page {
     background: rgba(255, 255, 255, 0.95);
     padding: 30px;
     border-radius: 10px;
@@ -213,6 +220,12 @@ body {
     margin-bottom: 30px;
     padding-bottom: 20px;
     border-bottom: 2px solid #ecf0f1;
+}
+
+.dashboard-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 .dashboard-header h2 {
@@ -415,6 +428,194 @@ body {
     line-height: 1.6;
 }
 
+/* Mission Logs Styles */
+.logs-container {
+    display: grid;
+    gap: 20px;
+}
+
+.log-card {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    border-left: 4px solid #3498db;
+    transition: all 0.3s ease;
+}
+
+.log-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.log-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.log-card-title {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.2em;
+    margin-bottom: 5px;
+}
+
+.log-card-date {
+    color: #7f8c8d;
+    font-size: 0.9em;
+}
+
+.log-card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.log-card-details {
+    color: #6c757d;
+    margin-bottom: 15px;
+}
+
+.log-card-stats {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.log-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    background: white;
+    border-radius: 6px;
+    min-width: 80px;
+}
+
+.log-stat-number {
+    font-weight: 600;
+    font-size: 1.2em;
+    color: #2c3e50;
+}
+
+.log-stat-label {
+    font-size: 0.8em;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* POI Management Styles */
+.poi-list,
+.sites-list {
+    display: grid;
+    gap: 20px;
+}
+
+.poi-card,
+.site-card {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.poi-card {
+    border-left: 4px solid #e74c3c;
+}
+
+.site-card {
+    border-left: 4px solid #27ae60;
+}
+
+.poi-card:hover,
+.site-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.poi-card-header,
+.site-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.poi-name,
+.site-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.2em;
+    margin-bottom: 5px;
+}
+
+.poi-alert-level {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.alert-low {
+    background: #d4edda;
+    color: #155724;
+}
+
+.alert-medium {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.alert-high {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.poi-reason,
+.site-type {
+    color: #6c757d;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+
+.poi-description,
+.site-details {
+    color: #495057;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.poi-actions,
+.site-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.empty-state h3 {
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    margin-bottom: 20px;
+}
+
 /* Utility Classes */
 .hidden {
     display: none !important;
@@ -464,6 +665,10 @@ body {
         flex-direction: column;
         gap: 15px;
         text-align: center;
+    }
+    
+    .dashboard-actions {
+        justify-content: center;
     }
     
     .mission-controls,
