@@ -529,16 +529,24 @@ class SecuritySpecialistApp {
         
         const boloBtn = document.getElementById('boloBtn');
         if (boloBtn) {
+            console.log('BOLO button found, adding event listener');
             boloBtn.addEventListener('click', () => {
+                console.log('BOLO button clicked');
                 this.showBoloMenu();
             });
+        } else {
+            console.log('BOLO button not found');
         }
         
         const poiBtn = document.getElementById('poiBtn');
         if (poiBtn) {
+            console.log('POI button found, adding event listener');
             poiBtn.addEventListener('click', () => {
+                console.log('POI button clicked');
                 this.showPOIMenu();
             });
+        } else {
+            console.log('POI button not found');
         }
     }
 
@@ -1712,7 +1720,15 @@ class SecuritySpecialistApp {
     
     showBoloMenu() {
         const modal = document.getElementById('logsModal');
+        if (!modal) {
+            console.error('Modal not found!');
+            return;
+        }
         const modalContent = modal.querySelector('.modal-content');
+        if (!modalContent) {
+            console.error('Modal content not found!');
+            return;
+        }
         
         modalContent.innerHTML = `
             <div class="modal-header">
@@ -1746,7 +1762,15 @@ class SecuritySpecialistApp {
     
     showPOIMenu() {
         const modal = document.getElementById('logsModal');
+        if (!modal) {
+            console.error('Modal not found!');
+            return;
+        }
         const modalContent = modal.querySelector('.modal-content');
+        if (!modalContent) {
+            console.error('Modal content not found!');
+            return;
+        }
         
         modalContent.innerHTML = `
             <div class="modal-header">
