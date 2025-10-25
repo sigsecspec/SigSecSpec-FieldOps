@@ -214,25 +214,25 @@ class SecuritySpecialistApp {
                 </div>
 
                 <div class="dashboard-controls">
-                    <button class="control-btn btn-primary" id="startMissionBtn" onclick="app.showStartMissionModal()">
+                    <button class="control-btn btn-primary" id="startMissionBtn" onclick="app.showInteractivePrompt('startMission')">
                         Begin Operation
                     </button>
-                    <button class="control-btn btn-success" id="onSiteBtn" onclick="app.goOnSite()" disabled>
+                    <button class="control-btn btn-success" id="onSiteBtn" onclick="app.showInteractivePrompt('onSite')" disabled>
                         Arrive On Scene
                     </button>
-                    <button class="control-btn btn-warning" id="offSiteBtn" onclick="app.goOffSite()" disabled>
+                    <button class="control-btn btn-warning" id="offSiteBtn" onclick="app.showInteractivePrompt('offSite')" disabled>
                         Clear Scene
                     </button>
-                    <button class="control-btn btn-primary" onclick="app.showIncidentModal()">
+                    <button class="control-btn btn-primary" onclick="app.showInteractivePrompt('incident')">
                         Incident Report
                     </button>
-                    <button class="control-btn btn-primary" onclick="app.showCheckpointModal()">
+                    <button class="control-btn btn-primary" onclick="app.showInteractivePrompt('checkpoint')">
                         Add Checkpoint
                     </button>
-                    <button class="control-btn btn-warning" onclick="app.showMissionReportModal()" id="missionReportBtn" disabled>
+                    <button class="control-btn btn-warning" onclick="app.showInteractivePrompt('report')" id="missionReportBtn" disabled>
                         Mission Report
                     </button>
-                    <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.endMission()" disabled>
+                    <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.showInteractivePrompt('endMission')" disabled>
                         End Mission
                     </button>
                 </div>
@@ -240,8 +240,8 @@ class SecuritySpecialistApp {
                 <div class="command-console">
                     <div class="console-output" id="consoleOutput"></div>
                     <div class="console-input-row">
-                        <span class="prompt">app@ops:~$</span>
-                        <input id="consoleInput" placeholder="Type a command, e.g., help" />
+                        <span class="prompt">GUARD@SEC:~$</span>
+                        <input id="consoleInput" placeholder="Type command or 'help' for assistance" />
                     </div>
                 </div>
 
@@ -275,16 +275,16 @@ class SecuritySpecialistApp {
                 </div>
 
                 <div class="dashboard-controls">
-                    <button class="control-btn btn-primary" id="startMissionBtn" onclick="app.showStartMissionModal()">
+                    <button class="control-btn btn-primary" id="startMissionBtn" onclick="app.showInteractivePrompt('startMission')">
                         Start Mission
                     </button>
-                    <button class="control-btn btn-primary" onclick="app.showIncidentModal()">
+                    <button class="control-btn btn-primary" onclick="app.showInteractivePrompt('incident')">
                         Incident Report
                     </button>
-                    <button class="control-btn btn-warning" onclick="app.showMissionReportModal()" id="missionReportBtn" disabled>
+                    <button class="control-btn btn-warning" onclick="app.showInteractivePrompt('report')" id="missionReportBtn" disabled>
                         Mission Report
                     </button>
-                    <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.endMission()" disabled>
+                    <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.showInteractivePrompt('endMission')" disabled>
                         End Mission
                     </button>
                 </div>
@@ -292,8 +292,8 @@ class SecuritySpecialistApp {
                 <div class="command-console">
                     <div class="console-output" id="consoleOutput"></div>
                     <div class="console-input-row">
-                        <span class="prompt">app@ops:~$</span>
-                        <input id="consoleInput" placeholder="Type a command, e.g., help" />
+                        <span class="prompt">GUARD@SEC:~$</span>
+                        <input id="consoleInput" placeholder="Type command or 'help' for assistance" />
                     </div>
                 </div>
 
@@ -1138,16 +1138,25 @@ class SecuritySpecialistApp {
             }
         });
         
-        // Seed greeting
-        this.consoleWrite('=== SECURITY COMMAND CONSOLE INITIALIZED ===');
-        this.consoleWrite('Type "help" for available commands.');
-        this.consoleWrite('Use quick commands: start [officer], onsite [location], etc.');
-        this.consoleWrite('Use UP/DOWN arrows for command history, TAB for auto-complete.');
+        // Professional startup message
+        this.consoleWrite('=== PROFESSIONAL GUARD SYSTEM v2.1 ===');
+        this.consoleWrite('🚔 SECURE TERMINAL INITIALIZED');
+        this.consoleWrite('');
+        this.consoleWrite('✓ Database connection: ACTIVE');
+        this.consoleWrite('✓ Communication systems: ONLINE');
+        this.consoleWrite('✓ GPS tracking: ENABLED');
+        this.consoleWrite('✓ Emergency protocols: LOADED');
+        this.consoleWrite('');
+        this.consoleWrite('Type "help" for command reference');
+        this.consoleWrite('Professional format: start [06:00] [am] end [14:00] [pm] [assignment]');
+        this.consoleWrite('Quick commands: radio, backup, bolo, patrol');
+        this.consoleWrite('');
+        this.consoleWrite('System ready for operations...');
     }
 
     autoComplete(input) {
         const value = input.value.toLowerCase();
-        const commands = ['help', 'start', 'onsite', 'offsite', 'incident', 'checkpoint', 'report', 'end', 'sites', 'bolos', 'logs', 'status', 'time', 'clear', 'home'];
+        const commands = ['help', 'start', 'onsite', 'offsite', 'incident', 'checkpoint', 'report', 'end', 'sites', 'bolos', 'bolo', 'patrol', 'radio', 'backup', 'code', 'logs', 'status', 'time', 'clear', 'home'];
         
         const matches = commands.filter(cmd => cmd.startsWith(value));
         if (matches.length === 1) {
@@ -1194,24 +1203,52 @@ class SecuritySpecialistApp {
         this.consoleWrite(`$ ${raw}`);
         switch ((cmd || '').toLowerCase()) {
             case 'help':
-                this.consoleWrite('Available Commands:');
-                this.consoleWrite('  start [officer_name] - Start mission');
-                this.consoleWrite('  onsite [location] - Go on site');
-                this.consoleWrite('  offsite - Leave current site');
-                this.consoleWrite('  incident [type] [location] [description] - Quick incident report');
-                this.consoleWrite('  checkpoint [name] [status] - Add checkpoint');
-                this.consoleWrite('  report [summary] - Mission report');
-                this.consoleWrite('  end - End mission');
+                this.consoleWrite('=== PROFESSIONAL GUARD SYSTEM COMMANDS ===');
+                this.consoleWrite('');
+                this.consoleWrite('MISSION CONTROL:');
+                this.consoleWrite('  start [HH:MM] [am/pm] end [HH:MM] [am/pm] [details] - Start shift');
+                this.consoleWrite('  start [officer_name] - Quick start mission');
+                this.consoleWrite('  end - End current shift/mission');
+                this.consoleWrite('  status - Show current mission status');
+                this.consoleWrite('');
+                this.consoleWrite('SITE OPERATIONS:');
+                this.consoleWrite('  onsite [location] - Arrive at location');
+                this.consoleWrite('  offsite - Depart current location');
+                this.consoleWrite('  patrol [location] - Begin patrol route');
+                this.consoleWrite('  checkpoint [name] [status] - Log checkpoint');
+                this.consoleWrite('');
+                this.consoleWrite('INCIDENT REPORTING:');
+                this.consoleWrite('  incident [type] [location] [description] - Report incident');
+                this.consoleWrite('  bolo [subject] [description] - Create BOLO alert');
+                this.consoleWrite('  report [summary] - Generate report');
+                this.consoleWrite('');
+                this.consoleWrite('COMMUNICATION:');
+                this.consoleWrite('  radio [message] - Radio check with dispatch');
+                this.consoleWrite('  backup - Request emergency backup');
+                this.consoleWrite('  code [code] - Look up security/police codes');
+                this.consoleWrite('');
+                this.consoleWrite('SYSTEM UTILITIES:');
                 this.consoleWrite('  sites - List saved sites');
                 this.consoleWrite('  bolos - List active BOLOs');
                 this.consoleWrite('  logs - View mission history');
-                this.consoleWrite('  status - Show current mission status');
                 this.consoleWrite('  time - Show current time');
                 this.consoleWrite('  clear - Clear console');
+                this.consoleWrite('');
+                this.consoleWrite('EXAMPLES:');
+                this.consoleWrite('  start 06:00 am end 14:00 pm Perimeter patrol');
+                this.consoleWrite('  onsite Main Entrance - Security checkpoint');
+                this.consoleWrite('  incident Suspicious Activity Parking Lot Male subject loitering');
+                this.consoleWrite('  bolo John Doe Wanted for questioning - white male 5ft 10in');
+                this.consoleWrite('  patrol Building A - Conducting security sweep');
                 break;
             case 'start':
                 if (args.length > 0) {
-                    this.quickStartMission(a);
+                    // Check if it's the professional format: start [time] [am/pm] end [time] [am/pm] [details]
+                    if (this.isProfessionalTimeFormat(args)) {
+                        this.handleProfessionalStart(args);
+                    } else {
+                        this.quickStartMission(a);
+                    }
                 } else {
                     this.showStartMissionModal();
                 }
@@ -1431,6 +1468,13 @@ class SecuritySpecialistApp {
             case 'sites':
                 this.listSites();
                 break;
+            case 'bolo':
+                if (args.length >= 2) {
+                    this.quickBolo(args);
+                } else {
+                    this.showBoloModal();
+                }
+                break;
             case 'bolos':
                 this.listBolos();
                 break;
@@ -1444,8 +1488,32 @@ class SecuritySpecialistApp {
             case 'time':
                 this.showTime();
                 break;
+            case 'patrol':
+                if (args.length > 0) {
+                    this.quickPatrol(a);
+                } else {
+                    this.consoleWrite('ERROR: Please specify patrol location. Usage: patrol [location]');
+                }
+                break;
             case 'clear':
                 this.clearConsole();
+                break;
+            case 'radio':
+                if (args.length > 0) {
+                    this.mockRadioCheck(a);
+                } else {
+                    this.consoleWrite('ERROR: Please specify radio check message. Usage: radio [message]');
+                }
+                break;
+            case 'backup':
+                this.requestBackup();
+                break;
+            case 'code':
+                if (args.length > 0) {
+                    this.handleSecurityCode(args[0]);
+                } else {
+                    this.consoleWrite('ERROR: Please specify security code. Usage: code [code]');
+                }
                 break;
             case 'home':
                 this.attemptNavigateHome();
@@ -1454,6 +1522,245 @@ class SecuritySpecialistApp {
             default:
                 this.consoleWrite(`Unknown command: ${cmd}. Type "help" for available commands.`);
         }
+    }
+
+    // =====================
+    // Professional Guard System Functions
+    // =====================
+    isProfessionalTimeFormat(args) {
+        // Check if format matches: [time] [am/pm] end [time] [am/pm] [details...]
+        return args.length >= 4 && 
+               args[1] && (args[1].toLowerCase() === 'am' || args[1].toLowerCase() === 'pm') &&
+               args[2] && args[2].toLowerCase() === 'end' &&
+               args[4] && (args[4].toLowerCase() === 'am' || args[4].toLowerCase() === 'pm');
+    }
+
+    handleProfessionalStart(args) {
+        if (this.currentMission && this.currentMission.status === 'active') {
+            this.consoleWrite('ERROR: Mission already active. End current mission first.');
+            return;
+        }
+
+        try {
+            // Parse start time: args[0] args[1] (e.g., "06:00" "am")
+            const startTimeStr = this.parseTime(args[0], args[1]);
+            // Parse end time: args[3] args[4] (e.g., "14:00" "pm") 
+            const endTimeStr = this.parseTime(args[3], args[4]);
+            
+            // Get details (everything after the end time)
+            const details = args.slice(5).join(' ') || 'Standard patrol duty';
+            
+            const today = new Date();
+            const startTime = new Date(`${today.toDateString()} ${startTimeStr}`);
+            const endTime = new Date(`${today.toDateString()} ${endTimeStr}`);
+            
+            // If end time is before start time, assume it's next day
+            if (endTime <= startTime) {
+                endTime.setDate(endTime.getDate() + 1);
+            }
+            
+            this.currentMission = {
+                type: this.currentMission?.type || 'patrol',
+                status: 'active',
+                startTime: startTime,
+                endTime: endTime,
+                details: {
+                    specialistName: 'Officer ' + (Math.floor(Math.random() * 9000) + 1000), // Random badge number
+                    patrolRoute: details,
+                    notes: 'Professional shift - ' + details
+                },
+                patrolStops: [],
+                incidents: [],
+                checkpoints: []
+            };
+
+            this.missionStartTime = startTime;
+            this.saveCurrentMission();
+            
+            // Update UI
+            document.getElementById('missionStatus').textContent = 'Active';
+            document.getElementById('missionStatus').className = 'mission-status status-active';
+            document.getElementById('startMissionBtn').disabled = true;
+            document.getElementById('missionReportBtn').disabled = false;
+            document.getElementById('endMissionBtn').disabled = false;
+            
+            if (this.currentMission.type === 'patrol') {
+                document.getElementById('onSiteBtn').disabled = false;
+            }
+            
+            this.addNavigationWarning();
+            
+            this.consoleWrite('=== PROFESSIONAL SHIFT INITIATED ===');
+            this.consoleWrite(`✓ Officer: ${this.currentMission.details.specialistName}`);
+            this.consoleWrite(`✓ Start: ${startTime.toLocaleString()}`);
+            this.consoleWrite(`✓ End: ${endTime.toLocaleString()}`);
+            this.consoleWrite(`✓ Duration: ${Math.round((endTime - startTime) / (1000 * 60 * 60))} hours`);
+            this.consoleWrite(`✓ Assignment: ${details}`);
+            this.consoleWrite('✓ System operational - All protocols active');
+            this.consoleWrite('');
+            this.consoleWrite('READY FOR DUTY - Use commands for operations');
+            
+        } catch (error) {
+            this.consoleWrite('ERROR: Invalid time format. Use: start [HH:MM] [am/pm] end [HH:MM] [am/pm] [details]');
+            this.consoleWrite('Example: start 06:00 am end 14:00 pm Perimeter security patrol');
+        }
+    }
+
+    parseTime(timeStr, meridiem) {
+        // Convert 24-hour format if needed
+        let [hours, minutes] = timeStr.split(':').map(Number);
+        
+        if (meridiem.toLowerCase() === 'pm' && hours !== 12) {
+            hours += 12;
+        } else if (meridiem.toLowerCase() === 'am' && hours === 12) {
+            hours = 0;
+        }
+        
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+    }
+
+    // =====================
+    // Interactive Button Prompt System
+    // =====================
+    showInteractivePrompt(action) {
+        this.currentPromptAction = action;
+        this.promptStep = 0;
+        this.promptData = {};
+        
+        // Clear console and show professional prompt
+        const output = document.getElementById('consoleOutput');
+        if (output) {
+            output.innerHTML = '';
+        }
+        
+        this.consoleWrite('=== PROFESSIONAL GUARD SYSTEM ===');
+        this.consoleWrite('');
+        
+        switch (action) {
+            case 'startMission':
+                this.consoleWrite('🚔 MISSION START PROTOCOL');
+                this.consoleWrite('Press Enter to Start Mission');
+                this.consoleWrite('Press ESC to Cancel');
+                break;
+            case 'onSite':
+                this.consoleWrite('📍 ARRIVE ON SCENE PROTOCOL');
+                this.consoleWrite('Press Enter to Arrive On Scene');
+                this.consoleWrite('Press ESC to Cancel');
+                break;
+            case 'offSite':
+                this.consoleWrite('🚗 CLEAR SCENE PROTOCOL');
+                this.consoleWrite('Press Enter to Clear Scene');
+                this.consoleWrite('Press ESC to Cancel');
+                break;
+            case 'incident':
+                this.consoleWrite('⚠️ INCIDENT REPORT PROTOCOL');
+                this.consoleWrite('Press Enter to Begin Incident Report');
+                this.consoleWrite('Press ESC to Cancel');
+                break;
+            case 'checkpoint':
+                this.consoleWrite('📋 CHECKPOINT LOG PROTOCOL');
+                this.consoleWrite('Press Enter to Add Checkpoint');
+                this.consoleWrite('Press ESC to Cancel');
+                break;
+            case 'report':
+                this.consoleWrite('📄 MISSION REPORT PROTOCOL');
+                this.consoleWrite('Press Enter to Generate Report');
+                this.consoleWrite('Press ESC to Cancel');
+                break;
+            case 'endMission':
+                this.consoleWrite('🛑 END MISSION PROTOCOL');
+                this.consoleWrite('Press Enter to End Mission');
+                this.consoleWrite('Press ESC to Cancel');
+                break;
+        }
+        
+        this.consoleWrite('');
+        this.consoleWrite('Waiting for input...');
+        
+        // Set up keyboard listener for this prompt
+        this.setupPromptKeyListener();
+    }
+
+    setupPromptKeyListener() {
+        // Remove existing listener if any
+        if (this.promptKeyListener) {
+            document.removeEventListener('keydown', this.promptKeyListener);
+        }
+        
+        this.promptKeyListener = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.handlePromptEnter();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                this.handlePromptEscape();
+            }
+        };
+        
+        document.addEventListener('keydown', this.promptKeyListener);
+    }
+
+    handlePromptEnter() {
+        if (!this.currentPromptAction) return;
+        
+        this.consoleWrite('✓ CONFIRMED - Processing...');
+        this.consoleWrite('');
+        
+        // Remove the key listener
+        if (this.promptKeyListener) {
+            document.removeEventListener('keydown', this.promptKeyListener);
+            this.promptKeyListener = null;
+        }
+        
+        // Execute the action based on current prompt
+        switch (this.currentPromptAction) {
+            case 'startMission':
+                this.consoleWrite('🚔 INITIATING MISSION START SEQUENCE...');
+                this.showStartMissionModal();
+                break;
+            case 'onSite':
+                this.consoleWrite('📍 PROCESSING ARRIVAL ON SCENE...');
+                this.goOnSite();
+                break;
+            case 'offSite':
+                this.consoleWrite('🚗 PROCESSING SCENE CLEARANCE...');
+                this.goOffSite();
+                break;
+            case 'incident':
+                this.consoleWrite('⚠️ OPENING INCIDENT REPORT SYSTEM...');
+                this.showIncidentModal();
+                break;
+            case 'checkpoint':
+                this.consoleWrite('📋 ACCESSING CHECKPOINT LOG...');
+                this.showCheckpointModal();
+                break;
+            case 'report':
+                this.consoleWrite('📄 GENERATING MISSION REPORT...');
+                this.showMissionReportModal();
+                break;
+            case 'endMission':
+                this.consoleWrite('🛑 INITIATING MISSION END SEQUENCE...');
+                this.endMission();
+                break;
+        }
+        
+        this.currentPromptAction = null;
+    }
+
+    handlePromptEscape() {
+        if (!this.currentPromptAction) return;
+        
+        this.consoleWrite('❌ OPERATION CANCELLED');
+        this.consoleWrite('');
+        this.consoleWrite('System ready for next command...');
+        
+        // Remove the key listener
+        if (this.promptKeyListener) {
+            document.removeEventListener('keydown', this.promptKeyListener);
+            this.promptKeyListener = null;
+        }
+        
+        this.currentPromptAction = null;
     }
 
     // =====================
@@ -1651,6 +1958,140 @@ class SecuritySpecialistApp {
             this.consoleWrite(`  ${idx + 1}. ${bolo.type}: ${bolo.subject}`);
             if (bolo.notes) this.consoleWrite(`     Notes: ${bolo.notes}`);
         });
+    }
+
+    quickBolo(args) {
+        const [subject, ...descParts] = args;
+        const description = descParts.join(' ');
+        
+        const bolo = {
+            id: Date.now(),
+            subject: subject,
+            type: 'Person', // Default type
+            description: description,
+            priority: 'Medium',
+            notes: 'Created via console',
+            createdAt: new Date(),
+            active: true
+        };
+        
+        this.bolos.push(bolo);
+        this.saveBolos();
+        
+        this.consoleWrite('=== BOLO ALERT CREATED ===');
+        this.consoleWrite(`✓ Subject: ${subject}`);
+        this.consoleWrite(`✓ Description: ${description}`);
+        this.consoleWrite(`✓ Alert ID: ${bolo.id}`);
+        this.consoleWrite('✓ All units notified');
+        this.consoleWrite('');
+        this.consoleWrite('BOLO is now active in system');
+    }
+
+    quickPatrol(location) {
+        if (!this.currentMission || this.currentMission.status !== 'active') {
+            this.consoleWrite('ERROR: Mission must be active to begin patrol!');
+            return;
+        }
+        
+        this.consoleWrite('=== PATROL ROUTE INITIATED ===');
+        this.consoleWrite(`✓ Patrol Location: ${location}`);
+        this.consoleWrite(`✓ Route Status: Active`);
+        this.consoleWrite(`✓ Time Started: ${new Date().toLocaleString()}`);
+        this.consoleWrite('');
+        this.consoleWrite('Patrol route logged. Use "onsite" command when arriving at checkpoints.');
+        
+        // Update mission notes
+        if (this.currentMission.details) {
+            this.currentMission.details.patrolRoute = location;
+            this.saveCurrentMission();
+        }
+    }
+
+    listActiveBOLOs() {
+        const activeBOLOs = this.bolos.filter(bolo => bolo.active);
+        
+        if (activeBOLOs.length === 0) {
+            this.consoleWrite('=== ACTIVE BOLO ALERTS ===');
+            this.consoleWrite('No active BOLOs at this time.');
+            return;
+        }
+        
+        this.consoleWrite('=== ACTIVE BOLO ALERTS ===');
+        this.consoleWrite('');
+        
+        activeBOLOs.forEach((bolo, idx) => {
+            this.consoleWrite(`[${idx + 1}] ALERT ID: ${bolo.id}`);
+            this.consoleWrite(`    Subject: ${bolo.subject}`);
+            this.consoleWrite(`    Type: ${bolo.type}`);
+            this.consoleWrite(`    Description: ${bolo.description || 'No description'}`);
+            this.consoleWrite(`    Priority: ${bolo.priority}`);
+            this.consoleWrite(`    Created: ${this.formatDateTime(bolo.createdAt)}`);
+            this.consoleWrite('');
+        });
+        
+        this.consoleWrite(`Total Active BOLOs: ${activeBOLOs.length}`);
+    }
+
+    mockRadioCheck(message) {
+        this.consoleWrite('=== RADIO TRANSMISSION ===');
+        this.consoleWrite(`📡 Transmitting: "${message}"`);
+        this.consoleWrite('📡 Signal strength: Strong');
+        
+        // Simulate radio response delay
+        setTimeout(() => {
+            this.consoleWrite('📡 Dispatch: "Copy that, message received loud and clear"');
+            this.consoleWrite('📡 Radio check complete - Channel clear');
+        }, 1500);
+    }
+
+    requestBackup() {
+        if (!this.currentMission || this.currentMission.status !== 'active') {
+            this.consoleWrite('ERROR: Must be on active mission to request backup!');
+            return;
+        }
+        
+        this.consoleWrite('🚨 BACKUP REQUEST INITIATED 🚨');
+        this.consoleWrite('');
+        this.consoleWrite('✓ Emergency signal transmitted');
+        this.consoleWrite('✓ GPS coordinates sent to dispatch');
+        this.consoleWrite('✓ All available units notified');
+        this.consoleWrite('');
+        
+        // Simulate dispatch response
+        setTimeout(() => {
+            this.consoleWrite('📡 Dispatch: "Unit 23 and Unit 47 responding to your location"');
+            this.consoleWrite('📡 Dispatch: "ETA 5 minutes - maintain position"');
+        }, 2000);
+    }
+
+    handleSecurityCode(code) {
+        const validCodes = {
+            '10-4': 'Message received and understood',
+            '10-20': 'What is your location?',
+            '10-33': 'Emergency traffic - clear the channel',
+            '10-54': 'Possible break-in',
+            '10-78': 'Need assistance',
+            '10-99': 'Emergency - officer needs help',
+            'code-1': 'Respond when convenient',
+            'code-2': 'Respond immediately',
+            'code-3': 'Emergency response - lights and sirens'
+        };
+        
+        const meaning = validCodes[code.toLowerCase()];
+        
+        if (meaning) {
+            this.consoleWrite('=== SECURITY CODE LOOKUP ===');
+            this.consoleWrite(`Code: ${code.toUpperCase()}`);
+            this.consoleWrite(`Meaning: ${meaning}`);
+            this.consoleWrite('✓ Code verified in system database');
+        } else {
+            this.consoleWrite('=== SECURITY CODE LOOKUP ===');
+            this.consoleWrite(`Code: ${code.toUpperCase()}`);
+            this.consoleWrite('❌ Code not found in database');
+            this.consoleWrite('');
+            this.consoleWrite('Common codes: 10-4, 10-20, 10-33, 10-54, 10-78, 10-99');
+            this.consoleWrite('             code-1, code-2, code-3');
+        }
     }
 
     showStatus() {
