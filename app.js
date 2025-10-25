@@ -67,6 +67,23 @@ class SecuritySpecialistApp {
         return window.innerWidth <= 1023 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
+    // Helper function to safely enable/disable buttons
+    safeSetButtonState(buttonId, disabled) {
+        const button = document.getElementById(buttonId);
+        if (button) {
+            button.disabled = disabled;
+        }
+    }
+
+    // Helper function to safely update status display
+    safeUpdateStatus(text, className) {
+        const statusElement = document.getElementById('missionStatus');
+        if (statusElement) {
+            statusElement.textContent = text;
+            statusElement.className = className;
+        }
+    }
+
     // Mobile-specific helper functions
 
     handleDesktopCommandButton(button) {
@@ -483,13 +500,8 @@ class SecuritySpecialistApp {
             }
         });
 
-        // Desktop command button handling
-        document.addEventListener('click', (e) => {
-            if (!this.isMobileDevice() && e.target.classList.contains('control-btn')) {
-                e.preventDefault();
-                this.handleDesktopCommandButton(e.target);
-            }
-        });
+        // Desktop command button handling - removed to avoid conflict with inline onclick handlers
+        // Buttons now use direct onclick handlers instead of event delegation
     }
 
     bindDatabaseButtons() {
@@ -797,16 +809,15 @@ class SecuritySpecialistApp {
         this.saveCurrentMission();
         
         // Update UI
-        document.getElementById('missionStatus').textContent = this.isOnSite ? 'On Site' : 'Active';
-        document.getElementById('missionStatus').className = this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active';
-        document.getElementById('startMissionBtn').disabled = true;
-        document.getElementById('missionReportBtn').disabled = false;
-        document.getElementById('endMissionBtn').disabled = false;
-        document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission starts
+        this.safeUpdateStatus(this.isOnSite ? 'On Site' : 'Active', this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active');
+        this.safeSetButtonState('startMissionBtn', true);
+        this.safeSetButtonState('missionReportBtn', false);
+        this.safeSetButtonState('endMissionBtn', false);
+        this.safeSetButtonState('incidentReportBtn', false); // Enable incident report when mission starts
         
         // Enable/disable onSite button based on current status
-        document.getElementById('onSiteBtn').disabled = this.isOnSite;
-        document.getElementById('offSiteBtn').disabled = !this.isOnSite;
+        this.safeSetButtonState('onSiteBtn', this.isOnSite);
+        this.safeSetButtonState('offSiteBtn', !this.isOnSite);
         
         // Enable BOLO and POI buttons if onsite
         const boloListBtn = document.getElementById('boloListBtn');
@@ -925,16 +936,15 @@ class SecuritySpecialistApp {
         this.saveCurrentMission();
         
         // Update UI
-        document.getElementById('missionStatus').textContent = this.isOnSite ? 'On Site' : 'Active';
-        document.getElementById('missionStatus').className = this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active';
-        document.getElementById('startMissionBtn').disabled = true;
-        document.getElementById('missionReportBtn').disabled = false;
-        document.getElementById('endMissionBtn').disabled = false;
-        document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission starts
+        this.safeUpdateStatus(this.isOnSite ? 'On Site' : 'Active', this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active');
+        this.safeSetButtonState('startMissionBtn', true);
+        this.safeSetButtonState('missionReportBtn', false);
+        this.safeSetButtonState('endMissionBtn', false);
+        this.safeSetButtonState('incidentReportBtn', false); // Enable incident report when mission starts
         
         // Enable/disable onSite button based on current status
-        document.getElementById('onSiteBtn').disabled = this.isOnSite;
-        document.getElementById('offSiteBtn').disabled = !this.isOnSite;
+        this.safeSetButtonState('onSiteBtn', this.isOnSite);
+        this.safeSetButtonState('offSiteBtn', !this.isOnSite);
         
         // Enable BOLO and POI buttons if onsite
         const boloListBtn = document.getElementById('boloListBtn');
@@ -999,16 +1009,15 @@ class SecuritySpecialistApp {
         this.saveCurrentMission();
 
         // Update UI buttons
-        document.getElementById('startMissionBtn').disabled = true;
-        document.getElementById('missionStatus').textContent = 'Active';
-        document.getElementById('missionStatus').className = 'mission-status status-active';
-        document.getElementById('missionReportBtn').disabled = false;
-        document.getElementById('endMissionBtn').disabled = false;
-        document.getElementById('incidentReportBtn').disabled = false;
+        this.safeSetButtonState('startMissionBtn', true);
+        this.safeUpdateStatus('Active', 'mission-status status-active');
+        this.safeSetButtonState('missionReportBtn', false);
+        this.safeSetButtonState('endMissionBtn', false);
+        this.safeSetButtonState('incidentReportBtn', false);
 
         // Enable/disable onSite button based on current status
-        document.getElementById('onSiteBtn').disabled = this.isOnSite;
-        document.getElementById('offSiteBtn').disabled = !this.isOnSite;
+        this.safeSetButtonState('onSiteBtn', this.isOnSite);
+        this.safeSetButtonState('offSiteBtn', !this.isOnSite);
         
         // Enable BOLO and POI buttons if onsite
         const boloListBtn = document.getElementById('boloListBtn');
@@ -1164,11 +1173,10 @@ class SecuritySpecialistApp {
         this.saveCurrentMission();
         
         // Update UI
-        document.getElementById('missionStatus').textContent = 'On Site';
-        document.getElementById('missionStatus').className = 'mission-status status-onsite';
-        document.getElementById('onSiteBtn').disabled = true;
-        document.getElementById('offSiteBtn').disabled = false;
-        document.getElementById('checkBtn').disabled = false; // Enable check button when on site
+        this.safeUpdateStatus('On Site', 'mission-status status-onsite');
+        this.safeSetButtonState('onSiteBtn', true);
+        this.safeSetButtonState('offSiteBtn', false);
+        this.safeSetButtonState('checkBtn', false); // Enable check button when on site
         
         // Enable BOLO and POI buttons when on site
         const boloListBtn = document.getElementById('boloListBtn');
@@ -1249,11 +1257,10 @@ class SecuritySpecialistApp {
             this.saveCurrentMission();
             
             // Update UI
-            document.getElementById('missionStatus').textContent = 'Active (In Transit)';
-            document.getElementById('missionStatus').className = 'mission-status status-active';
-            document.getElementById('onSiteBtn').disabled = false;
-            document.getElementById('offSiteBtn').disabled = true;
-            document.getElementById('checkBtn').disabled = true; // Disable check button when off site
+            this.safeUpdateStatus('Active (In Transit)', 'mission-status status-active');
+            this.safeSetButtonState('onSiteBtn', false);
+            this.safeSetButtonState('offSiteBtn', true);
+            this.safeSetButtonState('checkBtn', true); // Disable check button when off site
             
             // Disable BOLO and POI buttons when off site
             const boloListBtn = document.getElementById('boloListBtn');
@@ -3069,15 +3076,14 @@ class SecuritySpecialistApp {
             this.saveCurrentMission();
             
             // Update UI
-            document.getElementById('missionStatus').textContent = 'Active';
-            document.getElementById('missionStatus').className = 'mission-status status-active';
-            document.getElementById('startMissionBtn').disabled = true;
-            document.getElementById('missionReportBtn').disabled = false;
-            document.getElementById('endMissionBtn').disabled = false;
-            document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission starts
+            this.safeUpdateStatus('Active', 'mission-status status-active');
+            this.safeSetButtonState('startMissionBtn', true);
+            this.safeSetButtonState('missionReportBtn', false);
+            this.safeSetButtonState('endMissionBtn', false);
+            this.safeSetButtonState('incidentReportBtn', false); // Enable incident report when mission starts
             
             // Enable onSite button for all mission types
-            document.getElementById('onSiteBtn').disabled = false;
+            this.safeSetButtonState('onSiteBtn', false);
             
             this.enableViewButtons(); // Enable view buttons when mission starts
             this.addNavigationWarning();
@@ -3294,16 +3300,15 @@ class SecuritySpecialistApp {
         this.saveCurrentMission();
         
         // Update UI
-        document.getElementById('missionStatus').textContent = this.isOnSite ? 'On Site' : 'Active';
-        document.getElementById('missionStatus').className = this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active';
-        document.getElementById('startMissionBtn').disabled = true;
-        document.getElementById('missionReportBtn').disabled = false;
-        document.getElementById('endMissionBtn').disabled = false;
-        document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission starts
+        this.safeUpdateStatus(this.isOnSite ? 'On Site' : 'Active', this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active');
+        this.safeSetButtonState('startMissionBtn', true);
+        this.safeSetButtonState('missionReportBtn', false);
+        this.safeSetButtonState('endMissionBtn', false);
+        this.safeSetButtonState('incidentReportBtn', false); // Enable incident report when mission starts
         
         // Enable/disable onSite button based on current status
-        document.getElementById('onSiteBtn').disabled = this.isOnSite;
-        document.getElementById('offSiteBtn').disabled = !this.isOnSite;
+        this.safeSetButtonState('onSiteBtn', this.isOnSite);
+        this.safeSetButtonState('offSiteBtn', !this.isOnSite);
         
         // Enable BOLO and POI buttons if onsite
         const boloListBtn = document.getElementById('boloListBtn');
@@ -3350,11 +3355,10 @@ class SecuritySpecialistApp {
         this.saveCurrentMission();
         
         // Update UI
-        document.getElementById('missionStatus').textContent = 'On Site';
-        document.getElementById('missionStatus').className = 'mission-status status-onsite';
-        document.getElementById('onSiteBtn').disabled = true;
-        document.getElementById('offSiteBtn').disabled = false;
-        document.getElementById('checkBtn').disabled = false; // Enable check button when on site
+        this.safeUpdateStatus('On Site', 'mission-status status-onsite');
+        this.safeSetButtonState('onSiteBtn', true);
+        this.safeSetButtonState('offSiteBtn', false);
+        this.safeSetButtonState('checkBtn', false); // Enable check button when on site
         
         this.consoleWrite(`Now on site at: ${location}`);
         this.consoleWrite(`Arrival time: ${now.toLocaleString()}`);
@@ -4188,8 +4192,8 @@ class SecuritySpecialistApp {
         this.missionStartTime = null;
         
         // Reset button states
-        document.getElementById('incidentReportBtn').disabled = true;
-        document.getElementById('checkBtn').disabled = true;
+        this.safeSetButtonState('incidentReportBtn', true);
+        this.safeSetButtonState('checkBtn', true);
         
         this.closeModal();
         this.showNotification('Mission completed successfully! System reset to inactive. Navigation restrictions removed.');
@@ -4654,13 +4658,12 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                 
                 // Restore UI state
                 if (this.currentMission.status === 'active') {
-                    document.getElementById('missionStatus').textContent = this.isOnSite ? 'On Site' : 'Active';
-                    document.getElementById('missionStatus').className = this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active';
-                    document.getElementById('startMissionBtn').disabled = true;
-                    document.getElementById('missionReportBtn').disabled = false;
-                    document.getElementById('endMissionBtn').disabled = false;
-                    document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission is active
-                    document.getElementById('checkBtn').disabled = !this.isOnSite; // Enable check only when on site
+                    this.safeUpdateStatus(this.isOnSite ? 'On Site' : 'Active', this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active');
+                    this.safeSetButtonState('startMissionBtn', true);
+                    this.safeSetButtonState('missionReportBtn', false);
+                    this.safeSetButtonState('endMissionBtn', false);
+                    this.safeSetButtonState('incidentReportBtn', false); // Enable incident report when mission is active
+                    this.safeSetButtonState('checkBtn', !this.isOnSite); // Enable check only when on site
                     
                     // Enable BOLO and POI buttons only when on site
                     const boloListBtn = document.getElementById('boloListBtn');
@@ -4669,8 +4672,8 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                     if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
                     
                     // Enable/disable onSite/offSite buttons for all mission types
-                    document.getElementById('onSiteBtn').disabled = this.isOnSite || !!this.currentMission.report;
-                    document.getElementById('offSiteBtn').disabled = !this.isOnSite;
+                    this.safeSetButtonState('onSiteBtn', this.isOnSite || !!this.currentMission.report);
+                    this.safeSetButtonState('offSiteBtn', !this.isOnSite);
                     
                     this.enableViewButtons(); // Enable view buttons when restoring mission
                     // Restore navigation warning for active missions
@@ -5693,5 +5696,5 @@ Report Generated: ${this.formatDateTime(new Date())}`;
     }
 }
 
-// Initialize the app
-const app = new SecuritySpecialistApp();
+// Initialize the app and expose to global scope for onclick handlers
+window.app = new SecuritySpecialistApp();
