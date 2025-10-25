@@ -1621,6 +1621,33 @@ header {
     }
 }
 
+/* Desktop-only button visibility */
+@media (max-width: 1023px) {
+    .desktop-only-btn {
+        display: none !important;
+    }
+}
+
+/* Mobile table improvements */
+@media (max-width: 1023px) {
+    .copy-area table {
+        font-size: 11px;
+    }
+    
+    .copy-area table th,
+    .copy-area table td {
+        padding: 6px !important;
+        white-space: nowrap;
+    }
+    
+    .btn-small {
+        padding: 4px 8px !important;
+        font-size: 10px !important;
+        margin: 2px;
+        display: inline-block;
+    }
+}
+
 /* Menu System Styles */
 .popup-menu {
     padding: 20px;
