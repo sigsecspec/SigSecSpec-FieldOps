@@ -2,6 +2,8 @@ class FieldOfficerApp {
     constructor() {
         this.currentMission = null;
         this.missionLogs = this.loadMissionLogs();
+        this.sites = this.loadSites();
+        this.bolos = this.loadBolos();
         this.currentPatrolStops = [];
         this.currentIncidents = [];
         this.missionStartTime = null;
@@ -110,6 +112,10 @@ class FieldOfficerApp {
         document.getElementById('viewLogsBtn').addEventListener('click', () => {
             this.showMissionLogs();
         });
+        const siteBtn = document.getElementById('siteManagerBtn');
+        if (siteBtn) siteBtn.addEventListener('click', () => this.showSiteManager());
+        const boloBtn = document.getElementById('boloBtn');
+        if (boloBtn) boloBtn.addEventListener('click', () => this.showBoloBoard());
 
         // Modal close
         document.addEventListener('click', (e) => {
@@ -201,6 +207,15 @@ class FieldOfficerApp {
                     </button>
                 </div>
 
+                <div class="command-console">
+                    <div class="console-output" id="consoleOutput"></div>
+                    <div class="console-input-row">
+                        <span class="prompt">app@ops:~$</span>
+                        <input id="consoleInput" placeholder="Type a command, e.g., help" />
+                    </div>
+                    <div class="console-hint">Try: help | start | onsite | offsite | incident | checkpoint | report | end | sites | bolos</div>
+                </div>
+
                 <div class="patrol-stops">
                     <h3>Patrol Stops</h3>
                     <div id="patrolStopsList"></div>
@@ -212,6 +227,8 @@ class FieldOfficerApp {
                 </div>
             </div>
         `;
+
+        this.bindConsole();
     }
 
     showGenericDashboard(type) {
@@ -243,12 +260,23 @@ class FieldOfficerApp {
                     </button>
                 </div>
 
+                <div class="command-console">
+                    <div class="console-output" id="consoleOutput"></div>
+                    <div class="console-input-row">
+                        <span class="prompt">app@ops:~$</span>
+                        <input id="consoleInput" placeholder="Type a command, e.g., help" />
+                    </div>
+                    <div class="console-hint">Try: help | start | incident | report | end | sites | bolos</div>
+                </div>
+
                 <div class="patrol-stops">
                     <h3>Incidents</h3>
                     <div id="incidentsList"></div>
                 </div>
             </div>
         `;
+
+        this.bindConsole();
     }
 
     showStartMissionModal() {
@@ -359,6 +387,9 @@ class FieldOfficerApp {
         const modal = document.getElementById('logsModal');
         const modalContent = modal.querySelector('.modal-content');
         
+        // Build saved sites options
+        const siteOptions = this.sites.map((s, idx) => `<option value="${idx}">${s.name} — ${s.address || s.details || ''}</option>`).join('');
+
         modalContent.innerHTML = `
             <div class="modal-header">
                 <h2>Go On Site</h2>
@@ -367,8 +398,15 @@ class FieldOfficerApp {
             <div class="modal-body">
                 <form id="onSiteForm">
                     <div class="form-group">
-                        <label for="siteLocation">Location:</label>
-                        <input type="text" id="siteLocation" required>
+                        <label for="siteSelect">Select Saved Site:</label>
+                        <select id="siteSelect">
+                            <option value="">-- Choose from Site Manager --</option>
+                            ${siteOptions}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="siteLocation">Location (override or manual):</label>
+                        <input type="text" id="siteLocation" required placeholder="Name or address">
                     </div>
                     <div class="form-group">
                         <label for="siteArrivalTime">Arrival Time:</label>
@@ -385,6 +423,23 @@ class FieldOfficerApp {
                 </form>
             </div>
         `;
+
+        // Prefill when selecting a saved site
+        setTimeout(() => {
+            const select = document.getElementById('siteSelect');
+            const locInput = document.getElementById('siteLocation');
+            const detailsInput = document.getElementById('siteDetails');
+            if (select) {
+                select.addEventListener('change', () => {
+                    const idx = select.value;
+                    if (idx !== '') {
+                        const site = this.sites[Number(idx)];
+                        locInput.value = site.name || site.address || '';
+                        detailsInput.value = site.details || site.address || '';
+                    }
+                });
+            }
+        }, 0);
 
         // Set default time
         const now = new Date();
@@ -535,6 +590,333 @@ class FieldOfficerApp {
         this.updateIncidentsList();
         this.closeModal();
         this.showNotification('Incident report added successfully!');
+    }
+
+    // =====================
+    // Site Manager
+    // =====================
+    loadSites() {
+        try {
+            const raw = localStorage.getItem('fieldOfficerSites');
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            console.error('Error loading sites:', e);
+            return [];
+        }
+    }
+
+    saveSites() {
+        try {
+            localStorage.setItem('fieldOfficerSites', JSON.stringify(this.sites));
+        } catch (e) {
+            console.error('Error saving sites:', e);
+        }
+    }
+
+    showSiteManager() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+
+        const rows = this.sites.map((s, i) => `
+            <tr>
+                <td>${s.name || ''}</td>
+                <td>${s.address || ''}</td>
+                <td>${s.details || ''}</td>
+                <td>
+                    <button class="btn-small btn-primary" data-edit="${i}">Edit</button>
+                    <button class="btn-small btn-danger" data-del="${i}">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>Site Manager</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="siteForm" style="margin-bottom: 16px;">
+                    <div class="form-group"><label for="siteName">Site Name</label><input id="siteName" required></div>
+                    <div class="form-group"><label for="siteAddress">Address</label><input id="siteAddress"></div>
+                    <div class="form-group"><label for="siteDesc">Details</label><textarea id="siteDesc"></textarea></div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Save Site</button>
+                    </div>
+                </form>
+                <div class="copy-area" style="max-height: 260px;">
+                    <table style="width:100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left;">Name</th>
+                                <th style="text-align:left;">Address</th>
+                                <th style="text-align:left;">Details</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="sitesTable">${rows || '<tr><td colspan="4">No sites saved.</td></tr>'}</tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'block';
+
+        // Handlers
+        document.getElementById('siteForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const site = {
+                name: document.getElementById('siteName').value.trim(),
+                address: document.getElementById('siteAddress').value.trim(),
+                details: document.getElementById('siteDesc').value.trim()
+            };
+            this.sites.push(site);
+            this.saveSites();
+            this.showSiteManager();
+            this.showNotification('Site saved');
+        });
+
+        modal.querySelectorAll('[data-del]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = Number(btn.getAttribute('data-del'));
+                this.sites.splice(idx, 1);
+                this.saveSites();
+                this.showSiteManager();
+                this.showNotification('Site deleted');
+            });
+        });
+
+        modal.querySelectorAll('[data-edit]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = Number(btn.getAttribute('data-edit'));
+                const s = this.sites[idx];
+                document.getElementById('siteName').value = s.name || '';
+                document.getElementById('siteAddress').value = s.address || '';
+                document.getElementById('siteDesc').value = s.details || '';
+                // Replace submit to update instead of add
+                const form = document.getElementById('siteForm');
+                const newForm = form.cloneNode(true);
+                form.parentNode.replaceChild(newForm, form);
+                newForm.addEventListener('submit', (e2) => {
+                    e2.preventDefault();
+                    this.sites[idx] = {
+                        name: document.getElementById('siteName').value.trim(),
+                        address: document.getElementById('siteAddress').value.trim(),
+                        details: document.getElementById('siteDesc').value.trim()
+                    };
+                    this.saveSites();
+                    this.showSiteManager();
+                    this.showNotification('Site updated');
+                });
+            });
+        });
+    }
+
+    // =====================
+    // BOLO Board (Person of Interest → BOLO)
+    // =====================
+    loadBolos() {
+        try {
+            const raw = localStorage.getItem('fieldOfficerBolos');
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            console.error('Error loading BOLOs:', e);
+            return [];
+        }
+    }
+
+    saveBolos() {
+        try {
+            localStorage.setItem('fieldOfficerBolos', JSON.stringify(this.bolos));
+        } catch (e) {
+            console.error('Error saving BOLOs:', e);
+        }
+    }
+
+    showBoloBoard() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+
+        const rows = this.bolos.map((b, i) => `
+            <tr>
+                <td>${b.subject || ''}</td>
+                <td>${b.type || ''}</td>
+                <td>${b.notes || ''}</td>
+                <td>
+                    <button class="btn-small btn-primary" data-edit-b="${i}">Edit</button>
+                    <button class="btn-small btn-danger" data-del-b="${i}">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>BOLO Board</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="boloForm" style="margin-bottom: 16px;">
+                    <div class="form-group"><label for="boloSubject">Subject (Name/Plate/Item)</label><input id="boloSubject" required></div>
+                    <div class="form-group"><label for="boloType">Type</label>
+                        <select id="boloType" required>
+                            <option value="Person">Person</option>
+                            <option value="Vehicle">Vehicle</option>
+                            <option value="Item">Item</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label for="boloNotes">Notes</label><textarea id="boloNotes"></textarea></div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Add BOLO</button>
+                    </div>
+                </form>
+                <div class="copy-area" style="max-height: 260px;">
+                    <table style="width:100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left;">Subject</th>
+                                <th style="text-align:left;">Type</th>
+                                <th style="text-align:left;">Notes</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="boloTable">${rows || '<tr><td colspan="4">No BOLOs posted.</td></tr>'}</tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'block';
+
+        document.getElementById('boloForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const bolo = {
+                subject: document.getElementById('boloSubject').value.trim(),
+                type: document.getElementById('boloType').value,
+                notes: document.getElementById('boloNotes').value.trim(),
+                createdAt: new Date().toISOString()
+            };
+            this.bolos.push(bolo);
+            this.saveBolos();
+            this.showBoloBoard();
+            this.showNotification('BOLO added');
+        });
+
+        modal.querySelectorAll('[data-del-b]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = Number(btn.getAttribute('data-del-b'));
+                this.bolos.splice(idx, 1);
+                this.saveBolos();
+                this.showBoloBoard();
+                this.showNotification('BOLO removed');
+            });
+        });
+
+        modal.querySelectorAll('[data-edit-b]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = Number(btn.getAttribute('data-edit-b'));
+                const b = this.bolos[idx];
+                document.getElementById('boloSubject').value = b.subject || '';
+                document.getElementById('boloType').value = b.type || 'Person';
+                document.getElementById('boloNotes').value = b.notes || '';
+                const form = document.getElementById('boloForm');
+                const newForm = form.cloneNode(true);
+                form.parentNode.replaceChild(newForm, form);
+                newForm.addEventListener('submit', (e2) => {
+                    e2.preventDefault();
+                    this.bolos[idx] = {
+                        subject: document.getElementById('boloSubject').value.trim(),
+                        type: document.getElementById('boloType').value,
+                        notes: document.getElementById('boloNotes').value.trim(),
+                        createdAt: b.createdAt
+                    };
+                    this.saveBolos();
+                    this.showBoloBoard();
+                    this.showNotification('BOLO updated');
+                });
+            });
+        });
+    }
+
+    // =====================
+    // Command Console
+    // =====================
+    bindConsole() {
+        const input = document.getElementById('consoleInput');
+        if (!input) return;
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const cmd = input.value.trim();
+                if (cmd) this.handleCommand(cmd);
+                input.value = '';
+            }
+        });
+        // Seed greeting
+        this.consoleWrite('Type "help" for available commands.');
+    }
+
+    consoleWrite(text) {
+        const out = document.getElementById('consoleOutput');
+        if (!out) return;
+        const line = document.createElement('div');
+        line.textContent = text;
+        out.appendChild(line);
+        out.scrollTop = out.scrollHeight;
+    }
+
+    handleCommand(raw) {
+        const [cmd, ...args] = raw.split(/\s+/);
+        const a = args.join(' ');
+        this.consoleWrite(`$ ${raw}`);
+        switch ((cmd || '').toLowerCase()) {
+            case 'help':
+                this.consoleWrite('Commands: start, onsite, offsite, incident, checkpoint, report, end, sites, bolos, logs, home');
+                break;
+            case 'start':
+                this.showStartMissionModal();
+                this.consoleWrite('Opening Start Mission form...');
+                break;
+            case 'onsite':
+                this.goOnSite();
+                this.consoleWrite('Opening Go On Site form...');
+                break;
+            case 'offsite':
+                this.goOffSite();
+                this.consoleWrite('Marking off site (if on site)...');
+                break;
+            case 'incident':
+                this.showIncidentModal();
+                this.consoleWrite('Opening Incident Report form...');
+                break;
+            case 'checkpoint':
+                this.showCheckpointModal();
+                this.consoleWrite('Opening Add Checkpoint form...');
+                break;
+            case 'report':
+                this.showMissionReportModal();
+                this.consoleWrite('Opening Mission Report form...');
+                break;
+            case 'end':
+                this.endMission();
+                this.consoleWrite('Attempting to end mission...');
+                break;
+            case 'sites':
+                this.showSiteManager();
+                this.consoleWrite('Opening Site Manager...');
+                break;
+            case 'bolos':
+                this.showBoloBoard();
+                this.consoleWrite('Opening BOLO Board...');
+                break;
+            case 'logs':
+                this.showMissionLogs();
+                this.consoleWrite('Opening Mission Logs...');
+                break;
+            case 'home':
+                this.attemptNavigateHome();
+                this.consoleWrite('Navigating to home...');
+                break;
+            default:
+                this.consoleWrite(`Unknown command: ${cmd}. Type "help".`);
+        }
     }
 
     showCheckpointModal() {
