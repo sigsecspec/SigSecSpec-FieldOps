@@ -529,16 +529,24 @@ class SecuritySpecialistApp {
         
         const boloBtn = document.getElementById('boloBtn');
         if (boloBtn) {
+            console.log('BOLO button found, adding event listener');
             boloBtn.addEventListener('click', () => {
+                console.log('BOLO button clicked');
                 this.showBoloMenu();
             });
+        } else {
+            console.log('BOLO button not found');
         }
         
         const poiBtn = document.getElementById('poiBtn');
         if (poiBtn) {
+            console.log('POI button found, adding event listener');
             poiBtn.addEventListener('click', () => {
+                console.log('POI button clicked');
                 this.showPOIMenu();
             });
+        } else {
+            console.log('POI button not found');
         }
     }
 
@@ -798,39 +806,33 @@ class SecuritySpecialistApp {
         };
         
         this.missionStartTime = startTime;
-        
-        // Auto-set location for standing and desk missions
-        if (this.currentMission.type === 'standing') {
-            this.autoSetMissionLocation('Fixed Post Alpha', 'Assigned fixed security post');
-        } else if (this.currentMission.type === 'desk') {
-            this.autoSetMissionLocation('Security Station', 'Administrative desk duty assignment');
-        }
+        this.isOnSite = false; // Always start in transit
         
         this.saveCurrentMission();
         
-        // Update UI
-        this.safeUpdateStatus(this.isOnSite ? 'On Site' : 'Active', this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active');
+        // Update UI - Always show "In Transit" when mission starts
+        this.safeUpdateStatus('In Transit', 'mission-status status-active');
         this.safeSetButtonState('startMissionBtn', true);
         this.safeSetButtonState('missionReportBtn', false);
         this.safeSetButtonState('endMissionBtn', false);
         this.safeSetButtonState('incidentReportBtn', false); // Enable incident report when mission starts
         
-        // Enable/disable onSite button based on current status
-        this.safeSetButtonState('onSiteBtn', this.isOnSite);
-        this.safeSetButtonState('offSiteBtn', !this.isOnSite);
+        // Enable "Arrive On Scene" button, disable others since we're in transit
+        this.safeSetButtonState('onSiteBtn', false); // Enable arrive on scene button
+        this.safeSetButtonState('offSiteBtn', true); // Disable off-site button
         
-        // Enable BOLO and POI buttons if onsite
+        // Disable BOLO, POI, and Check buttons until on-site
         const boloListBtn = document.getElementById('boloListBtn');
         const poiListBtn = document.getElementById('poiListBtn');
         const checkBtn = document.getElementById('checkBtn');
-        if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
-        if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
-        if (checkBtn) checkBtn.disabled = !this.isOnSite;
+        if (boloListBtn) boloListBtn.disabled = true;
+        if (poiListBtn) poiListBtn.disabled = true;
+        if (checkBtn) checkBtn.disabled = true;
         
         this.enableViewButtons(); // Enable view buttons when mission starts
         this.addNavigationWarning();
         this.closeModal();
-        this.showNotification('Mission started successfully!');
+        this.showNotification('Mission started - In Transit');
         
         // Log to console as if command was executed
         this.consoleWrite(`Mission started for Specialist ${specialistName}`);
@@ -839,7 +841,8 @@ class SecuritySpecialistApp {
         if (notes) {
             this.consoleWrite(`Notes: ${notes}`);
         }
-        this.consoleWrite('Mission status: ACTIVE');
+        this.consoleWrite('Mission status: IN TRANSIT');
+        this.consoleWrite('Use "Arrive On Scene" button when at location');
     }
 
     startMission() {
@@ -925,34 +928,28 @@ class SecuritySpecialistApp {
         };
         
         this.missionStartTime = this.currentMission.startTime;
-        
-        // Auto-set location for standing and desk missions
-        if (this.currentMission.type === 'standing') {
-            this.autoSetMissionLocation('Fixed Post Alpha', 'Assigned fixed security post');
-        } else if (this.currentMission.type === 'desk') {
-            this.autoSetMissionLocation('Security Station', 'Administrative desk duty assignment');
-        }
+        this.isOnSite = false; // Always start in transit
         
         this.saveCurrentMission();
         
-        // Update UI
-        this.safeUpdateStatus(this.isOnSite ? 'On Site' : 'Active', this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active');
+        // Update UI - Always show "In Transit" when mission starts
+        this.safeUpdateStatus('In Transit', 'mission-status status-active');
         this.safeSetButtonState('startMissionBtn', true);
         this.safeSetButtonState('missionReportBtn', false);
         this.safeSetButtonState('endMissionBtn', false);
         this.safeSetButtonState('incidentReportBtn', false); // Enable incident report when mission starts
         
-        // Enable/disable onSite button based on current status
-        this.safeSetButtonState('onSiteBtn', this.isOnSite);
-        this.safeSetButtonState('offSiteBtn', !this.isOnSite);
+        // Enable "Arrive On Scene" button, disable others since we're in transit
+        this.safeSetButtonState('onSiteBtn', false); // Enable arrive on scene button
+        this.safeSetButtonState('offSiteBtn', true); // Disable off-site button
         
-        // Enable BOLO and POI buttons if onsite
+        // Disable BOLO, POI, and Check buttons until on-site
         const boloListBtn = document.getElementById('boloListBtn');
         const poiListBtn = document.getElementById('poiListBtn');
         const checkBtn = document.getElementById('checkBtn');
-        if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
-        if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
-        if (checkBtn) checkBtn.disabled = !this.isOnSite;
+        if (boloListBtn) boloListBtn.disabled = true;
+        if (poiListBtn) poiListBtn.disabled = true;
+        if (checkBtn) checkBtn.disabled = true;
         
         this.enableViewButtons(); // Enable view buttons when mission starts
         // Add navigation restriction indicator
@@ -998,34 +995,28 @@ class SecuritySpecialistApp {
         };
 
         this.missionStartTime = startTime;
-        
-        // Auto-set location for standing and desk missions
-        if (this.currentMission.type === 'standing') {
-            this.autoSetMissionLocation('Fixed Post Alpha', 'Assigned fixed security post');
-        } else if (this.currentMission.type === 'desk') {
-            this.autoSetMissionLocation('Security Station', 'Administrative desk duty assignment');
-        }
+        this.isOnSite = false; // Always start in transit
         
         this.saveCurrentMission();
 
-        // Update UI buttons
+        // Update UI buttons - Always show "In Transit" when mission starts
         this.safeSetButtonState('startMissionBtn', true);
-        this.safeUpdateStatus('Active', 'mission-status status-active');
+        this.safeUpdateStatus('In Transit', 'mission-status status-active');
         this.safeSetButtonState('missionReportBtn', false);
         this.safeSetButtonState('endMissionBtn', false);
         this.safeSetButtonState('incidentReportBtn', false);
 
-        // Enable/disable onSite button based on current status
-        this.safeSetButtonState('onSiteBtn', this.isOnSite);
-        this.safeSetButtonState('offSiteBtn', !this.isOnSite);
+        // Enable "Arrive On Scene" button, disable others since we're in transit
+        this.safeSetButtonState('onSiteBtn', false); // Enable arrive on scene button
+        this.safeSetButtonState('offSiteBtn', true); // Disable off-site button
         
-        // Enable BOLO and POI buttons if onsite
+        // Disable BOLO, POI, and Check buttons until on-site
         const boloListBtn = document.getElementById('boloListBtn');
         const poiListBtn = document.getElementById('poiListBtn');
         const checkBtn = document.getElementById('checkBtn');
-        if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
-        if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
-        if (checkBtn) checkBtn.disabled = !this.isOnSite;
+        if (boloListBtn) boloListBtn.disabled = true;
+        if (poiListBtn) poiListBtn.disabled = true;
+        if (checkBtn) checkBtn.disabled = true;
 
         // Add navigation restriction indicator
         this.addNavigationWarning();
@@ -1729,7 +1720,15 @@ class SecuritySpecialistApp {
     
     showBoloMenu() {
         const modal = document.getElementById('logsModal');
+        if (!modal) {
+            console.error('Modal not found!');
+            return;
+        }
         const modalContent = modal.querySelector('.modal-content');
+        if (!modalContent) {
+            console.error('Modal content not found!');
+            return;
+        }
         
         modalContent.innerHTML = `
             <div class="modal-header">
@@ -1763,7 +1762,15 @@ class SecuritySpecialistApp {
     
     showPOIMenu() {
         const modal = document.getElementById('logsModal');
+        if (!modal) {
+            console.error('Modal not found!');
+            return;
+        }
         const modalContent = modal.querySelector('.modal-content');
+        if (!modalContent) {
+            console.error('Modal content not found!');
+            return;
+        }
         
         modalContent.innerHTML = `
             <div class="modal-header">
@@ -1798,6 +1805,9 @@ class SecuritySpecialistApp {
     showBoloList() {
         const modal = document.getElementById('logsModal');
         const modalContent = modal.querySelector('.modal-content');
+        
+        // Check if on mission for adding details
+        const canAddDetails = this.currentMission && this.isOnSite;
 
         const rows = this.bolos.map((b, i) => `
             <tr>
@@ -1810,6 +1820,7 @@ class SecuritySpecialistApp {
                 <td>
                     <button class="btn-small btn-primary" data-edit-b="${i}">Edit</button>
                     <button class="btn-small btn-danger" data-del-b="${i}">Delete</button>
+                    <button class="btn-small btn-info desktop-only-btn" data-details-b="${i}" ${!canAddDetails ? 'disabled title="Must be on-site during a mission to add details"' : ''}>📝 Details</button>
                 </td>
             </tr>
         `).join('');
@@ -1820,11 +1831,11 @@ class SecuritySpecialistApp {
                 <span class="close">&times;</span>
             </div>
             <div class="modal-body">
-                <div style="margin-bottom: 16px; display: flex; gap: 10px;">
+                <div style="margin-bottom: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
                     <button class="control-btn btn-primary" onclick="app.showBoloAddForm()">➕ Add New BOLO</button>
                     <button class="control-btn btn-secondary" onclick="app.showBoloMenu()">◀ Back to Menu</button>
                 </div>
-                <div class="copy-area" style="max-height: 400px;">
+                <div class="copy-area" style="max-height: 400px; overflow-x: auto;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                         <thead>
                             <tr style="background: var(--desktop-bg-tertiary, var(--mobile-bg-tertiary)); position: sticky; top: 0;">
@@ -1834,7 +1845,7 @@ class SecuritySpecialistApp {
                                 <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Location</th>
                                 <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Notes</th>
                                 <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Created</th>
-                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Actions</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border)); white-space: nowrap;">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="boloTable">${rows || '<tr><td colspan="7" style="padding: 20px; text-align: center;">No BOLOs posted.</td></tr>'}</tbody>
@@ -1862,6 +1873,13 @@ class SecuritySpecialistApp {
             btn.addEventListener('click', () => {
                 const idx = Number(btn.getAttribute('data-edit-b'));
                 this.showBoloEditForm(idx);
+            });
+        });
+        
+        modal.querySelectorAll('[data-details-b]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = Number(btn.getAttribute('data-details-b'));
+                this.addBoloDetailsFromList(idx);
             });
         });
     }
@@ -2077,6 +2095,9 @@ class SecuritySpecialistApp {
     showPOIList() {
         const modal = document.getElementById('logsModal');
         const modalContent = modal.querySelector('.modal-content');
+        
+        // Check if on mission for adding details
+        const canAddDetails = this.currentMission && this.isOnSite;
 
         const rows = this.pois.map((p, i) => `
             <tr>
@@ -2090,6 +2111,7 @@ class SecuritySpecialistApp {
                 <td>
                     <button class="btn-small btn-primary" data-edit-p="${i}">Edit</button>
                     <button class="btn-small btn-danger" data-del-p="${i}">Delete</button>
+                    <button class="btn-small btn-info desktop-only-btn" data-details-p="${i}" ${!canAddDetails ? 'disabled title="Must be on-site during a mission to add details"' : ''}>📝 Details</button>
                 </td>
             </tr>
         `).join('');
@@ -2100,11 +2122,11 @@ class SecuritySpecialistApp {
                 <span class="close">&times;</span>
             </div>
             <div class="modal-body">
-                <div style="margin-bottom: 16px; display: flex; gap: 10px;">
+                <div style="margin-bottom: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
                     <button class="control-btn btn-primary" onclick="app.showPOIAddForm()">➕ Add New POI</button>
                     <button class="control-btn btn-secondary" onclick="app.showPOIMenu()">◀ Back to Menu</button>
                 </div>
-                <div class="copy-area" style="max-height: 400px;">
+                <div class="copy-area" style="max-height: 400px; overflow-x: auto;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                         <thead>
                             <tr style="background: var(--desktop-bg-tertiary, var(--mobile-bg-tertiary)); position: sticky; top: 0;">
@@ -2115,7 +2137,7 @@ class SecuritySpecialistApp {
                                 <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Locations</th>
                                 <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Notes</th>
                                 <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Created</th>
-                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Actions</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border)); white-space: nowrap;">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="poiTable">${rows || '<tr><td colspan="8" style="padding: 20px; text-align: center;">No POIs recorded.</td></tr>'}</tbody>
@@ -2143,6 +2165,13 @@ class SecuritySpecialistApp {
             btn.addEventListener('click', () => {
                 const idx = Number(btn.getAttribute('data-edit-p'));
                 this.showPOIEditForm(idx);
+            });
+        });
+        
+        modal.querySelectorAll('[data-details-p]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = Number(btn.getAttribute('data-details-p'));
+                this.addPoiDetailsFromList(idx);
             });
         });
     }
@@ -3708,25 +3737,28 @@ class SecuritySpecialistApp {
             };
 
             this.missionStartTime = startTime;
-            
-            // Auto-set location for standing and desk missions
-            if (this.currentMission.type === 'standing') {
-                this.autoSetMissionLocation('Fixed Post Alpha', 'Assigned fixed security post');
-            } else if (this.currentMission.type === 'desk') {
-                this.autoSetMissionLocation('Security Station', 'Administrative desk duty assignment');
-            }
+            this.isOnSite = false; // Always start in transit
             
             this.saveCurrentMission();
             
-            // Update UI
-            this.safeUpdateStatus('Active', 'mission-status status-active');
+            // Update UI - Always show "In Transit" when mission starts
+            this.safeUpdateStatus('In Transit', 'mission-status status-active');
             this.safeSetButtonState('startMissionBtn', true);
             this.safeSetButtonState('missionReportBtn', false);
             this.safeSetButtonState('endMissionBtn', false);
             this.safeSetButtonState('incidentReportBtn', false); // Enable incident report when mission starts
             
-            // Enable onSite button for all mission types
-            this.safeSetButtonState('onSiteBtn', false);
+            // Enable "Arrive On Scene" button, disable off-site button
+            this.safeSetButtonState('onSiteBtn', false); // Enable arrive on scene button
+            this.safeSetButtonState('offSiteBtn', true); // Disable off-site button
+            
+            // Disable BOLO, POI, and Check buttons until on-site
+            const boloListBtn = document.getElementById('boloListBtn');
+            const poiListBtn = document.getElementById('poiListBtn');
+            const checkBtn = document.getElementById('checkBtn');
+            if (boloListBtn) boloListBtn.disabled = true;
+            if (poiListBtn) poiListBtn.disabled = true;
+            if (checkBtn) checkBtn.disabled = true;
             
             this.enableViewButtons(); // Enable view buttons when mission starts
             this.addNavigationWarning();
@@ -3738,8 +3770,9 @@ class SecuritySpecialistApp {
             this.consoleWrite(`✓ Duration: ${Math.round((endTime - startTime) / (1000 * 60 * 60))} hours`);
             this.consoleWrite(`✓ Assignment: ${details}`);
             this.consoleWrite('✓ System operational - All protocols active');
+            this.consoleWrite('✓ Status: IN TRANSIT');
             this.consoleWrite('');
-            this.consoleWrite('READY FOR DUTY - Use commands for operations');
+            this.consoleWrite('READY FOR DUTY - Use "Arrive On Scene" when at location');
             
         } catch (error) {
             this.consoleWrite('ERROR: Invalid time format. Use: start [HH:MM] [am/pm] end [HH:MM] [am/pm] [details]');
@@ -3932,34 +3965,28 @@ class SecuritySpecialistApp {
         };
         
         this.missionStartTime = now;
-        
-        // Auto-set location for standing and desk missions
-        if (this.currentMission.type === 'standing') {
-            this.autoSetMissionLocation('Fixed Post Alpha', 'Assigned fixed security post');
-        } else if (this.currentMission.type === 'desk') {
-            this.autoSetMissionLocation('Security Station', 'Administrative desk duty assignment');
-        }
+        this.isOnSite = false; // Always start in transit
         
         this.saveCurrentMission();
         
-        // Update UI
-        this.safeUpdateStatus(this.isOnSite ? 'On Site' : 'Active', this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active');
+        // Update UI - Always show "In Transit" when mission starts
+        this.safeUpdateStatus('In Transit', 'mission-status status-active');
         this.safeSetButtonState('startMissionBtn', true);
         this.safeSetButtonState('missionReportBtn', false);
         this.safeSetButtonState('endMissionBtn', false);
         this.safeSetButtonState('incidentReportBtn', false); // Enable incident report when mission starts
         
-        // Enable/disable onSite button based on current status
-        this.safeSetButtonState('onSiteBtn', this.isOnSite);
-        this.safeSetButtonState('offSiteBtn', !this.isOnSite);
+        // Enable "Arrive On Scene" button, disable others since we're in transit
+        this.safeSetButtonState('onSiteBtn', false); // Enable arrive on scene button
+        this.safeSetButtonState('offSiteBtn', true); // Disable off-site button
         
-        // Enable BOLO and POI buttons if onsite
+        // Disable BOLO, POI, and Check buttons until on-site
         const boloListBtn = document.getElementById('boloListBtn');
         const poiListBtn = document.getElementById('poiListBtn');
         const checkBtn = document.getElementById('checkBtn');
-        if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
-        if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
-        if (checkBtn) checkBtn.disabled = !this.isOnSite;
+        if (boloListBtn) boloListBtn.disabled = true;
+        if (poiListBtn) poiListBtn.disabled = true;
+        if (checkBtn) checkBtn.disabled = true;
         
         this.enableViewButtons(); // Enable view buttons when mission starts
         this.addNavigationWarning();
@@ -6037,6 +6064,185 @@ Report Generated: ${this.formatDateTime(new Date())}`;
             this.saveCurrentMission();
             
             this.showCurrentLocationPOIs(); // Go back to POI list
+            this.showNotification('POI details added successfully');
+            
+            // Log to console
+            this.consoleWrite(`POI details added for: ${poi.firstName} ${poi.lastName}`);
+            this.consoleWrite(`Observer: ${observerName} (Badge: ${observerBadge})`);
+            this.consoleWrite(`Details: ${additionalDetails}`);
+        });
+
+        modal.style.display = 'block';
+    }
+
+    // Add BOLO details from the main list view
+    addBoloDetailsFromList(boloIndex) {
+        if (!this.currentMission || !this.isOnSite) {
+            this.showNotification('Must be on-site during a mission to add details!', 'error');
+            return;
+        }
+        
+        const bolo = this.bolos[boloIndex];
+        if (!bolo) return;
+
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>Add Details to BOLO: ${bolo.subject || 'Unknown'}</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; padding: 12px; background: var(--desktop-bg-tertiary, var(--mobile-bg-tertiary)); border-radius: 4px;">
+                    <h3>Current BOLO Information (Read-Only)</h3>
+                    <p><strong>Subject:</strong> ${bolo.subject || 'N/A'}</p>
+                    <p><strong>Type:</strong> ${bolo.type || 'Person'}</p>
+                    <p><strong>Location:</strong> ${bolo.location || 'All Sites'}</p>
+                    <p><strong>Description:</strong> ${bolo.notes || 'No description'}</p>
+                </div>
+                
+                <form id="addBoloDetailsForm">
+                    <div class="form-group">
+                        <label for="boloAdditionalDetails">Additional Details/Observations:</label>
+                        <textarea id="boloAdditionalDetails" required placeholder="Enter any additional details, observations, or updates about this BOLO..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="boloObserverName">Observer Name:</label>
+                        <input type="text" id="boloObserverName" value="${this.guardProfile.firstName} ${this.guardProfile.lastName}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="boloObserverBadge">Badge Number:</label>
+                        <input type="text" id="boloObserverBadge" value="${this.guardProfile.badgeNumber}" readonly>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="app.showBoloList()">Cancel</button>
+                        <button type="submit" class="btn-primary">Add Details</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.getElementById('addBoloDetailsForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const additionalDetails = document.getElementById('boloAdditionalDetails').value;
+            const observerName = document.getElementById('boloObserverName').value;
+            const observerBadge = document.getElementById('boloObserverBadge').value;
+            
+            // Add the details as a new entry in the mission log
+            const detailEntry = {
+                type: 'BOLO Update',
+                time: new Date(),
+                location: this.currentPatrolStop.location,
+                description: `Additional details for BOLO: ${bolo.subject || 'Unknown'}`,
+                action: `Details: ${additionalDetails}`,
+                observer: observerName,
+                observerBadge: observerBadge,
+                observerDepartment: this.guardProfile.department,
+                boloId: bolo.id,
+                originalBolo: {
+                    subject: bolo.subject,
+                    type: bolo.type,
+                    location: bolo.location,
+                    description: bolo.notes
+                }
+            };
+
+            this.currentMission.incidents.push(detailEntry);
+            this.saveCurrentMission();
+            
+            this.showBoloList(); // Go back to BOLO list
+            this.showNotification('BOLO details added successfully');
+            
+            // Log to console
+            this.consoleWrite(`BOLO details added for: ${bolo.subject || 'Unknown'}`);
+            this.consoleWrite(`Observer: ${observerName} (Badge: ${observerBadge})`);
+            this.consoleWrite(`Details: ${additionalDetails}`);
+        });
+
+        modal.style.display = 'block';
+    }
+
+    // Add POI details from the main list view
+    addPoiDetailsFromList(poiIndex) {
+        if (!this.currentMission || !this.isOnSite) {
+            this.showNotification('Must be on-site during a mission to add details!', 'error');
+            return;
+        }
+        
+        const poi = this.pois[poiIndex];
+        if (!poi) return;
+
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>Add Details to POI: ${poi.firstName} ${poi.lastName}</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; padding: 12px; background: var(--desktop-bg-tertiary, var(--mobile-bg-tertiary)); border-radius: 4px;">
+                    <h3>Current POI Information (Read-Only)</h3>
+                    <p><strong>Name:</strong> ${poi.firstName} ${poi.lastName}</p>
+                    <p><strong>Status:</strong> ${poi.status || 'N/A'}</p>
+                    <p><strong>Locations:</strong> ${(poi.locations || []).join(', ')}</p>
+                    <p><strong>Notes:</strong> ${poi.notes || 'No notes'}</p>
+                </div>
+                
+                <form id="addPoiDetailsForm">
+                    <div class="form-group">
+                        <label for="poiAdditionalDetails">Additional Details/Observations:</label>
+                        <textarea id="poiAdditionalDetails" required placeholder="Enter any additional details, observations, or interactions with this person..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="poiObserverName">Observer Name:</label>
+                        <input type="text" id="poiObserverName" value="${this.guardProfile.firstName} ${this.guardProfile.lastName}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="poiObserverBadge">Badge Number:</label>
+                        <input type="text" id="poiObserverBadge" value="${this.guardProfile.badgeNumber}" readonly>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="app.showPOIList()">Cancel</button>
+                        <button type="submit" class="btn-primary">Add Details</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.getElementById('addPoiDetailsForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const additionalDetails = document.getElementById('poiAdditionalDetails').value;
+            const observerName = document.getElementById('poiObserverName').value;
+            const observerBadge = document.getElementById('poiObserverBadge').value;
+            
+            // Add the details as a new entry in the mission log
+            const detailEntry = {
+                type: 'POI Update',
+                time: new Date(),
+                location: this.currentPatrolStop.location,
+                description: `Additional details for POI: ${poi.firstName} ${poi.lastName}`,
+                action: `Details: ${additionalDetails}`,
+                observer: observerName,
+                observerBadge: observerBadge,
+                observerDepartment: this.guardProfile.department,
+                poiId: poi.id,
+                originalPoi: {
+                    firstName: poi.firstName,
+                    lastName: poi.lastName,
+                    status: poi.status,
+                    locations: poi.locations,
+                    notes: poi.notes
+                }
+            };
+
+            this.currentMission.incidents.push(detailEntry);
+            this.saveCurrentMission();
+            
+            this.showPOIList(); // Go back to POI list
             this.showNotification('POI details added successfully');
             
             // Log to console
