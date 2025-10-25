@@ -625,10 +625,10 @@ class SecuritySpecialistApp {
                     <button class="control-btn btn-info" id="viewPatrolStopsBtn" onclick="app.showPatrolStopsListModal()" disabled>
                         View Patrol Stops
                     </button>
-                    <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showLocationBoloMenu()" disabled>
+                    <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showLocationBoloMenu()">
                         BOLO's
                     </button>
-                    <button class="control-btn btn-warning" id="poiListBtn" onclick="app.showLocationPOIMenu()" disabled>
+                    <button class="control-btn btn-warning" id="poiListBtn" onclick="app.showLocationPOIMenu()">
                         POI's
                     </button>
                     <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.confirmEndMission()" disabled>
@@ -688,10 +688,10 @@ class SecuritySpecialistApp {
                     <button class="control-btn btn-info" id="viewPatrolStopsBtn" onclick="app.showPatrolStopsListModal()" disabled>
                         View Site Visits
                     </button>
-                    <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showLocationBoloMenu()" disabled>
+                    <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showLocationBoloMenu()">
                         BOLO's
                     </button>
-                    <button class="control-btn btn-warning" id="poiListBtn" onclick="app.showLocationPOIMenu()" disabled>
+                    <button class="control-btn btn-warning" id="poiListBtn" onclick="app.showLocationPOIMenu()">
                         POI's
                     </button>
                     <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.confirmEndMission()" disabled>
@@ -802,11 +802,7 @@ class SecuritySpecialistApp {
         this.safeSetButtonState('offSiteBtn', true); // Disable off-site button
         
         // Disable BOLO, POI, and Check buttons until on-site
-        const boloListBtn = document.getElementById('boloListBtn');
-        const poiListBtn = document.getElementById('poiListBtn');
         const checkBtn = document.getElementById('checkBtn');
-        if (boloListBtn) boloListBtn.disabled = true;
-        if (poiListBtn) poiListBtn.disabled = true;
         if (checkBtn) checkBtn.disabled = true;
         
         this.enableViewButtons(); // Enable view buttons when mission starts
@@ -924,11 +920,7 @@ class SecuritySpecialistApp {
         this.safeSetButtonState('offSiteBtn', true); // Disable off-site button
         
         // Disable BOLO, POI, and Check buttons until on-site
-        const boloListBtn = document.getElementById('boloListBtn');
-        const poiListBtn = document.getElementById('poiListBtn');
         const checkBtn = document.getElementById('checkBtn');
-        if (boloListBtn) boloListBtn.disabled = true;
-        if (poiListBtn) poiListBtn.disabled = true;
         if (checkBtn) checkBtn.disabled = true;
         
         this.enableViewButtons(); // Enable view buttons when mission starts
@@ -991,11 +983,7 @@ class SecuritySpecialistApp {
         this.safeSetButtonState('offSiteBtn', true); // Disable off-site button
         
         // Disable BOLO, POI, and Check buttons until on-site
-        const boloListBtn = document.getElementById('boloListBtn');
-        const poiListBtn = document.getElementById('poiListBtn');
         const checkBtn = document.getElementById('checkBtn');
-        if (boloListBtn) boloListBtn.disabled = true;
-        if (poiListBtn) poiListBtn.disabled = true;
         if (checkBtn) checkBtn.disabled = true;
 
         // Add navigation restriction indicator
@@ -1149,11 +1137,7 @@ class SecuritySpecialistApp {
         this.safeSetButtonState('offSiteBtn', false);
         this.safeSetButtonState('checkBtn', false); // Enable check button when on site
         
-        // Enable BOLO and POI buttons when on site
-        const boloListBtn = document.getElementById('boloListBtn');
-        const poiListBtn = document.getElementById('poiListBtn');
-        if (boloListBtn) boloListBtn.disabled = false;
-        if (poiListBtn) poiListBtn.disabled = false;
+        // BOLO and POI buttons are always enabled now
         
         this.closeModal();
         this.showNotification('Now on site at ' + formData.get('siteLocation'));
@@ -1191,13 +1175,9 @@ class SecuritySpecialistApp {
         const onSiteBtn = document.getElementById('onSiteBtn');
         const offSiteBtn = document.getElementById('offSiteBtn');
         const checkBtn = document.getElementById('checkBtn');
-        const boloListBtn = document.getElementById('boloListBtn');
-        const poiListBtn = document.getElementById('poiListBtn');
         if (onSiteBtn) onSiteBtn.disabled = true;
         if (offSiteBtn) offSiteBtn.disabled = false;
         if (checkBtn) checkBtn.disabled = false; // Enable check button when on site
-        if (boloListBtn) boloListBtn.disabled = false; // Enable BOLO button when on site
-        if (poiListBtn) poiListBtn.disabled = false; // Enable POI button when on site
         
         this.consoleWrite(`✓ Now on site at: ${data.location}`);
         this.consoleWrite(`✓ Arrival time: ${this.currentSiteStartTime.toLocaleString()}`);
@@ -1234,10 +1214,6 @@ class SecuritySpecialistApp {
             this.safeSetButtonState('checkBtn', true); // Disable check button when off site
             
             // Disable BOLO and POI buttons when off site
-            const boloListBtn = document.getElementById('boloListBtn');
-            const poiListBtn = document.getElementById('poiListBtn');
-            if (boloListBtn) boloListBtn.disabled = true;
-            if (poiListBtn) poiListBtn.disabled = true;
             
             // Patrol stops now shown in modal
             this.showNotification('Left site - now in transit');
@@ -1329,14 +1305,10 @@ class SecuritySpecialistApp {
             }
             
             // Enable BOLO and POI buttons since we're now onsite
-            const boloListBtn = document.getElementById('boloListBtn');
-            const poiListBtn = document.getElementById('poiListBtn');
             const checkBtn = document.getElementById('checkBtn');
             const onSiteBtn = document.getElementById('onSiteBtn');
             const offSiteBtn = document.getElementById('offSiteBtn');
             
-            if (boloListBtn) boloListBtn.disabled = false;
-            if (poiListBtn) poiListBtn.disabled = false;
             if (checkBtn) checkBtn.disabled = false;
             if (onSiteBtn) onSiteBtn.disabled = true; // Disable since already onsite
             if (offSiteBtn) offSiteBtn.disabled = false; // Enable offsite option
@@ -2613,8 +2585,12 @@ class SecuritySpecialistApp {
     // Enhanced BOLO functionality for current location
     // Location-specific BOLO menu - shows popup menu for BOLOs at current location
     showLocationBoloMenu() {
+        if (!this.currentMission) {
+            this.showNotification('Must start a mission first!', 'error');
+            return;
+        }
         if (!this.isOnSite || !this.currentPatrolStop) {
-            this.showNotification('Must be on site to view location-specific BOLOs!', 'error');
+            this.showNotification('Must be on site to view location-specific BOLOs! Use "Go On Site" button first.', 'error');
             return;
         }
 
@@ -2670,8 +2646,12 @@ class SecuritySpecialistApp {
 
     // Location-specific POI menu - shows popup menu for POIs at current location
     showLocationPOIMenu() {
+        if (!this.currentMission) {
+            this.showNotification('Must start a mission first!', 'error');
+            return;
+        }
         if (!this.isOnSite || !this.currentPatrolStop) {
-            this.showNotification('Must be on site to view location-specific POIs!', 'error');
+            this.showNotification('Must be on site to view location-specific POIs! Use "Go On Site" button first.', 'error');
             return;
         }
 
@@ -3851,11 +3831,7 @@ class SecuritySpecialistApp {
             this.safeSetButtonState('offSiteBtn', true); // Disable off-site button
             
             // Disable BOLO, POI, and Check buttons until on-site
-            const boloListBtn = document.getElementById('boloListBtn');
-            const poiListBtn = document.getElementById('poiListBtn');
             const checkBtn = document.getElementById('checkBtn');
-            if (boloListBtn) boloListBtn.disabled = true;
-            if (poiListBtn) poiListBtn.disabled = true;
             if (checkBtn) checkBtn.disabled = true;
             
             this.enableViewButtons(); // Enable view buttons when mission starts
@@ -4079,11 +4055,7 @@ class SecuritySpecialistApp {
         this.safeSetButtonState('offSiteBtn', true); // Disable off-site button
         
         // Disable BOLO, POI, and Check buttons until on-site
-        const boloListBtn = document.getElementById('boloListBtn');
-        const poiListBtn = document.getElementById('poiListBtn');
         const checkBtn = document.getElementById('checkBtn');
-        if (boloListBtn) boloListBtn.disabled = true;
-        if (poiListBtn) poiListBtn.disabled = true;
         if (checkBtn) checkBtn.disabled = true;
         
         this.enableViewButtons(); // Enable view buttons when mission starts
@@ -5236,22 +5208,26 @@ Report Generated: ${this.formatDateTime(new Date())}`;
             position: fixed;
             top: 20px;
             right: 20px;
-            background: ${type === 'error' ? '#e74c3c' : '#27ae60'};
+            background: ${type === 'error' ? '#e74c3c' : type === 'warning' ? '#f39c12' : type === 'info' ? '#3498db' : '#27ae60'};
             color: white;
             padding: 15px 20px;
             border-radius: 5px;
             z-index: 10000;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            font-weight: bold;
+            max-width: 400px;
+            word-wrap: break-word;
         `;
 
         document.body.appendChild(notification);
 
-        // Remove after 3 seconds
+        // Remove after longer time for errors (5 seconds) or 3 seconds for others
+        const timeout = type === 'error' ? 5000 : 3000;
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.parentNode.removeChild(notification);
             }
-        }, 3000);
+        }, timeout);
     }
 
     formatDateTime(date) {
@@ -5434,10 +5410,6 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                     this.safeSetButtonState('checkBtn', !this.isOnSite); // Enable check only when on site
                     
                     // Enable BOLO and POI buttons only when on site
-                    const boloListBtn = document.getElementById('boloListBtn');
-                    const poiListBtn = document.getElementById('poiListBtn');
-                    if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
-                    if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
                     
                     // Enable/disable onSite/offSite buttons for all mission types
                     this.safeSetButtonState('onSiteBtn', this.isOnSite || !!this.currentMission.report);
