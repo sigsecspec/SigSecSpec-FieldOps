@@ -846,6 +846,88 @@ header {
     background-color: rgba(0, 0, 0, 0.8);
 }
 
+/* Command Console Styles */
+.command-console {
+    margin-top: 20px;
+}
+
+/* Desktop console - terminal look */
+@media (min-width: 1024px) {
+    .console-output {
+        background: #0f0f0f;
+        color: var(--desktop-text-primary);
+        border: 1px solid var(--desktop-border);
+        border-radius: 2px;
+        padding: 12px;
+        height: 180px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+    }
+    .console-input-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+    }
+    .console-input-row .prompt {
+        color: var(--desktop-accent);
+        font-weight: bold;
+    }
+    .console-input-row input {
+        flex: 1;
+        background: var(--desktop-bg-primary);
+        color: var(--desktop-text-primary);
+        border: 1px solid var(--desktop-border);
+        border-radius: 2px;
+        padding: 10px 12px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+    }
+    .console-hint {
+        margin-top: 6px;
+        color: var(--desktop-text-muted);
+        font-size: 11px;
+        font-family: 'Courier New', monospace;
+    }
+}
+
+/* Mobile console - clean input */
+@media (max-width: 1023px) {
+    .console-output {
+        background: var(--mobile-bg-tertiary);
+        color: var(--mobile-text-primary);
+        border: 1px solid var(--mobile-border);
+        border-radius: 8px;
+        padding: 12px;
+        height: 160px;
+        overflow-y: auto;
+        font-size: 13px;
+    }
+    .console-input-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+    }
+    .console-input-row .prompt {
+        display: none;
+    }
+    .console-input-row input {
+        flex: 1;
+        background: var(--mobile-bg-tertiary);
+        color: var(--mobile-text-primary);
+        border: 1px solid var(--mobile-border);
+        border-radius: 8px;
+        padding: 12px;
+    }
+    .console-hint {
+        margin-top: 6px;
+        color: var(--mobile-text-muted);
+        font-size: 12px;
+    }
+}
+
 .modal-content {
     margin: 3% auto;
     padding: 0;
