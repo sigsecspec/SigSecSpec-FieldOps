@@ -969,6 +969,45 @@ header {
         font-size: 11px;
         font-family: 'Courier New', monospace;
     }
+    
+    /* Console line styling */
+    .console-line {
+        margin-bottom: 2px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+    }
+    
+    .console-timestamp {
+        color: var(--desktop-text-muted);
+        font-size: 10px;
+    }
+    
+    .console-command {
+        color: var(--desktop-accent);
+        font-weight: bold;
+    }
+    
+    .console-output-text {
+        color: var(--desktop-text-primary);
+    }
+    
+    .console-error {
+        color: var(--desktop-danger);
+        font-weight: bold;
+    }
+    
+    .console-warning {
+        color: var(--desktop-warning);
+        font-weight: bold;
+    }
+    
+    .console-system {
+        color: var(--desktop-success);
+        font-weight: bold;
+        text-align: center;
+        display: block;
+        margin: 4px 0;
+    }
 }
 
 /* Mobile console - clean input */
@@ -1009,6 +1048,44 @@ header {
         margin-top: 6px;
         color: var(--mobile-text-muted);
         font-size: 12px;
+    }
+    
+    /* Mobile console line styling */
+    .console-line {
+        margin-bottom: 2px;
+        font-size: 13px;
+    }
+    
+    .console-timestamp {
+        color: var(--mobile-text-muted);
+        font-size: 11px;
+    }
+    
+    .console-command {
+        color: var(--mobile-accent);
+        font-weight: 600;
+    }
+    
+    .console-output-text {
+        color: var(--mobile-text-primary);
+    }
+    
+    .console-error {
+        color: var(--mobile-danger);
+        font-weight: 600;
+    }
+    
+    .console-warning {
+        color: var(--mobile-warning);
+        font-weight: 600;
+    }
+    
+    .console-system {
+        color: var(--mobile-success);
+        font-weight: 600;
+        text-align: center;
+        display: block;
+        margin: 4px 0;
     }
 }
 
