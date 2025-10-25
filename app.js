@@ -527,27 +527,7 @@ class SecuritySpecialistApp {
             });
         }
         
-        const boloBtn = document.getElementById('boloBtn');
-        if (boloBtn) {
-            console.log('BOLO button found, adding event listener');
-            boloBtn.addEventListener('click', () => {
-                console.log('BOLO button clicked');
-                this.showBoloMenu();
-            });
-        } else {
-            console.log('BOLO button not found');
-        }
-        
-        const poiBtn = document.getElementById('poiBtn');
-        if (poiBtn) {
-            console.log('POI button found, adding event listener');
-            poiBtn.addEventListener('click', () => {
-                console.log('POI button clicked');
-                this.showPOIMenu();
-            });
-        } else {
-            console.log('POI button not found');
-        }
+        // BOLO and POI buttons now use inline onclick handlers for better reliability
     }
 
     loadMainPage() {
@@ -558,8 +538,8 @@ class SecuritySpecialistApp {
                     <button id="profileBtn" class="nav-btn">👤 Guard Profile</button>
                     <button id="viewLogsBtn" class="nav-btn">Database Records</button>
                     <button id="siteManagerBtn" class="nav-btn">Site Manager</button>
-                    <button id="boloBtn" class="nav-btn">BOLO Board</button>
-                    <button id="poiBtn" class="nav-btn">Person of Interest</button>
+                    <button id="boloBtn" class="nav-btn" onclick="app.showBoloMenu()">BOLO Board</button>
+                    <button id="poiBtn" class="nav-btn" onclick="app.showPOIMenu()">Person of Interest</button>
                 </div>
                 
                 <div class="mission-selection">
@@ -645,10 +625,10 @@ class SecuritySpecialistApp {
                     <button class="control-btn btn-info" id="viewPatrolStopsBtn" onclick="app.showPatrolStopsListModal()" disabled>
                         View Patrol Stops
                     </button>
-                    <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showCurrentLocationBolos()" disabled>
+                    <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showLocationBoloMenu()" disabled>
                         BOLO's
                     </button>
-                    <button class="control-btn btn-warning" id="poiListBtn" onclick="app.showCurrentLocationPOIs()" disabled>
+                    <button class="control-btn btn-warning" id="poiListBtn" onclick="app.showLocationPOIMenu()" disabled>
                         POI's
                     </button>
                     <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.confirmEndMission()" disabled>
@@ -708,10 +688,10 @@ class SecuritySpecialistApp {
                     <button class="control-btn btn-info" id="viewPatrolStopsBtn" onclick="app.showPatrolStopsListModal()" disabled>
                         View Site Visits
                     </button>
-                    <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showCurrentLocationBolos()" disabled>
+                    <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showLocationBoloMenu()" disabled>
                         BOLO's
                     </button>
-                    <button class="control-btn btn-warning" id="poiListBtn" onclick="app.showCurrentLocationPOIs()" disabled>
+                    <button class="control-btn btn-warning" id="poiListBtn" onclick="app.showLocationPOIMenu()" disabled>
                         POI's
                     </button>
                     <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.confirmEndMission()" disabled>
@@ -2631,6 +2611,123 @@ class SecuritySpecialistApp {
     }
 
     // Enhanced BOLO functionality for current location
+    // Location-specific BOLO menu - shows popup menu for BOLOs at current location
+    showLocationBoloMenu() {
+        if (!this.isOnSite || !this.currentPatrolStop) {
+            this.showNotification('Must be on site to view location-specific BOLOs!', 'error');
+            return;
+        }
+
+        const currentLocation = this.currentPatrolStop.location;
+        const locationBolos = this.bolos.filter(bolo => 
+            bolo.active !== false && (
+                !bolo.location || 
+                bolo.location.toLowerCase().includes(currentLocation.toLowerCase()) ||
+                currentLocation.toLowerCase().includes(bolo.location?.toLowerCase() || '')
+            )
+        );
+
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>🚨 BOLO Management - ${currentLocation.toUpperCase()}</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="popup-menu">
+                    <div class="popup-menu-title">Location: ${currentLocation}</div>
+                    <div style="margin-bottom: 20px; padding: 12px; background: var(--desktop-bg-tertiary, var(--mobile-bg-tertiary)); border-radius: 4px; text-align: center;">
+                        <strong>Active BOLOs for this location: ${locationBolos.length}</strong>
+                    </div>
+                    <div class="menu-options">
+                        <div class="menu-option-card" onclick="app.showCurrentLocationBolos()">
+                            <div class="menu-option-icon">📋</div>
+                            <div class="menu-option-title">View Location BOLOs</div>
+                            <div class="menu-option-desc">Browse and manage BOLOs for ${currentLocation}</div>
+                        </div>
+                        <div class="menu-option-card" onclick="app.showBoloAddForm(); app.showNotification('Remember to set location to ${currentLocation}', 'info')">
+                            <div class="menu-option-icon">➕</div>
+                            <div class="menu-option-title">Add New BOLO</div>
+                            <div class="menu-option-desc">Create a new BOLO alert for this location</div>
+                        </div>
+                        <div class="menu-option-card" onclick="app.showBoloList()">
+                            <div class="menu-option-icon">🌐</div>
+                            <div class="menu-option-title">View All BOLOs</div>
+                            <div class="menu-option-desc">Browse all BOLO records system-wide</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="control-btn btn-secondary" onclick="app.closeModal()">Close</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'block';
+    }
+
+    // Location-specific POI menu - shows popup menu for POIs at current location
+    showLocationPOIMenu() {
+        if (!this.isOnSite || !this.currentPatrolStop) {
+            this.showNotification('Must be on site to view location-specific POIs!', 'error');
+            return;
+        }
+
+        const currentLocation = this.currentPatrolStop.location;
+        const locationPOIs = this.pois.filter(poi => 
+            poi.locations && (
+                poi.locations.includes('All Sites') ||
+                poi.locations.some(loc => 
+                    loc.toLowerCase().includes(currentLocation.toLowerCase()) ||
+                    currentLocation.toLowerCase().includes(loc.toLowerCase())
+                )
+            )
+        );
+
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>👤 POI Management - ${currentLocation.toUpperCase()}</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="popup-menu">
+                    <div class="popup-menu-title">Location: ${currentLocation}</div>
+                    <div style="margin-bottom: 20px; padding: 12px; background: var(--desktop-bg-tertiary, var(--mobile-bg-tertiary)); border-radius: 4px; text-align: center;">
+                        <strong>POIs for this location: ${locationPOIs.length}</strong>
+                    </div>
+                    <div class="menu-options">
+                        <div class="menu-option-card" onclick="app.showCurrentLocationPOIs()">
+                            <div class="menu-option-icon">📋</div>
+                            <div class="menu-option-title">View Location POIs</div>
+                            <div class="menu-option-desc">Browse and manage POIs for ${currentLocation}</div>
+                        </div>
+                        <div class="menu-option-card" onclick="app.showPOIAddForm(); app.showNotification('Remember to add ${currentLocation} to locations', 'info')">
+                            <div class="menu-option-icon">➕</div>
+                            <div class="menu-option-title">Add New POI</div>
+                            <div class="menu-option-desc">Create a new person of interest record</div>
+                        </div>
+                        <div class="menu-option-card" onclick="app.showPOIList()">
+                            <div class="menu-option-icon">🌐</div>
+                            <div class="menu-option-title">View All POIs</div>
+                            <div class="menu-option-desc">Browse all POI records system-wide</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="control-btn btn-secondary" onclick="app.closeModal()">Close</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'block';
+    }
+
+    // Location-specific BOLO list view - shows detailed table of BOLOs for current location
     showCurrentLocationBolos() {
         if (!this.isOnSite || !this.currentPatrolStop) {
             this.showNotification('Must be on site to view location-specific BOLOs!', 'error');
@@ -3012,6 +3109,7 @@ class SecuritySpecialistApp {
         });
     }
 
+    // Location-specific POI list view - shows detailed table of POIs for current location  
     showCurrentLocationPOIs() {
         if (!this.isOnSite || !this.currentPatrolStop) {
             this.showNotification('Must be on site to view location-specific POIs!', 'error');
@@ -5933,7 +6031,7 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                         <input type="text" id="boloObserverBadge" value="${this.guardProfile.badgeNumber}" readonly>
                     </div>
                     <div class="form-actions">
-                        <button type="button" class="btn-secondary" onclick="app.showCurrentLocationBolos()">Cancel</button>
+                        <button type="button" class="btn-secondary" onclick="app.showLocationBoloMenu()">Cancel</button>
                         <button type="submit" class="btn-primary">Add Details</button>
                     </div>
                 </form>
@@ -6026,7 +6124,7 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                         <input type="text" id="poiObserverBadge" value="${this.guardProfile.badgeNumber}" readonly>
                     </div>
                     <div class="form-actions">
-                        <button type="button" class="btn-secondary" onclick="app.showCurrentLocationPOIs()">Cancel</button>
+                        <button type="button" class="btn-secondary" onclick="app.showLocationPOIMenu()">Cancel</button>
                         <button type="submit" class="btn-primary">Add Details</button>
                     </div>
                 </form>
