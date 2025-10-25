@@ -98,6 +98,134 @@ class SecuritySpecialistApp {
         }
     }
 
+    // Enhanced step-by-step command interface
+    startStepByStepCommand(commandName, steps, callback) {
+        this.currentStepByStep = {
+            commandName,
+            steps,
+            callback,
+            currentIndex: 0,
+            data: {},
+            cancelled: false
+        };
+        
+        this.consoleWrite(`=== ${commandName.toUpperCase()} COMMAND - STEP BY STEP ===`);
+        this.consoleWrite('Use ENTER to complete each step, TAB to cancel at any time');
+        this.consoleWrite('');
+        this.showNextStep();
+    }
+
+    showNextStep() {
+        if (!this.currentStepByStep || this.currentStepByStep.cancelled) return;
+        
+        const stepData = this.currentStepByStep;
+        if (stepData.currentIndex >= stepData.steps.length) {
+            // All steps completed, execute callback
+            this.resetConsolePrompt();
+            stepData.callback(stepData.data);
+            this.currentStepByStep = null;
+            return;
+        }
+        
+        const currentStep = stepData.steps[stepData.currentIndex];
+        this.currentStep = currentStep;
+        
+        // Show the step in console with clear formatting
+        const stepText = currentStep.required ? 
+            `Step ${stepData.currentIndex + 1}/${stepData.steps.length}: ${currentStep.prompt} (required)` : 
+            `Step ${stepData.currentIndex + 1}/${stepData.steps.length}: ${currentStep.prompt} (optional - press Enter to skip)`;
+        
+        this.consoleWrite(stepText);
+        
+        // Update the console input prompt to show the current step
+        this.updateConsolePrompt(`${currentStep.prompt}`);
+        
+        // Set up the input to handle this step
+        this.setupStepInput();
+    }
+
+    setupStepInput() {
+        const input = document.getElementById('consoleInput');
+        if (!input) return;
+        
+        // Remove any existing listeners
+        if (this.stepKeyListener) {
+            input.removeEventListener('keydown', this.stepKeyListener);
+        }
+        
+        this.stepKeyListener = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.handleStepInput(input.value.trim());
+                input.value = '';
+            } else if (e.key === 'Tab') {
+                e.preventDefault();
+                this.cancelStepByStep();
+            }
+        };
+        
+        input.addEventListener('keydown', this.stepKeyListener);
+        input.focus();
+    }
+
+    handleStepInput(value) {
+        if (!this.currentStepByStep || !this.currentStep) return;
+        
+        const stepData = this.currentStepByStep;
+        const step = this.currentStep;
+        
+        // Validate required fields
+        if (step.required && !value) {
+            this.consoleWrite(`ERROR: ${step.prompt} is required. Please enter a value.`);
+            return;
+        }
+        
+        // Store the value
+        stepData.data[step.key] = value;
+        
+        // Show what was entered
+        if (value) {
+            this.consoleWrite(`✓ ${step.prompt}: ${value}`);
+        } else {
+            this.consoleWrite(`✓ ${step.prompt}: (skipped)`);
+        }
+        
+        // Move to next step
+        stepData.currentIndex++;
+        this.currentStep = null;
+        
+        // Remove step listener and show next step
+        const input = document.getElementById('consoleInput');
+        if (input && this.stepKeyListener) {
+            input.removeEventListener('keydown', this.stepKeyListener);
+            this.stepKeyListener = null;
+        }
+        
+        this.showNextStep();
+    }
+
+    cancelStepByStep() {
+        if (!this.currentStepByStep) return;
+        
+        this.consoleWrite('');
+        this.consoleWrite('❌ Command cancelled by user');
+        this.consoleWrite('');
+        
+        // Clean up
+        this.currentStepByStep.cancelled = true;
+        this.currentStepByStep = null;
+        this.currentStep = null;
+        
+        // Remove listeners and reset prompt
+        const input = document.getElementById('consoleInput');
+        if (input && this.stepKeyListener) {
+            input.removeEventListener('keydown', this.stepKeyListener);
+            this.stepKeyListener = null;
+        }
+        
+        this.resetConsolePrompt();
+    }
+
     startPromptSequence(commandName, prompts, callback) {
         this.currentPromptSequence = {
             commandName,
@@ -425,6 +553,9 @@ class SecuritySpecialistApp {
                     <button class="control-btn btn-primary" id="checkpointBtn" onclick="app.showCheckpointModal()" disabled>
                         Add Checkpoint
                     </button>
+                    <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showCurrentLocationBolos()" disabled>
+                        BOLO's (Location)
+                    </button>
                     <button class="control-btn btn-warning" onclick="app.showMissionReportModal()" id="missionReportBtn" disabled>
                         Mission Report
                     </button>
@@ -476,6 +607,9 @@ class SecuritySpecialistApp {
                     </button>
                     <button class="control-btn btn-primary" id="incidentReportBtn" onclick="app.showIncidentModal()" disabled>
                         Incident Report
+                    </button>
+                    <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showCurrentLocationBolos()" disabled>
+                        BOLO's (Location)
                     </button>
                     <button class="control-btn btn-warning" onclick="app.showMissionReportModal()" id="missionReportBtn" disabled>
                         Mission Report
@@ -714,6 +848,67 @@ class SecuritySpecialistApp {
         this.pendingMissionDetails = null;
     }
 
+    processStepByStepStart(data) {
+        // Parse the start and end times
+        let startTime = new Date();
+        let endTime = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8 hours later
+
+        if (data.startTime) {
+            const parsedStart = new Date(data.startTime);
+            if (!isNaN(parsedStart.getTime())) {
+                startTime = parsedStart;
+            }
+        }
+
+        if (data.endTime) {
+            const parsedEnd = new Date(data.endTime);
+            if (!isNaN(parsedEnd.getTime())) {
+                endTime = parsedEnd;
+            }
+        }
+
+        // Start the mission
+        this.currentMission.status = 'active';
+        this.currentMission.startTime = startTime;
+        this.currentMission.endTime = endTime;
+        this.currentMission.details = {
+            specialistName: data.specialistName,
+            patrolRoute: '',
+            notes: data.notes || ''
+        };
+
+        this.missionStartTime = startTime;
+        this.saveCurrentMission();
+
+        // Update UI buttons
+        document.getElementById('startMissionBtn').disabled = true;
+        document.getElementById('missionStatus').textContent = 'Active';
+        document.getElementById('missionStatus').className = 'mission-status status-active';
+        document.getElementById('missionReportBtn').disabled = false;
+        document.getElementById('endMissionBtn').disabled = false;
+        document.getElementById('incidentReportBtn').disabled = false;
+
+        if (this.currentMission.type === 'patrol') {
+            document.getElementById('onSiteBtn').disabled = false;
+        }
+
+        // Add navigation restriction indicator
+        this.addNavigationWarning();
+
+        this.consoleWrite('✓ Mission started successfully via step-by-step interface!');
+        this.consoleWrite('✓ Navigation restrictions activated');
+        this.consoleWrite('✓ System ready for operations');
+        this.consoleWrite('');
+        this.consoleWrite(`Specialist: ${data.specialistName}`);
+        this.consoleWrite(`Start Time: ${startTime.toLocaleString()}`);
+        this.consoleWrite(`End Time: ${endTime.toLocaleString()}`);
+        if (data.notes) {
+            this.consoleWrite(`Notes: ${data.notes}`);
+        }
+        this.consoleWrite('');
+        this.consoleWrite('Available commands: onsite, offsite, incident, checkpoint, report, end');
+    }
+
     showOnSiteModal() {
         if (this.currentMission.status !== 'active') {
             this.showNotification('Mission must be started first!', 'error');
@@ -885,9 +1080,11 @@ class SecuritySpecialistApp {
         const onSiteBtn = document.getElementById('onSiteBtn');
         const offSiteBtn = document.getElementById('offSiteBtn');
         const checkpointBtn = document.getElementById('checkpointBtn');
+        const boloListBtn = document.getElementById('boloListBtn');
         if (onSiteBtn) onSiteBtn.disabled = true;
         if (offSiteBtn) offSiteBtn.disabled = false;
         if (checkpointBtn) checkpointBtn.disabled = false; // Enable checkpoint button when on site
+        if (boloListBtn) boloListBtn.disabled = false; // Enable BOLO button when on site
         
         this.consoleWrite(`✓ Now on site at: ${data.location}`);
         this.consoleWrite(`✓ Arrival time: ${this.currentSiteStartTime.toLocaleString()}`);
@@ -922,6 +1119,10 @@ class SecuritySpecialistApp {
         document.getElementById('onSiteBtn').disabled = false;
         document.getElementById('offSiteBtn').disabled = true;
         document.getElementById('checkpointBtn').disabled = true; // Disable checkpoint button when off site
+        
+        // Disable BOLO button when off site
+        const boloListBtn = document.getElementById('boloListBtn');
+        if (boloListBtn) boloListBtn.disabled = true;
         
         this.updatePatrolStopsList();
         this.showNotification('Left site - now in transit');
@@ -1436,6 +1637,107 @@ class SecuritySpecialistApp {
         });
     }
 
+    // Enhanced BOLO functionality for current location
+    showCurrentLocationBolos() {
+        if (!this.isOnSite || !this.currentPatrolStop) {
+            this.showNotification('Must be on site to view location-specific BOLOs!', 'error');
+            return;
+        }
+
+        const currentLocation = this.currentPatrolStop.location;
+        
+        // Filter BOLOs by current location or show all active BOLOs
+        const locationBolos = this.bolos.filter(bolo => 
+            bolo.active !== false && (
+                !bolo.location || 
+                bolo.location.toLowerCase().includes(currentLocation.toLowerCase()) ||
+                currentLocation.toLowerCase().includes(bolo.location?.toLowerCase() || '')
+            )
+        );
+
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+
+        // Create Excel-like table with enhanced styling
+        const tableRows = locationBolos.map((bolo, i) => `
+            <tr style="border-bottom: 1px solid var(--desktop-border, var(--mobile-border));">
+                <td style="padding: 8px; font-weight: bold;">${bolo.id || (i + 1)}</td>
+                <td style="padding: 8px;">${bolo.subject || 'N/A'}</td>
+                <td style="padding: 8px;">${bolo.type || 'Person'}</td>
+                <td style="padding: 8px;">${bolo.description || bolo.notes || 'No description'}</td>
+                <td style="padding: 8px;">${bolo.priority || 'Medium'}</td>
+                <td style="padding: 8px; font-size: 11px;">${this.formatDateTime(bolo.createdAt || new Date())}</td>
+                <td style="padding: 8px;">
+                    <span style="padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; 
+                          background: ${bolo.active !== false ? 'var(--desktop-success, var(--mobile-success))' : 'var(--desktop-danger, var(--mobile-danger))'}; 
+                          color: white;">
+                        ${bolo.active !== false ? 'ACTIVE' : 'INACTIVE'}
+                    </span>
+                </td>
+            </tr>
+        `).join('');
+
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>🚨 BOLO ALERTS - ${currentLocation.toUpperCase()}</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 16px; padding: 12px; background: var(--desktop-bg-tertiary, var(--mobile-bg-tertiary)); border-radius: 4px;">
+                    <strong>Current Location:</strong> ${currentLocation}<br>
+                    <strong>On Site Since:</strong> ${this.currentSiteStartTime ? this.currentSiteStartTime.toLocaleString() : 'Unknown'}<br>
+                    <strong>Active BOLOs:</strong> ${locationBolos.length}
+                </div>
+                
+                <div style="overflow-x: auto; max-height: 400px; border: 1px solid var(--desktop-border, var(--mobile-border)); border-radius: 4px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead style="background: var(--desktop-bg-secondary, var(--mobile-bg-secondary)); position: sticky; top: 0;">
+                            <tr>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">ID</th>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Subject</th>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Type</th>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Description</th>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Priority</th>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Created</th>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows || '<tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--desktop-text-muted, var(--mobile-text-muted));">No active BOLOs for this location</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 16px; padding: 8px; background: var(--desktop-bg-primary, var(--mobile-bg-primary)); border-radius: 4px; font-size: 11px;">
+                    <strong>Console Command:</strong> Type "bolos" to view all system BOLOs or "bolo [subject] [description]" to create new BOLO
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'block';
+        
+        // Also log to console
+        this.consoleWrite(`=== LOCATION-SPECIFIC BOLO ALERTS ===`);
+        this.consoleWrite(`Current Location: ${currentLocation}`);
+        this.consoleWrite(`Active BOLOs Found: ${locationBolos.length}`);
+        this.consoleWrite('');
+        
+        if (locationBolos.length > 0) {
+            locationBolos.forEach((bolo, idx) => {
+                this.consoleWrite(`[${idx + 1}] ID: ${bolo.id || 'N/A'} | ${bolo.type || 'Person'}: ${bolo.subject || 'Unknown'}`);
+                if (bolo.description || bolo.notes) {
+                    this.consoleWrite(`    Description: ${bolo.description || bolo.notes}`);
+                }
+                this.consoleWrite(`    Priority: ${bolo.priority || 'Medium'} | Status: ${bolo.active !== false ? 'ACTIVE' : 'INACTIVE'}`);
+                this.consoleWrite('');
+            });
+        } else {
+            this.consoleWrite('No active BOLOs found for current location.');
+        }
+        
+        this.consoleWrite('BOLO display opened in modal window.');
+    }
+
     // =====================
     // Command Console
     // =====================
@@ -1443,23 +1745,30 @@ class SecuritySpecialistApp {
         const input = document.getElementById('consoleInput');
         if (!input) return;
         
-        // Command history
-        this.commandHistory = this.commandHistory || [];
+        // Initialize command history with persistence
+        this.loadCommandHistory();
         this.historyIndex = -1;
         
         input.addEventListener('keydown', (e) => {
-            // Check if we're in prompt mode
-            if (this.currentPromptSequence && this.promptKeyListener) {
-                // Let the prompt handler deal with it
+            // Check if we're in prompt mode or step-by-step mode
+            if ((this.currentPromptSequence && this.promptKeyListener) || 
+                (this.currentStepByStep && !this.currentStepByStep.cancelled)) {
+                // Let the respective handler deal with it
                 return;
             }
             
             if (e.key === 'Enter') {
                 const cmd = input.value.trim();
                 if (cmd) {
+                    // Add to history and save
                     this.commandHistory.unshift(cmd);
-                    if (this.commandHistory.length > 50) this.commandHistory.pop();
+                    // Keep only last 50 commands
+                    if (this.commandHistory.length > 50) {
+                        this.commandHistory = this.commandHistory.slice(0, 50);
+                    }
+                    this.saveCommandHistory();
                     this.historyIndex = -1;
+                    this.clearHistoryIndicator();
                     this.handleCommand(cmd);
                 }
                 input.value = '';
@@ -1468,15 +1777,19 @@ class SecuritySpecialistApp {
                 if (this.historyIndex < this.commandHistory.length - 1) {
                     this.historyIndex++;
                     input.value = this.commandHistory[this.historyIndex] || '';
+                    // Show history indicator
+                    this.showHistoryIndicator(this.historyIndex + 1, this.commandHistory.length);
                 }
             } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 if (this.historyIndex > 0) {
                     this.historyIndex--;
                     input.value = this.commandHistory[this.historyIndex] || '';
+                    this.showHistoryIndicator(this.historyIndex + 1, this.commandHistory.length);
                 } else if (this.historyIndex === 0) {
                     this.historyIndex = -1;
                     input.value = '';
+                    this.clearHistoryIndicator();
                 }
             } else if (e.key === 'Tab') {
                 e.preventDefault();
@@ -1492,10 +1805,12 @@ class SecuritySpecialistApp {
         this.consoleWrite('✓ Communication systems: ONLINE');
         this.consoleWrite('✓ GPS tracking: ENABLED');
         this.consoleWrite('✓ Emergency protocols: LOADED');
+        this.consoleWrite('✓ Command history: LOADED (' + this.commandHistory.length + ' previous commands)');
         this.consoleWrite('');
         this.consoleWrite('Type "help" for command reference');
         this.consoleWrite('Professional format: start [06:00] [am] end [14:00] [pm] [assignment]');
         this.consoleWrite('Quick commands: radio, backup, bolo, patrol');
+        this.consoleWrite('Navigation: ↑/↓ arrows for command history, TAB for autocomplete');
         this.consoleWrite('');
         this.consoleWrite('System ready for operations...');
     }
@@ -1509,6 +1824,58 @@ class SecuritySpecialistApp {
             input.value = matches[0] + ' ';
         } else if (matches.length > 1) {
             this.consoleWrite(`Available: ${matches.join(', ')}`);
+        }
+    }
+
+    // Command history persistence
+    loadCommandHistory() {
+        try {
+            const saved = localStorage.getItem('guardSystemCommandHistory');
+            this.commandHistory = saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            console.error('Error loading command history:', e);
+            this.commandHistory = [];
+        }
+    }
+
+    saveCommandHistory() {
+        try {
+            localStorage.setItem('guardSystemCommandHistory', JSON.stringify(this.commandHistory));
+        } catch (e) {
+            console.error('Error saving command history:', e);
+        }
+    }
+
+    // History navigation indicators
+    showHistoryIndicator(current, total) {
+        let indicator = document.getElementById('historyIndicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.id = 'historyIndicator';
+            indicator.style.cssText = `
+                position: fixed;
+                top: 50px;
+                right: 20px;
+                background: var(--desktop-bg-secondary, var(--mobile-bg-secondary));
+                color: var(--desktop-text-muted, var(--mobile-text-muted));
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                font-family: 'Courier New', monospace;
+                border: 1px solid var(--desktop-border, var(--mobile-border));
+                z-index: 1000;
+                opacity: 0.8;
+            `;
+            document.body.appendChild(indicator);
+        }
+        indicator.textContent = `History: ${current}/${total}`;
+        indicator.style.display = 'block';
+    }
+
+    clearHistoryIndicator() {
+        const indicator = document.getElementById('historyIndicator');
+        if (indicator) {
+            indicator.style.display = 'none';
         }
     }
 
@@ -1551,6 +1918,12 @@ class SecuritySpecialistApp {
             case 'help':
                 this.consoleWrite('=== PROFESSIONAL GUARD SYSTEM COMMANDS ===');
                 this.consoleWrite('');
+                this.consoleWrite('NAVIGATION:');
+                this.consoleWrite('  ↑/↓ arrows - Browse command history');
+                this.consoleWrite('  TAB - Auto-complete commands');
+                this.consoleWrite('  ENTER - Execute command or complete step');
+                this.consoleWrite('  TAB (during step-by-step) - Cancel current command');
+                this.consoleWrite('');
                 this.consoleWrite('MISSION CONTROL:');
                 this.consoleWrite('  start [HH:MM] [am/pm] end [HH:MM] [am/pm] [details] - Start shift');
                 this.consoleWrite('  start [officer_name] - Quick start mission');
@@ -1558,15 +1931,15 @@ class SecuritySpecialistApp {
                 this.consoleWrite('  status - Show current mission status');
                 this.consoleWrite('');
                 this.consoleWrite('SITE OPERATIONS:');
-                this.consoleWrite('  onsite [location] - Arrive at location');
+                this.consoleWrite('  onsite [location] - Arrive at location (step-by-step mode)');
                 this.consoleWrite('  offsite - Depart current location');
                 this.consoleWrite('  patrol [location] - Begin patrol route');
-                this.consoleWrite('  checkpoint [name] [status] - Log checkpoint');
+                this.consoleWrite('  checkpoint [name] [status] - Log checkpoint (step-by-step mode)');
                 this.consoleWrite('');
                 this.consoleWrite('INCIDENT REPORTING:');
-                this.consoleWrite('  incident [type] [location] [description] - Report incident');
+                this.consoleWrite('  incident [type] [location] [description] - Report incident (step-by-step mode)');
                 this.consoleWrite('  bolo [subject] [description] - Create BOLO alert');
-                this.consoleWrite('  report [summary] - Generate report');
+                this.consoleWrite('  report [summary] - Generate report (step-by-step mode)');
                 this.consoleWrite('');
                 this.consoleWrite('COMMUNICATION:');
                 this.consoleWrite('  radio [message] - Radio check with dispatch');
@@ -1575,15 +1948,19 @@ class SecuritySpecialistApp {
                 this.consoleWrite('');
                 this.consoleWrite('SYSTEM UTILITIES:');
                 this.consoleWrite('  sites - List saved sites');
-                this.consoleWrite('  bolos - List active BOLOs');
+                this.consoleWrite('  bolos - List active BOLOs (all locations)');
                 this.consoleWrite('  logs - View mission history');
                 this.consoleWrite('  time - Show current time');
                 this.consoleWrite('  clear - Clear console');
                 this.consoleWrite('');
+                this.consoleWrite('STEP-BY-STEP COMMANDS:');
+                this.consoleWrite('  Commands marked with (step-by-step mode) will guide you through');
+                this.consoleWrite('  each required field. Use ENTER to complete each step, TAB to cancel.');
+                this.consoleWrite('');
                 this.consoleWrite('EXAMPLES:');
                 this.consoleWrite('  start 06:00 am end 14:00 pm Perimeter patrol');
-                this.consoleWrite('  onsite Main Entrance - Security checkpoint');
-                this.consoleWrite('  incident Suspicious Activity Parking Lot Male subject loitering');
+                this.consoleWrite('  onsite (will prompt for location and details)');
+                this.consoleWrite('  incident (will prompt for type, location, description, action)');
                 this.consoleWrite('  bolo John Doe Wanted for questioning - white male 5ft 10in');
                 this.consoleWrite('  patrol Building A - Conducting security sweep');
                 break;
@@ -1596,7 +1973,15 @@ class SecuritySpecialistApp {
                         this.quickStartMission(a);
                     }
                 } else {
-                    this.showStartMissionModal();
+                    // Use step-by-step interface for detailed mission start
+                    this.startStepByStepCommand('start', [
+                        { prompt: 'Specialist Name', key: 'specialistName', required: true },
+                        { prompt: 'Start Time (YYYY-MM-DD HH:MM or leave blank for now)', key: 'startTime', required: false },
+                        { prompt: 'End Time (YYYY-MM-DD HH:MM or leave blank for 8 hours)', key: 'endTime', required: false },
+                        { prompt: 'Mission Notes', key: 'notes', required: false }
+                    ], (data) => {
+                        this.processStepByStepStart(data);
+                    });
                 }
                 break;
             case 'start_detailed':
@@ -3447,6 +3832,10 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                     document.getElementById('endMissionBtn').disabled = false;
                     document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission is active
                     document.getElementById('checkpointBtn').disabled = !this.isOnSite; // Enable checkpoint only when on site
+                    
+                    // Enable BOLO button only when on site
+                    const boloListBtn = document.getElementById('boloListBtn');
+                    if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
                     
                     if (this.currentMission.type === 'patrol') {
                         document.getElementById('onSiteBtn').disabled = this.isOnSite || !!this.currentMission.report;
