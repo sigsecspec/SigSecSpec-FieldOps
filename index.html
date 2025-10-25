@@ -8,50 +8,12 @@
 </head>
 <body>
     <div class="container">
-        <header id="mainHeader" data-unit="PATROL-01" data-badge="S-7734" role="banner" style="display: none;">
-            <div class="header-left">
-                <h1>SigSecSpec Database</h1>
-            </div>
-            <div class="header-right">
-                <div class="user-info">
-                    <span id="currentUser" class="current-user"></span>
-                    <span id="userRole" class="user-role"></span>
-                </div>
-                <button id="logoutBtn" class="nav-btn logout-btn">Logout</button>
-            </div>
+        <header data-unit="PATROL-01" data-badge="S-7734" role="banner">
+            <h1>SigSecSpec Database</h1>
         </header>
 
         <main id="mainContent" role="main" aria-label="Main application content">
-            <!-- Login Screen -->
-            <div id="loginScreen" class="login-screen">
-                <div class="login-content">
-                    <div class="login-header">
-                        <div class="login-icon">🚔</div>
-                        <h1>SigSecSpec Multi-User System</h1>
-                        <p>Secure Badge Authentication Required</p>
-                    </div>
-                    <div class="login-form">
-                        <div class="form-group">
-                            <label for="badgeNumber">Badge Number:</label>
-                            <input type="text" id="badgeNumber" placeholder="Enter 4-digit badge number" maxlength="4" autocomplete="off">
-                        </div>
-                        <div class="form-group">
-                            <label for="password">Password:</label>
-                            <input type="password" id="password" placeholder="Enter password" autocomplete="off">
-                        </div>
-                        <div class="login-actions">
-                            <button id="loginBtn" class="btn-primary control-btn">Authenticate</button>
-                        </div>
-                        <div id="loginError" class="login-error" style="display: none;"></div>
-                    </div>
-                    <div class="login-footer">
-                        <p>Authorized Personnel Only</p>
-                        <p>All access attempts are logged and monitored</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="loading-screen" style="display: none;">
+            <div class="loading-screen">
                 <div class="loading-content">
                     <div class="loading-icon">🚔</div>
                     <h2>Initializing Security System...</h2>
