@@ -38,48 +38,6 @@ class SecuritySpecialistApp {
     }
 
     // Mobile-specific helper functions
-    showMobileQuickActions() {
-        if (!this.isMobileDevice()) return;
-        
-        const modal = document.getElementById('logsModal');
-        const modalContent = modal.querySelector('.modal-content');
-        
-        modalContent.innerHTML = `
-            <div class="modal-header">
-                <h2>Quick Actions</h2>
-                <span class="close">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="dashboard-controls">
-                    ${this.currentMission && this.currentMission.status === 'active' ? `
-                        ${!this.isOnSite ? `
-                            <button class="control-btn btn-success" onclick="app.showOnSiteModal(); app.closeModal();">
-                                Arrive On Scene
-                            </button>
-                        ` : `
-                            <button class="control-btn btn-warning" onclick="app.confirmOffSite(); app.closeModal();">
-                                Clear Scene
-                            </button>
-                        `}
-                        <button class="control-btn btn-primary" onclick="app.showIncidentModal(); app.closeModal();">
-                            Report Incident
-                        </button>
-                        ${this.isOnSite ? `
-                            <button class="control-btn btn-primary" onclick="app.showCheckpointModal(); app.closeModal();">
-                                Add Checkpoint
-                            </button>
-                        ` : ''}
-                    ` : `
-                        <button class="control-btn btn-primary" onclick="app.showStartMissionModal(); app.closeModal();">
-                            Start Mission
-                        </button>
-                    `}
-                </div>
-            </div>
-        `;
-        
-        modal.style.display = 'block';
-    }
 
     handleDesktopCommandButton(button) {
         const buttonText = button.textContent.toLowerCase().trim();
@@ -110,13 +68,13 @@ class SecuritySpecialistApp {
                     this.executeConsoleCommand(`incident ${data.type} ${data.location} ${data.description} ${data.action || ''}`);
                 });
                 break;
-            case 'add checkpoint':
-                this.startPromptSequence('checkpoint', [
-                    { prompt: 'checkpoint name:', key: 'name', required: true },
+            case 'add check':
+                this.startPromptSequence('check', [
+                    { prompt: 'check name:', key: 'name', required: true },
                     { prompt: 'status:', key: 'status', required: true },
                     { prompt: 'notes:', key: 'notes', required: false }
                 ], (data) => {
-                    this.executeConsoleCommand(`checkpoint ${data.name} ${data.status} ${data.notes || ''}`);
+                    this.executeConsoleCommand(`check ${data.name} ${data.status} ${data.notes || ''}`);
                 });
                 break;
             case 'mission report':
@@ -551,7 +509,7 @@ class SecuritySpecialistApp {
                         <div class="mission-card" data-mission="patrol">
                             <div class="mission-icon">🚗</div>
                             <h3>Mobile Patrol</h3>
-                            <p>Vehicle patrol with checkpoint stops</p>
+                            <p>Vehicle patrol with check stops</p>
                         </div>
                         <div class="mission-card" data-mission="desk">
                             <div class="mission-icon">📋</div>
@@ -576,7 +534,7 @@ class SecuritySpecialistApp {
             details: {},
             patrolStops: [],
             incidents: [],
-            checkpoints: []
+            checks: []
         };
         this.saveCurrentMission();
 
@@ -597,7 +555,6 @@ class SecuritySpecialistApp {
                         <div class="mission-status status-inactive" id="missionStatus">Inactive</div>
                     </div>
                     <div class="nav-buttons">
-                        <button class="nav-btn" onclick="app.showMobileQuickActions()" style="margin-right: 10px;">⚡ Quick Actions</button>
                         <button class="nav-btn" onclick="app.attemptNavigateHome()">← Back to Home</button>
                     </div>
                 </div>
@@ -615,8 +572,8 @@ class SecuritySpecialistApp {
                     <button class="control-btn btn-primary" id="incidentReportBtn" onclick="app.showIncidentModal()" disabled>
                         Incident Report
                     </button>
-                    <button class="control-btn btn-primary" id="checkpointBtn" onclick="app.showCheckpointModal()" disabled>
-                        Add Checkpoint
+                    <button class="control-btn btn-primary" id="checkBtn" onclick="app.showCheckModal()" disabled>
+                        Add Check
                     </button>
                     <button class="control-btn btn-info" id="viewIncidentsBtn" onclick="app.showIncidentsListModal()" disabled>
                         View Incidents
@@ -629,9 +586,6 @@ class SecuritySpecialistApp {
                     </button>
                     <button class="control-btn btn-warning" id="poiListBtn" onclick="app.showCurrentLocationPOIs()" disabled>
                         POI's (Location)
-                    </button>
-                    <button class="control-btn btn-warning" onclick="app.showMissionReportModal()" id="missionReportBtn" disabled>
-                        Mission Report
                     </button>
                     <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.confirmEndMission()" disabled>
                         End Mission
@@ -664,7 +618,6 @@ class SecuritySpecialistApp {
                         <div class="mission-status status-inactive" id="missionStatus">Inactive</div>
                     </div>
                     <div class="nav-buttons">
-                        <button class="nav-btn" onclick="app.showMobileQuickActions()" style="margin-right: 10px;">⚡ Quick Actions</button>
                         <button class="nav-btn" onclick="app.attemptNavigateHome()">← Back to Home</button>
                     </div>
                 </div>
@@ -684,9 +637,6 @@ class SecuritySpecialistApp {
                     </button>
                     <button class="control-btn btn-warning" id="poiListBtn" onclick="app.showCurrentLocationPOIs()" disabled>
                         POI's (Location)
-                    </button>
-                    <button class="control-btn btn-warning" onclick="app.showMissionReportModal()" id="missionReportBtn" disabled>
-                        Mission Report
                     </button>
                     <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.confirmEndMission()" disabled>
                         End Mission
@@ -914,7 +864,7 @@ class SecuritySpecialistApp {
         this.consoleWrite('✓ Navigation restrictions activated');
         this.consoleWrite('✓ System ready for operations');
         this.consoleWrite('');
-        this.consoleWrite('Available commands: onsite, offsite, incident, checkpoint, report, end');
+        this.consoleWrite('Available commands: onsite, offsite, incident, check, report, end');
         
         // Clear pending details
         this.pendingMissionDetails = null;
@@ -978,7 +928,7 @@ class SecuritySpecialistApp {
             this.consoleWrite(`Notes: ${data.notes}`);
         }
         this.consoleWrite('');
-        this.consoleWrite('Available commands: onsite, offsite, incident, checkpoint, report, end');
+        this.consoleWrite('Available commands: onsite, offsite, incident, check, report, end');
     }
 
     showOnSiteModal() {
@@ -1105,7 +1055,7 @@ class SecuritySpecialistApp {
             departureTime: null,
             details: formData.get('siteDetails'),
             incidents: [],
-            checkpoints: []
+            checks: []
         };
         this.saveCurrentMission();
         
@@ -1114,7 +1064,7 @@ class SecuritySpecialistApp {
         document.getElementById('missionStatus').className = 'mission-status status-onsite';
         document.getElementById('onSiteBtn').disabled = true;
         document.getElementById('offSiteBtn').disabled = false;
-        document.getElementById('checkpointBtn').disabled = false; // Enable checkpoint button when on site
+        document.getElementById('checkBtn').disabled = false; // Enable check button when on site
         
         this.closeModal();
         this.showNotification('Now on site at ' + formData.get('siteLocation'));
@@ -1138,7 +1088,7 @@ class SecuritySpecialistApp {
             departureTime: null,
             details: data.details || '',
             incidents: [],
-            checkpoints: []
+            checks: []
         };
         this.saveCurrentMission();
         
@@ -1151,12 +1101,12 @@ class SecuritySpecialistApp {
         
         const onSiteBtn = document.getElementById('onSiteBtn');
         const offSiteBtn = document.getElementById('offSiteBtn');
-        const checkpointBtn = document.getElementById('checkpointBtn');
+        const checkBtn = document.getElementById('checkBtn');
         const boloListBtn = document.getElementById('boloListBtn');
         const poiListBtn = document.getElementById('poiListBtn');
         if (onSiteBtn) onSiteBtn.disabled = true;
         if (offSiteBtn) offSiteBtn.disabled = false;
-        if (checkpointBtn) checkpointBtn.disabled = false; // Enable checkpoint button when on site
+        if (checkBtn) checkBtn.disabled = false; // Enable check button when on site
         if (boloListBtn) boloListBtn.disabled = false; // Enable BOLO button when on site
         if (poiListBtn) poiListBtn.disabled = false; // Enable POI button when on site
         
@@ -1193,7 +1143,7 @@ class SecuritySpecialistApp {
             document.getElementById('missionStatus').className = 'mission-status status-active';
             document.getElementById('onSiteBtn').disabled = false;
             document.getElementById('offSiteBtn').disabled = true;
-            document.getElementById('checkpointBtn').disabled = true; // Disable checkpoint button when off site
+            document.getElementById('checkBtn').disabled = true; // Disable check button when off site
             
             // Disable BOLO and POI buttons when off site
             const boloListBtn = document.getElementById('boloListBtn');
@@ -2446,7 +2396,7 @@ class SecuritySpecialistApp {
 
     autoComplete(input) {
         const value = input.value.toLowerCase();
-        const commands = ['help', 'start', 'onsite', 'offsite', 'incident', 'checkpoint', 'report', 'end', 'sites', 'bolos', 'bolo', 'pois', 'poi', 'patrol', 'radio', 'backup', 'code', 'logs', 'status', 'time', 'clear', 'home'];
+        const commands = ['help', 'start', 'onsite', 'offsite', 'incident', 'check', 'report', 'end', 'sites', 'bolos', 'bolo', 'pois', 'poi', 'patrol', 'radio', 'backup', 'code', 'logs', 'status', 'time', 'clear', 'home'];
         
         const matches = commands.filter(cmd => cmd.startsWith(value));
         if (matches.length === 1) {
@@ -2563,7 +2513,7 @@ class SecuritySpecialistApp {
                 this.consoleWrite('  onsite [location] - Arrive at location (step-by-step mode)');
                 this.consoleWrite('  offsite - Depart current location');
                 this.consoleWrite('  patrol [location] - Begin patrol route');
-                this.consoleWrite('  checkpoint [name] [status] - Log checkpoint (step-by-step mode)');
+                this.consoleWrite('  check [name] [status] - Log check (step-by-step mode)');
                 this.consoleWrite('');
                 this.consoleWrite('INCIDENT REPORTING:');
                 this.consoleWrite('  incident [type] [location] [description] - Report incident (step-by-step mode)');
@@ -2766,11 +2716,11 @@ class SecuritySpecialistApp {
             case 'confirm_incident':
                 this.confirmIncident();
                 break;
-            case 'checkpoint':
+            case 'check':
                 if (args.length >= 2) {
-                    this.quickCheckpoint(args);
+                    this.quickCheck(args);
                 } else {
-                    this.showCheckpointConsolePrompt();
+                    this.showCheckConsolePrompt();
                 }
                 break;
             case 'report':
@@ -2942,7 +2892,7 @@ class SecuritySpecialistApp {
                 },
                 patrolStops: [],
                 incidents: [],
-                checkpoints: []
+                checks: []
             };
 
             this.missionStartTime = startTime;
@@ -3030,9 +2980,9 @@ class SecuritySpecialistApp {
                 this.consoleWrite('Press Enter to Begin Incident Report');
                 this.consoleWrite('Press ESC to Cancel');
                 break;
-            case 'checkpoint':
+            case 'check':
                 this.consoleWrite('📋 CHECKPOINT LOG PROTOCOL');
-                this.consoleWrite('Press Enter to Add Checkpoint');
+                this.consoleWrite('Press Enter to Add Check');
                 this.consoleWrite('Press ESC to Cancel');
                 break;
             case 'report':
@@ -3103,9 +3053,9 @@ class SecuritySpecialistApp {
                 this.consoleWrite('⚠️ OPENING INCIDENT REPORT SYSTEM...');
                 this.showIncidentModal();
                 break;
-            case 'checkpoint':
+            case 'check':
                 this.consoleWrite('📋 ACCESSING CHECKPOINT LOG...');
-                this.showCheckpointModal();
+                this.showCheckModal();
                 break;
             case 'report':
                 this.consoleWrite('📄 GENERATING MISSION REPORT...');
@@ -3160,7 +3110,7 @@ class SecuritySpecialistApp {
             },
             patrolStops: [],
             incidents: [],
-            checkpoints: []
+            checks: []
         };
         
         this.missionStartTime = now;
@@ -3210,7 +3160,7 @@ class SecuritySpecialistApp {
             departureTime: null,
             details: 'Arrived via console',
             incidents: [],
-            checkpoints: []
+            checks: []
         };
         this.saveCurrentMission();
         
@@ -3219,7 +3169,7 @@ class SecuritySpecialistApp {
         document.getElementById('missionStatus').className = 'mission-status status-onsite';
         document.getElementById('onSiteBtn').disabled = true;
         document.getElementById('offSiteBtn').disabled = false;
-        document.getElementById('checkpointBtn').disabled = false; // Enable checkpoint button when on site
+        document.getElementById('checkBtn').disabled = false; // Enable check button when on site
         
         this.consoleWrite(`Now on site at: ${location}`);
         this.consoleWrite(`Arrival time: ${now.toLocaleString()}`);
@@ -3255,16 +3205,16 @@ class SecuritySpecialistApp {
         this.consoleWrite(`Description: ${description}`);
     }
 
-    quickCheckpoint(args) {
+    quickCheck(args) {
         if (!this.isOnSite) {
-            this.consoleWrite('ERROR: Must be on site to add checkpoint!');
+            this.consoleWrite('ERROR: Must be on site to add check!');
             return;
         }
 
         const [name, status, ...detailsParts] = args;
         const details = detailsParts.join(' ') || 'Added via console';
         
-        const checkpoint = {
+        const check = {
             time: new Date(),
             name: name,
             status: status,
@@ -3272,13 +3222,13 @@ class SecuritySpecialistApp {
         };
 
         if (this.isOnSite && this.currentPatrolStop) {
-            this.currentPatrolStop.checkpoints.push(checkpoint);
+            this.currentPatrolStop.checks.push(check);
         } else {
-            this.currentMission.checkpoints.push(checkpoint);
+            this.currentMission.checks.push(check);
         }
         this.saveCurrentMission();
 
-        this.consoleWrite(`Checkpoint added: ${name} - Status: ${status}`);
+        this.consoleWrite(`Check added: ${name} - Status: ${status}`);
         if (details) this.consoleWrite(`Details: ${details}`);
     }
 
@@ -3425,7 +3375,7 @@ class SecuritySpecialistApp {
         this.consoleWrite(`✓ Route Status: Active`);
         this.consoleWrite(`✓ Time Started: ${new Date().toLocaleString()}`);
         this.consoleWrite('');
-        this.consoleWrite('Patrol route logged. Use "onsite" command when arriving at checkpoints.');
+        this.consoleWrite('Patrol route logged. Use "onsite" command when arriving at checks.');
         
         // Update mission notes
         if (this.currentMission.details) {
@@ -3556,71 +3506,71 @@ class SecuritySpecialistApp {
         }
     }
 
-    showCheckpointModal() {
+    showCheckModal() {
         if (!this.isOnSite) {
-            this.showNotification('Must be on site to add checkpoint!', 'error');
+            this.showNotification('Must be on site to add check!', 'error');
             return;
         }
 
         // Always show modal for button clicks
-        this.showMobileCheckpointModal();
+        this.showMobileCheckModal();
     }
 
-    showCheckpointConsolePrompt() {
+    showCheckConsolePrompt() {
         if (!this.isOnSite) {
-            this.showNotification('Must be on site to add checkpoint!', 'error');
+            this.showNotification('Must be on site to add check!', 'error');
             return;
         }
 
         // For console commands: Use console prompts for desktop, modal for mobile
         if (this.isMobileDevice()) {
-            this.showMobileCheckpointModal();
+            this.showMobileCheckModal();
         } else {
-            this.startPromptSequence('checkpoint', [
-                { prompt: 'checkpoint name:', key: 'name', required: true },
+            this.startPromptSequence('check', [
+                { prompt: 'check name:', key: 'name', required: true },
                 { prompt: 'status:', key: 'status', required: true },
                 { prompt: 'notes:', key: 'notes', required: false }
             ], (data) => {
-                this.processCheckpointFromConsole(data);
+                this.processCheckFromConsole(data);
             });
         }
-        this.consoleWrite('Opening Add Checkpoint form...');
+        this.consoleWrite('Opening Add Check form...');
     }
 
-    showMobileCheckpointModal() {
+    showMobileCheckModal() {
         const modal = document.getElementById('logsModal');
         const modalContent = modal.querySelector('.modal-content');
         
         modalContent.innerHTML = `
             <div class="modal-header">
-                <h2>Add Checkpoint</h2>
+                <h2>Add Check</h2>
                 <span class="close">&times;</span>
             </div>
             <div class="modal-body">
-                <form id="checkpointForm">
+                <form id="checkForm">
                     <div class="form-group">
-                        <label for="checkpointTime">Checkpoint Time:</label>
-                        <input type="datetime-local" id="checkpointTime" required>
+                        <label for="checkTime">Check Time:</label>
+                        <input type="datetime-local" id="checkTime" required>
                     </div>
                     <div class="form-group">
-                        <label for="checkpointName">Checkpoint Name:</label>
-                        <input type="text" id="checkpointName" required placeholder="e.g., Main Entrance, Parking Lot A">
+                        <label for="checkName">Check Name:</label>
+                        <input type="text" id="checkName" required placeholder="e.g., Main Entrance, Parking Lot A">
                     </div>
                     <div class="form-group">
-                        <label for="checkpointStatus">Status:</label>
-                        <select id="checkpointStatus" required>
+                        <label for="checkStatus">Status:</label>
+                        <select id="checkStatus" required>
                             <option value="Normal">Normal</option>
                             <option value="Attention Required">Attention Required</option>
                             <option value="Issue Found">Issue Found</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="checkpointDetails">Details:</label>
-                        <textarea id="checkpointDetails" placeholder="Checkpoint details, observations, etc..."></textarea>
+                        <label for="checkDetails">Details:</label>
+                        <textarea id="checkDetails" placeholder="Check details, observations, etc..."></textarea>
                     </div>
                     <div class="form-actions">
                         <button type="button" class="btn-secondary" onclick="app.closeModal()">Cancel</button>
-                        <button type="submit" class="btn-primary">Add Checkpoint</button>
+                        <button type="submit" class="btn-primary">Add Check</button>
                     </div>
                 </form>
             </div>
@@ -3628,49 +3578,49 @@ class SecuritySpecialistApp {
 
         // Set default time
         const now = new Date();
-        document.getElementById('checkpointTime').value = now.toISOString().slice(0, 16);
+        document.getElementById('checkTime').value = now.toISOString().slice(0, 16);
 
-        document.getElementById('checkpointForm').addEventListener('submit', (e) => {
+        document.getElementById('checkForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            this.addCheckpoint();
+            this.addCheck();
         });
 
         modal.style.display = 'block';
     }
 
-    addCheckpoint() {
-        const form = document.getElementById('checkpointForm');
+    addCheck() {
+        const form = document.getElementById('checkForm');
         const formData = new FormData(form);
         
-        const checkpoint = {
-            time: new Date(formData.get('checkpointTime')),
-            name: formData.get('checkpointName'),
-            status: formData.get('checkpointStatus'),
-            details: formData.get('checkpointDetails') || ''
+        const check = {
+            time: new Date(formData.get('checkTime')),
+            name: formData.get('checkName'),
+            status: formData.get('checkStatus'),
+            details: formData.get('checkDetails') || ''
         };
 
         if (this.isOnSite && this.currentPatrolStop) {
-            this.currentPatrolStop.checkpoints.push(checkpoint);
+            this.currentPatrolStop.checks.push(check);
         } else {
-            this.currentMission.checkpoints.push(checkpoint);
+            this.currentMission.checks.push(check);
         }
         this.saveCurrentMission();
 
         this.closeModal();
-        this.showNotification('Checkpoint added successfully!');
+        this.showNotification('Check added successfully!');
         
         // Log to console as if command was executed
-        this.consoleWrite(`Checkpoint logged: ${checkpoint.name}`);
-        this.consoleWrite(`Status: ${checkpoint.status}`);
-        this.consoleWrite(`Time: ${checkpoint.time.toLocaleString()}`);
-        if (checkpoint.details) {
-            this.consoleWrite(`Details: ${checkpoint.details}`);
+        this.consoleWrite(`Check logged: ${check.name}`);
+        this.consoleWrite(`Status: ${check.status}`);
+        this.consoleWrite(`Time: ${check.time.toLocaleString()}`);
+        if (check.details) {
+            this.consoleWrite(`Details: ${check.details}`);
         }
-        this.consoleWrite('Checkpoint saved successfully');
+        this.consoleWrite('Check saved successfully');
     }
 
-    processCheckpointFromConsole(data) {
-        const checkpoint = {
+    processCheckFromConsole(data) {
+        const check = {
             time: new Date(),
             name: data.name,
             status: data.status,
@@ -3678,23 +3628,23 @@ class SecuritySpecialistApp {
         };
 
         if (this.isOnSite && this.currentPatrolStop) {
-            this.currentPatrolStop.checkpoints.push(checkpoint);
-            this.consoleWrite(`✓ Checkpoint added to current patrol stop`);
+            this.currentPatrolStop.checks.push(check);
+            this.consoleWrite(`✓ Check added to current patrol stop`);
         } else {
-            this.currentMission.checkpoints.push(checkpoint);
-            this.consoleWrite(`✓ Checkpoint added to mission log`);
+            this.currentMission.checks.push(check);
+            this.consoleWrite(`✓ Check added to mission log`);
         }
         this.saveCurrentMission();
 
-        this.consoleWrite(`✓ Checkpoint: ${data.name}`);
+        this.consoleWrite(`✓ Check: ${data.name}`);
         this.consoleWrite(`✓ Status: ${data.status}`);
-        this.consoleWrite(`✓ Time: ${checkpoint.time.toLocaleString()}`);
+        this.consoleWrite(`✓ Time: ${check.time.toLocaleString()}`);
         if (data.notes) {
             this.consoleWrite(`✓ Notes: ${data.notes}`);
         }
         this.consoleWrite('');
 
-        this.showNotification('Checkpoint added successfully!');
+        this.showNotification('Check added successfully!');
     }
 
     showMissionReportModal() {
@@ -3899,7 +3849,8 @@ class SecuritySpecialistApp {
 
     confirmEndMission() {
         if (!this.currentMission.report) {
-            this.showNotification('Mission report must be completed before ending mission!', 'error');
+            this.showNotification('Creating mission report before ending mission...', 'info');
+            this.showMissionReportModal();
             return;
         }
 
@@ -3941,7 +3892,8 @@ class SecuritySpecialistApp {
 
     endMission() {
         if (!this.currentMission.report) {
-            this.showNotification('Mission report must be completed before ending mission!', 'error');
+            this.showNotification('Creating mission report before ending mission...', 'info');
+            this.showMissionReportModal();
             return;
         }
 
@@ -4058,7 +4010,7 @@ class SecuritySpecialistApp {
         
         // Reset button states
         document.getElementById('incidentReportBtn').disabled = true;
-        document.getElementById('checkpointBtn').disabled = true;
+        document.getElementById('checkBtn').disabled = true;
         
         this.closeModal();
         this.showNotification('Mission completed successfully! System reset to inactive. Navigation restrictions removed.');
@@ -4229,12 +4181,12 @@ ${index + 1}. ${stop.location}
    Details: ${stop.details || 'None'}
 `;
 
-                if (stop.checkpoints && stop.checkpoints.length > 0) {
-                    report += `   Checkpoints:
+                if (stop.checks && stop.checks.length > 0) {
+                    report += `   Checks:
 `;
-                    stop.checkpoints.forEach(checkpoint => {
-                        report += `   - ${this.formatDateTime(checkpoint.time)}: ${checkpoint.name} (${checkpoint.status})
-     ${checkpoint.details || 'No additional details'}
+                    stop.checks.forEach(check => {
+                        report += `   - ${this.formatDateTime(check.time)}: ${check.name} (${check.status})
+     ${check.details || 'No additional details'}
 `;
                     });
                 }
@@ -4266,15 +4218,15 @@ ${index + 1}. ${incident.type} - ${this.formatDateTime(incident.time)}
             });
         }
 
-        if (mission.checkpoints && mission.checkpoints.length > 0) {
+        if (mission.checks && mission.checks.length > 0) {
             report += `
 GENERAL CHECKPOINTS:
 `;
-            mission.checkpoints.forEach((checkpoint, index) => {
+            mission.checks.forEach((check, index) => {
                 report += `
-${index + 1}. ${checkpoint.name} - ${this.formatDateTime(checkpoint.time)}
-   Status: ${checkpoint.status}
-   Details: ${checkpoint.details || 'None'}
+${index + 1}. ${check.name} - ${this.formatDateTime(check.time)}
+   Status: ${check.status}
+   Details: ${check.details || 'None'}
 `;
             });
         }
@@ -4529,7 +4481,7 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                     document.getElementById('missionReportBtn').disabled = false;
                     document.getElementById('endMissionBtn').disabled = false;
                     document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission is active
-                    document.getElementById('checkpointBtn').disabled = !this.isOnSite; // Enable checkpoint only when on site
+                    document.getElementById('checkBtn').disabled = !this.isOnSite; // Enable check only when on site
                     
                     // Enable BOLO and POI buttons only when on site
                     const boloListBtn = document.getElementById('boloListBtn');
@@ -4919,7 +4871,7 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                     <div class="mission-log-date">${this.formatDateTime(stop.arrivalTime)} - ${this.formatDateTime(stop.departureTime)}</div>
                     <p><strong>Details:</strong> ${stop.details || 'No details'}</p>
                     <p><strong>Incidents:</strong> ${stop.incidents.length}</p>
-                    <p><strong>Checkpoints:</strong> ${stop.checkpoints.length}</p>
+                    <p><strong>Checks:</strong> ${stop.checks.length}</p>
                 </div>
             `;
         });
