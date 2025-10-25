@@ -1,4 +1,4 @@
-class FieldOfficerApp {
+class SecuritySpecialistApp {
     constructor() {
         this.currentMission = null;
         this.missionLogs = this.loadMissionLogs();
@@ -24,10 +24,14 @@ class FieldOfficerApp {
         this.startAutoSave();
         this.addBeforeUnloadListener();
         this.addNavigationPrevention();
-        this.addPoliceTerminalFeatures();
+        this.addSecurityTerminalFeatures();
+    }
+
+    isMobileDevice() {
+        return window.innerWidth <= 1023;
     }
     
-    addPoliceTerminalFeatures() {
+    addSecurityTerminalFeatures() {
         // Add timestamp for desktop toughbook style
         if (window.innerWidth >= 1024) {
             this.addTimestamp();
@@ -60,7 +64,7 @@ class FieldOfficerApp {
     
     addTimestamp() {
         const timestamp = document.createElement('div');
-        timestamp.id = 'policeTimestamp';
+        timestamp.id = 'securityTimestamp';
         timestamp.style.cssText = `
             position: fixed;
             top: 10px;
@@ -81,7 +85,7 @@ class FieldOfficerApp {
     }
     
     updateTimestamp() {
-        const timestamp = document.getElementById('policeTimestamp');
+        const timestamp = document.getElementById('securityTimestamp');
         if (timestamp) {
             const now = new Date();
             const timeStr = now.toLocaleTimeString('en-US', { 
@@ -108,15 +112,6 @@ class FieldOfficerApp {
             }
         });
 
-        // Navigation
-        document.getElementById('viewLogsBtn').addEventListener('click', () => {
-            this.showMissionLogs();
-        });
-        const siteBtn = document.getElementById('siteManagerBtn');
-        if (siteBtn) siteBtn.addEventListener('click', () => this.showSiteManager());
-        const boloBtn = document.getElementById('boloBtn');
-        if (boloBtn) boloBtn.addEventListener('click', () => this.showBoloBoard());
-
         // Modal close
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('close') || e.target.classList.contains('modal')) {
@@ -125,30 +120,65 @@ class FieldOfficerApp {
         });
     }
 
+    bindDatabaseButtons() {
+        // Navigation buttons - only bind if they exist (on main page)
+        const viewLogsBtn = document.getElementById('viewLogsBtn');
+        if (viewLogsBtn) {
+            viewLogsBtn.addEventListener('click', () => {
+                this.showMissionLogs();
+            });
+        }
+        
+        const siteBtn = document.getElementById('siteManagerBtn');
+        if (siteBtn) {
+            siteBtn.addEventListener('click', () => {
+                this.showSiteManager();
+            });
+        }
+        
+        const boloBtn = document.getElementById('boloBtn');
+        if (boloBtn) {
+            boloBtn.addEventListener('click', () => {
+                this.showBoloBoard();
+            });
+        }
+    }
+
     loadMainPage() {
         const mainContent = document.getElementById('mainContent');
         mainContent.innerHTML = `
-            <div class="mission-selection">
-                <h2>Select Operation Type</h2>
-                <div class="mission-cards">
-                    <div class="mission-card" data-mission="standing">
-                        <div class="mission-icon">🛡️</div>
-                        <h3>Fixed Post</h3>
-                        <p>Stationary patrol assignment</p>
-                    </div>
-                    <div class="mission-card" data-mission="patrol">
-                        <div class="mission-icon">🚔</div>
-                        <h3>Mobile Patrol</h3>
-                        <p>Vehicle patrol with checkpoint stops</p>
-                    </div>
-                    <div class="mission-card" data-mission="desk">
-                        <div class="mission-icon">📋</div>
-                        <h3>Desk Duty</h3>
-                        <p>Station administrative operations</p>
+            <div class="main-screen">
+                <div class="database-buttons">
+                    <button id="viewLogsBtn" class="nav-btn">Database Records</button>
+                    <button id="siteManagerBtn" class="nav-btn">Site Manager</button>
+                    <button id="boloBtn" class="nav-btn">BOLO Board</button>
+                </div>
+                
+                <div class="mission-selection">
+                    <h2>Select Operation Type</h2>
+                    <div class="mission-cards">
+                        <div class="mission-card" data-mission="standing">
+                            <div class="mission-icon">🛡️</div>
+                            <h3>Fixed Post</h3>
+                            <p>Stationary security assignment</p>
+                        </div>
+                        <div class="mission-card" data-mission="patrol">
+                            <div class="mission-icon">🚗</div>
+                            <h3>Mobile Patrol</h3>
+                            <p>Vehicle patrol with checkpoint stops</p>
+                        </div>
+                        <div class="mission-card" data-mission="desk">
+                            <div class="mission-icon">📋</div>
+                            <h3>Desk Duty</h3>
+                            <p>Administrative operations</p>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
+        
+        // Re-bind the database button events since they're now on the main page
+        this.bindDatabaseButtons();
     }
 
     startMissionType(type) {
@@ -213,7 +243,6 @@ class FieldOfficerApp {
                         <span class="prompt">app@ops:~$</span>
                         <input id="consoleInput" placeholder="Type a command, e.g., help" />
                     </div>
-                    <div class="console-hint">Commands: help | start [officer] | onsite [location] | offsite | incident [type] [location] [desc] | status | time | clear</div>
                 </div>
 
                 <div class="patrol-stops">
@@ -266,7 +295,6 @@ class FieldOfficerApp {
                         <span class="prompt">app@ops:~$</span>
                         <input id="consoleInput" placeholder="Type a command, e.g., help" />
                     </div>
-                    <div class="console-hint">Commands: help | start [officer] | incident [type] [location] [desc] | report [summary] | status | time | clear</div>
                 </div>
 
                 <div class="patrol-stops">
@@ -280,17 +308,107 @@ class FieldOfficerApp {
     }
 
     showStartMissionModal() {
-        this.consoleWrite('=== MISSION START CONSOLE ===');
-        this.consoleWrite('Starting mission configuration...');
-        this.consoleWrite('Use console commands to configure mission:');
-        this.consoleWrite('  start [officer_name] - Quick start with officer name');
-        this.consoleWrite('  start_detailed - Start detailed configuration');
-        this.consoleWrite('  cancel - Cancel mission start');
-        this.consoleWrite('');
-        this.consoleWrite('Current mission type: ' + (this.currentMission?.type || 'Not selected'));
-        this.consoleWrite('System status: ' + (this.currentMission?.status || 'Inactive'));
-        this.consoleWrite('');
-        this.consoleWrite('Type your command below:');
+        if (this.isMobileDevice()) {
+            this.showMobileStartMissionModal();
+        } else {
+            this.consoleWrite('=== MISSION START CONSOLE ===');
+            this.consoleWrite('Starting mission configuration...');
+            this.consoleWrite('Use console commands to configure mission:');
+            this.consoleWrite('  start [specialist_name] - Quick start with specialist name');
+            this.consoleWrite('  start_detailed - Start detailed configuration');
+            this.consoleWrite('  cancel - Cancel mission start');
+            this.consoleWrite('');
+            this.consoleWrite('Current mission type: ' + (this.currentMission?.type || 'Not selected'));
+            this.consoleWrite('System status: ' + (this.currentMission?.status || 'Inactive'));
+            this.consoleWrite('');
+            this.consoleWrite('Type your command below:');
+        }
+    }
+
+    showMobileStartMissionModal() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>Start Mission</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="startMissionForm">
+                    <div class="form-group">
+                        <label for="specialistName">Specialist Name:</label>
+                        <input type="text" id="specialistName" required placeholder="Enter your name">
+                    </div>
+                    <div class="form-group">
+                        <label for="missionStartTime">Start Time:</label>
+                        <input type="datetime-local" id="missionStartTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="missionEndTime">End Time:</label>
+                        <input type="datetime-local" id="missionEndTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="missionNotes">Mission Notes (optional):</label>
+                        <textarea id="missionNotes" placeholder="Any special instructions or notes..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="app.closeModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Start Mission</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        // Set default times
+        const now = new Date();
+        const endTime = new Date(now.getTime() + 8 * 60 * 60 * 1000); // 8 hours later
+        document.getElementById('missionStartTime').value = now.toISOString().slice(0, 16);
+        document.getElementById('missionEndTime').value = endTime.toISOString().slice(0, 16);
+
+        document.getElementById('startMissionForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.processMobileStartMission();
+        });
+
+        modal.style.display = 'block';
+    }
+
+    processMobileStartMission() {
+        const form = document.getElementById('startMissionForm');
+        const formData = new FormData(form);
+        
+        const specialistName = formData.get('specialistName');
+        const startTime = new Date(formData.get('missionStartTime'));
+        const endTime = new Date(formData.get('missionEndTime'));
+        const notes = formData.get('missionNotes') || '';
+
+        this.currentMission.status = 'active';
+        this.currentMission.startTime = startTime;
+        this.currentMission.endTime = endTime;
+        this.currentMission.details = {
+            specialistName: specialistName,
+            patrolRoute: '',
+            notes: notes
+        };
+        
+        this.missionStartTime = startTime;
+        this.saveCurrentMission();
+        
+        // Update UI
+        document.getElementById('missionStatus').textContent = 'Active';
+        document.getElementById('missionStatus').className = 'mission-status status-active';
+        document.getElementById('startMissionBtn').disabled = true;
+        document.getElementById('missionReportBtn').disabled = false;
+        document.getElementById('endMissionBtn').disabled = false;
+        
+        if (this.currentMission.type === 'patrol') {
+            document.getElementById('onSiteBtn').disabled = false;
+        }
+        
+        this.addNavigationWarning();
+        this.closeModal();
+        this.showNotification('Mission started successfully!');
     }
 
     startMission() {
@@ -300,32 +418,51 @@ class FieldOfficerApp {
 
     startDetailedMission() {
         this.consoleWrite('=== DETAILED MISSION CONFIGURATION ===');
-        this.consoleWrite('Enter mission details step by step:');
+        this.consoleWrite('Starting step-by-step mission setup...');
         this.consoleWrite('');
-        this.consoleWrite('Step 1: Officer Name');
-        this.consoleWrite('Command: officer [name]');
-        this.consoleWrite('');
-        this.consoleWrite('Step 2: Start Time (optional - defaults to now)');
-        this.consoleWrite('Command: start_time [YYYY-MM-DD HH:MM]');
-        this.consoleWrite('');
-        this.consoleWrite('Step 3: End Time (optional - defaults to 8 hours from now)');
-        this.consoleWrite('Command: end_time [YYYY-MM-DD HH:MM]');
-        this.consoleWrite('');
-        this.consoleWrite('Step 4: Mission Notes (optional)');
-        this.consoleWrite('Command: notes [your notes]');
-        this.consoleWrite('');
-        this.consoleWrite('Step 5: Confirm and Start');
-        this.consoleWrite('Command: confirm_start');
-        this.consoleWrite('');
-        this.consoleWrite('Type your commands below:');
         
         // Initialize mission details object
         this.pendingMissionDetails = {
-            officerName: '',
+            specialistName: '',
             startTime: new Date(),
             endTime: new Date(Date.now() + 8 * 60 * 60 * 1000),
-            notes: ''
+            notes: '',
+            currentStep: 'specialist'
         };
+        
+        this.askNextMissionQuestion();
+    }
+
+    askNextMissionQuestion() {
+        if (!this.pendingMissionDetails) return;
+        
+        switch (this.pendingMissionDetails.currentStep) {
+            case 'specialist':
+                this.consoleWrite('Step 1 of 4: What is your specialist name?');
+                this.consoleWrite('Type: specialist [your_name]');
+                break;
+            case 'start_time':
+                this.consoleWrite('Step 2 of 4: Mission start time (optional - press Enter to use current time)');
+                this.consoleWrite('Type: start_time [YYYY-MM-DD HH:MM] or press Enter to skip');
+                break;
+            case 'end_time':
+                this.consoleWrite('Step 3 of 4: Mission end time (optional - press Enter for 8 hours from start)');
+                this.consoleWrite('Type: end_time [YYYY-MM-DD HH:MM] or press Enter to skip');
+                break;
+            case 'notes':
+                this.consoleWrite('Step 4 of 4: Mission notes (optional - press Enter to skip)');
+                this.consoleWrite('Type: notes [your_notes] or press Enter to skip');
+                break;
+            case 'confirm':
+                this.consoleWrite('All details collected. Ready to start mission:');
+                this.consoleWrite(`Specialist: ${this.pendingMissionDetails.specialistName}`);
+                this.consoleWrite(`Start: ${this.pendingMissionDetails.startTime.toLocaleString()}`);
+                this.consoleWrite(`End: ${this.pendingMissionDetails.endTime.toLocaleString()}`);
+                this.consoleWrite(`Notes: ${this.pendingMissionDetails.notes || 'None'}`);
+                this.consoleWrite('');
+                this.consoleWrite('Type: confirm_start to begin mission');
+                break;
+        }
     }
 
     confirmStartMission() {
@@ -334,13 +471,13 @@ class FieldOfficerApp {
             return;
         }
 
-        if (!this.pendingMissionDetails.officerName) {
-            this.consoleWrite('ERROR: Officer name is required. Use "officer [name]" first.');
+        if (!this.pendingMissionDetails.specialistName) {
+            this.consoleWrite('ERROR: Specialist name is required. Use "specialist [name]" first.');
             return;
         }
 
         this.consoleWrite('=== CONFIRMING MISSION START ===');
-        this.consoleWrite(`Officer: ${this.pendingMissionDetails.officerName}`);
+        this.consoleWrite(`Specialist: ${this.pendingMissionDetails.specialistName}`);
         this.consoleWrite(`Start Time: ${this.pendingMissionDetails.startTime.toLocaleString()}`);
         this.consoleWrite(`End Time: ${this.pendingMissionDetails.endTime.toLocaleString()}`);
         this.consoleWrite(`Notes: ${this.pendingMissionDetails.notes || 'None'}`);
@@ -351,7 +488,7 @@ class FieldOfficerApp {
         this.currentMission.startTime = this.pendingMissionDetails.startTime;
         this.currentMission.endTime = this.pendingMissionDetails.endTime;
         this.currentMission.details = {
-            officerName: this.pendingMissionDetails.officerName,
+            specialistName: this.pendingMissionDetails.specialistName,
             patrolRoute: '',
             notes: this.pendingMissionDetails.notes
         };
@@ -518,20 +655,102 @@ class FieldOfficerApp {
     }
 
     showIncidentModal() {
-        this.consoleWrite('=== INCIDENT REPORT CONSOLE ===');
-        this.consoleWrite('Report an incident using console commands:');
-        this.consoleWrite('');
-        this.consoleWrite('Quick Report:');
-        this.consoleWrite('  incident [type] [location] [description]');
-        this.consoleWrite('');
-        this.consoleWrite('Detailed Report:');
-        this.consoleWrite('  incident_detailed - Start detailed incident report');
-        this.consoleWrite('');
-        this.consoleWrite('Available incident types:');
-        this.consoleWrite('  Security Breach, Suspicious Activity, Equipment Issue');
-        this.consoleWrite('  Medical Emergency, Fire/Safety, Theft, Vandalism, Other');
-        this.consoleWrite('');
-        this.consoleWrite('Type your command below:');
+        if (this.isMobileDevice()) {
+            this.showMobileIncidentModal();
+        } else {
+            this.consoleWrite('=== INCIDENT REPORT CONSOLE ===');
+            this.consoleWrite('Report an incident using console commands:');
+            this.consoleWrite('');
+            this.consoleWrite('Quick Report:');
+            this.consoleWrite('  incident [type] [location] [description]');
+            this.consoleWrite('');
+            this.consoleWrite('Detailed Report:');
+            this.consoleWrite('  incident_detailed - Start detailed incident report');
+            this.consoleWrite('');
+            this.consoleWrite('Available incident types:');
+            this.consoleWrite('  Security Breach, Suspicious Activity, Equipment Issue');
+            this.consoleWrite('  Medical Emergency, Fire/Safety, Theft, Vandalism, Other');
+            this.consoleWrite('');
+            this.consoleWrite('Type your command below:');
+        }
+    }
+
+    showMobileIncidentModal() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>Incident Report</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="incidentForm">
+                    <div class="form-group">
+                        <label for="incidentType">Incident Type:</label>
+                        <select id="incidentType" required>
+                            <option value="">Select incident type...</option>
+                            <option value="Security Breach">Security Breach</option>
+                            <option value="Suspicious Activity">Suspicious Activity</option>
+                            <option value="Equipment Issue">Equipment Issue</option>
+                            <option value="Medical Emergency">Medical Emergency</option>
+                            <option value="Fire/Safety">Fire/Safety</option>
+                            <option value="Theft">Theft</option>
+                            <option value="Vandalism">Vandalism</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="incidentLocation">Location:</label>
+                        <input type="text" id="incidentLocation" required placeholder="Where did this occur?">
+                    </div>
+                    <div class="form-group">
+                        <label for="incidentDescription">Description:</label>
+                        <textarea id="incidentDescription" required placeholder="Describe what happened..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="incidentAction">Action Taken (optional):</label>
+                        <textarea id="incidentAction" placeholder="What action was taken?"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="app.closeModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Submit Report</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.getElementById('incidentForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.processMobileIncident();
+        });
+
+        modal.style.display = 'block';
+    }
+
+    processMobileIncident() {
+        const form = document.getElementById('incidentForm');
+        const formData = new FormData(form);
+        
+        const incident = {
+            time: new Date(),
+            type: formData.get('incidentType'),
+            location: formData.get('incidentLocation'),
+            description: formData.get('incidentDescription'),
+            action: formData.get('incidentAction') || 'None specified'
+        };
+
+        // Add to current patrol stop if on site, otherwise to general incidents
+        if (this.isOnSite && this.currentPatrolStop) {
+            this.currentPatrolStop.incidents.push(incident);
+        } else {
+            this.currentMission.incidents.push(incident);
+        }
+        this.saveCurrentMission();
+
+        this.updateIncidentsList();
+        this.closeModal();
+        this.showNotification('Incident report submitted successfully!');
     }
 
     addIncident() {
@@ -541,33 +760,52 @@ class FieldOfficerApp {
 
     startDetailedIncident() {
         this.consoleWrite('=== DETAILED INCIDENT REPORT ===');
-        this.consoleWrite('Enter incident details step by step:');
+        this.consoleWrite('Starting step-by-step incident report...');
         this.consoleWrite('');
-        this.consoleWrite('Step 1: Incident Type');
-        this.consoleWrite('Command: incident_type [type]');
-        this.consoleWrite('Available types: Security Breach, Suspicious Activity, Equipment Issue, Medical Emergency, Fire/Safety, Theft, Vandalism, Other');
-        this.consoleWrite('');
-        this.consoleWrite('Step 2: Location');
-        this.consoleWrite('Command: incident_location [location]');
-        this.consoleWrite('');
-        this.consoleWrite('Step 3: Description');
-        this.consoleWrite('Command: incident_desc [description]');
-        this.consoleWrite('');
-        this.consoleWrite('Step 4: Action Taken (optional)');
-        this.consoleWrite('Command: incident_action [action]');
-        this.consoleWrite('');
-        this.consoleWrite('Step 5: Confirm and Submit');
-        this.consoleWrite('Command: confirm_incident');
-        this.consoleWrite('');
-        this.consoleWrite('Type your commands below:');
         
         // Initialize incident details object
         this.pendingIncident = {
             type: '',
             location: '',
             description: '',
-            action: 'None specified'
+            action: 'None specified',
+            currentStep: 'type'
         };
+        
+        this.askNextIncidentQuestion();
+    }
+
+    askNextIncidentQuestion() {
+        if (!this.pendingIncident) return;
+        
+        switch (this.pendingIncident.currentStep) {
+            case 'type':
+                this.consoleWrite('Step 1 of 4: What type of incident is this?');
+                this.consoleWrite('Available types: Security Breach, Suspicious Activity, Equipment Issue, Medical Emergency, Fire/Safety, Theft, Vandalism, Other');
+                this.consoleWrite('Type: incident_type [type]');
+                break;
+            case 'location':
+                this.consoleWrite('Step 2 of 4: Where did this incident occur?');
+                this.consoleWrite('Type: incident_location [location]');
+                break;
+            case 'description':
+                this.consoleWrite('Step 3 of 4: Please describe what happened:');
+                this.consoleWrite('Type: incident_desc [description]');
+                break;
+            case 'action':
+                this.consoleWrite('Step 4 of 4: What action was taken? (optional - press Enter to skip)');
+                this.consoleWrite('Type: incident_action [action] or press Enter to skip');
+                break;
+            case 'confirm':
+                this.consoleWrite('Incident report ready for submission:');
+                this.consoleWrite(`Type: ${this.pendingIncident.type}`);
+                this.consoleWrite(`Location: ${this.pendingIncident.location}`);
+                this.consoleWrite(`Description: ${this.pendingIncident.description}`);
+                this.consoleWrite(`Action: ${this.pendingIncident.action}`);
+                this.consoleWrite('');
+                this.consoleWrite('Type: confirm_incident to submit report');
+                break;
+        }
     }
 
     confirmIncident() {
@@ -901,7 +1139,7 @@ class FieldOfficerApp {
         });
         
         // Seed greeting
-        this.consoleWrite('=== POLICE COMMAND CONSOLE INITIALIZED ===');
+        this.consoleWrite('=== SECURITY COMMAND CONSOLE INITIALIZED ===');
         this.consoleWrite('Type "help" for available commands.');
         this.consoleWrite('Use quick commands: start [officer], onsite [location], etc.');
         this.consoleWrite('Use UP/DOWN arrows for command history, TAB for auto-complete.');
@@ -981,14 +1219,16 @@ class FieldOfficerApp {
             case 'start_detailed':
                 this.startDetailedMission();
                 break;
-            case 'officer':
+            case 'specialist':
                 if (args.length > 0) {
                     this.pendingMissionDetails = this.pendingMissionDetails || {};
-                    this.pendingMissionDetails.officerName = a;
-                    this.consoleWrite(`Officer name set: ${a}`);
-                    this.consoleWrite('Next: Set start time with "start_time [YYYY-MM-DD HH:MM]" or continue with "confirm_start"');
+                    this.pendingMissionDetails.specialistName = a;
+                    this.consoleWrite(`✓ Specialist name set: ${a}`);
+                    this.consoleWrite('');
+                    this.pendingMissionDetails.currentStep = 'start_time';
+                    this.askNextMissionQuestion();
                 } else {
-                    this.consoleWrite('ERROR: Please provide officer name. Usage: officer [name]');
+                    this.consoleWrite('ERROR: Please provide specialist name. Usage: specialist [name]');
                 }
                 break;
             case 'start_time':
@@ -1000,11 +1240,17 @@ class FieldOfficerApp {
                     } else {
                         this.pendingMissionDetails = this.pendingMissionDetails || {};
                         this.pendingMissionDetails.startTime = startTime;
-                        this.consoleWrite(`Start time set: ${startTime.toLocaleString()}`);
-                        this.consoleWrite('Next: Set end time with "end_time [YYYY-MM-DD HH:MM]" or continue with "confirm_start"');
+                        this.consoleWrite(`✓ Start time set: ${startTime.toLocaleString()}`);
+                        this.consoleWrite('');
+                        this.pendingMissionDetails.currentStep = 'end_time';
+                        this.askNextMissionQuestion();
                     }
                 } else {
-                    this.consoleWrite('ERROR: Please provide start time. Usage: start_time [YYYY-MM-DD HH:MM]');
+                    // Skip to next step if no time provided
+                    this.consoleWrite('✓ Using current time as start time');
+                    this.consoleWrite('');
+                    this.pendingMissionDetails.currentStep = 'end_time';
+                    this.askNextMissionQuestion();
                 }
                 break;
             case 'end_time':
@@ -1016,22 +1262,30 @@ class FieldOfficerApp {
                     } else {
                         this.pendingMissionDetails = this.pendingMissionDetails || {};
                         this.pendingMissionDetails.endTime = endTime;
-                        this.consoleWrite(`End time set: ${endTime.toLocaleString()}`);
-                        this.consoleWrite('Next: Add notes with "notes [your notes]" or continue with "confirm_start"');
+                        this.consoleWrite(`✓ End time set: ${endTime.toLocaleString()}`);
+                        this.consoleWrite('');
+                        this.pendingMissionDetails.currentStep = 'notes';
+                        this.askNextMissionQuestion();
                     }
                 } else {
-                    this.consoleWrite('ERROR: Please provide end time. Usage: end_time [YYYY-MM-DD HH:MM]');
+                    // Skip to next step if no time provided
+                    this.consoleWrite('✓ Using default end time (8 hours from start)');
+                    this.consoleWrite('');
+                    this.pendingMissionDetails.currentStep = 'notes';
+                    this.askNextMissionQuestion();
                 }
                 break;
             case 'notes':
                 if (args.length > 0) {
                     this.pendingMissionDetails = this.pendingMissionDetails || {};
                     this.pendingMissionDetails.notes = a;
-                    this.consoleWrite(`Notes set: ${a}`);
-                    this.consoleWrite('Next: Confirm and start with "confirm_start"');
+                    this.consoleWrite(`✓ Notes set: ${a}`);
                 } else {
-                    this.consoleWrite('ERROR: Please provide notes. Usage: notes [your notes]');
+                    this.consoleWrite('✓ No notes added');
                 }
+                this.consoleWrite('');
+                this.pendingMissionDetails.currentStep = 'confirm';
+                this.askNextMissionQuestion();
                 break;
             case 'confirm_start':
                 this.confirmStartMission();
@@ -1066,8 +1320,10 @@ class FieldOfficerApp {
                 if (args.length > 0) {
                     this.pendingIncident = this.pendingIncident || {};
                     this.pendingIncident.type = a;
-                    this.consoleWrite(`Incident type set: ${a}`);
-                    this.consoleWrite('Next: Set location with "incident_location [location]"');
+                    this.consoleWrite(`✓ Incident type set: ${a}`);
+                    this.consoleWrite('');
+                    this.pendingIncident.currentStep = 'location';
+                    this.askNextIncidentQuestion();
                 } else {
                     this.consoleWrite('ERROR: Please provide incident type. Usage: incident_type [type]');
                 }
@@ -1076,8 +1332,10 @@ class FieldOfficerApp {
                 if (args.length > 0) {
                     this.pendingIncident = this.pendingIncident || {};
                     this.pendingIncident.location = a;
-                    this.consoleWrite(`Location set: ${a}`);
-                    this.consoleWrite('Next: Set description with "incident_desc [description]"');
+                    this.consoleWrite(`✓ Location set: ${a}`);
+                    this.consoleWrite('');
+                    this.pendingIncident.currentStep = 'description';
+                    this.askNextIncidentQuestion();
                 } else {
                     this.consoleWrite('ERROR: Please provide location. Usage: incident_location [location]');
                 }
@@ -1086,8 +1344,10 @@ class FieldOfficerApp {
                 if (args.length > 0) {
                     this.pendingIncident = this.pendingIncident || {};
                     this.pendingIncident.description = a;
-                    this.consoleWrite(`Description set: ${a}`);
-                    this.consoleWrite('Next: Set action taken with "incident_action [action]" or confirm with "confirm_incident"');
+                    this.consoleWrite(`✓ Description set: ${a}`);
+                    this.consoleWrite('');
+                    this.pendingIncident.currentStep = 'action';
+                    this.askNextIncidentQuestion();
                 } else {
                     this.consoleWrite('ERROR: Please provide description. Usage: incident_desc [description]');
                 }
@@ -1096,11 +1356,13 @@ class FieldOfficerApp {
                 if (args.length > 0) {
                     this.pendingIncident = this.pendingIncident || {};
                     this.pendingIncident.action = a;
-                    this.consoleWrite(`Action set: ${a}`);
-                    this.consoleWrite('Next: Confirm with "confirm_incident"');
+                    this.consoleWrite(`✓ Action set: ${a}`);
                 } else {
-                    this.consoleWrite('ERROR: Please provide action. Usage: incident_action [action]');
+                    this.consoleWrite('✓ No action specified');
                 }
+                this.consoleWrite('');
+                this.pendingIncident.currentStep = 'confirm';
+                this.askNextIncidentQuestion();
                 break;
             case 'confirm_incident':
                 this.confirmIncident();
@@ -1127,8 +1389,10 @@ class FieldOfficerApp {
                 if (args.length > 0) {
                     this.pendingReport = this.pendingReport || {};
                     this.pendingReport.summary = a;
-                    this.consoleWrite(`Summary set: ${a}`);
-                    this.consoleWrite('Next: Set observations with "report_obs [observations]" or confirm with "confirm_report"');
+                    this.consoleWrite(`✓ Summary set: ${a}`);
+                    this.consoleWrite('');
+                    this.pendingReport.currentStep = 'observations';
+                    this.askNextReportQuestion();
                 } else {
                     this.consoleWrite('ERROR: Please provide summary. Usage: report_summary [summary]');
                 }
@@ -1137,21 +1401,25 @@ class FieldOfficerApp {
                 if (args.length > 0) {
                     this.pendingReport = this.pendingReport || {};
                     this.pendingReport.observations = a;
-                    this.consoleWrite(`Observations set: ${a}`);
-                    this.consoleWrite('Next: Set recommendations with "report_rec [recommendations]" or confirm with "confirm_report"');
+                    this.consoleWrite(`✓ Observations set: ${a}`);
                 } else {
-                    this.consoleWrite('ERROR: Please provide observations. Usage: report_obs [observations]');
+                    this.consoleWrite('✓ No observations added');
                 }
+                this.consoleWrite('');
+                this.pendingReport.currentStep = 'recommendations';
+                this.askNextReportQuestion();
                 break;
             case 'report_rec':
                 if (args.length > 0) {
                     this.pendingReport = this.pendingReport || {};
                     this.pendingReport.recommendations = a;
-                    this.consoleWrite(`Recommendations set: ${a}`);
-                    this.consoleWrite('Next: Confirm with "confirm_report"');
+                    this.consoleWrite(`✓ Recommendations set: ${a}`);
                 } else {
-                    this.consoleWrite('ERROR: Please provide recommendations. Usage: report_rec [recommendations]');
+                    this.consoleWrite('✓ No recommendations added');
                 }
+                this.consoleWrite('');
+                this.pendingReport.currentStep = 'confirm';
+                this.askNextReportQuestion();
                 break;
             case 'confirm_report':
                 this.confirmReport();
@@ -1191,7 +1459,7 @@ class FieldOfficerApp {
     // =====================
     // Quick Console Commands (No Popups)
     // =====================
-    quickStartMission(officerName) {
+    quickStartMission(specialistName) {
         if (this.currentMission && this.currentMission.status === 'active') {
             this.consoleWrite('ERROR: Mission already active. End current mission first.');
             return;
@@ -1206,7 +1474,7 @@ class FieldOfficerApp {
             startTime: now,
             endTime: endTime,
             details: {
-                officerName: officerName,
+                specialistName: specialistName,
                 patrolRoute: '',
                 notes: 'Started via console'
             },
@@ -1230,7 +1498,7 @@ class FieldOfficerApp {
         }
         
         this.addNavigationWarning();
-        this.consoleWrite(`Mission started for Officer ${officerName}`);
+        this.consoleWrite(`Mission started for Specialist ${specialistName}`);
         this.consoleWrite(`Expected end time: ${endTime.toLocaleString()}`);
     }
 
@@ -1394,7 +1662,7 @@ class FieldOfficerApp {
         this.consoleWrite('Mission Status:');
         this.consoleWrite(`  Type: ${this.currentMission.type}`);
         this.consoleWrite(`  Status: ${this.currentMission.status}`);
-        this.consoleWrite(`  Officer: ${this.currentMission.details?.officerName || 'Unknown'}`);
+        this.consoleWrite(`  Specialist: ${this.currentMission.details?.specialistName || 'Unknown'}`);
         this.consoleWrite(`  Started: ${this.formatDateTime(this.currentMission.startTime)}`);
         
         if (this.isOnSite && this.currentPatrolStop) {
@@ -1504,16 +1772,83 @@ class FieldOfficerApp {
             return;
         }
 
-        this.consoleWrite('=== MISSION REPORT CONSOLE ===');
-        this.consoleWrite('Create mission report using console commands:');
-        this.consoleWrite('');
-        this.consoleWrite('Quick Report:');
-        this.consoleWrite('  report [summary] - Quick report with summary only');
-        this.consoleWrite('');
-        this.consoleWrite('Detailed Report:');
-        this.consoleWrite('  report_detailed - Start detailed mission report');
-        this.consoleWrite('');
-        this.consoleWrite('Type your command below:');
+        if (this.isMobileDevice()) {
+            this.showMobileMissionReportModal();
+        } else {
+            this.consoleWrite('=== MISSION REPORT CONSOLE ===');
+            this.consoleWrite('Create mission report using console commands:');
+            this.consoleWrite('');
+            this.consoleWrite('Quick Report:');
+            this.consoleWrite('  report [summary] - Quick report with summary only');
+            this.consoleWrite('');
+            this.consoleWrite('Detailed Report:');
+            this.consoleWrite('  report_detailed - Start detailed mission report');
+            this.consoleWrite('');
+            this.consoleWrite('Type your command below:');
+        }
+    }
+
+    showMobileMissionReportModal() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>Mission Report</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="missionReportForm">
+                    <div class="form-group">
+                        <label for="reportSummary">Mission Summary (required):</label>
+                        <textarea id="reportSummary" required placeholder="Provide a summary of the mission..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="reportObservations">Key Observations (optional):</label>
+                        <textarea id="reportObservations" placeholder="Any notable observations during the mission..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="reportRecommendations">Recommendations (optional):</label>
+                        <textarea id="reportRecommendations" placeholder="Any recommendations for future missions..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="app.closeModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Save Report</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.getElementById('missionReportForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.processMobileMissionReport();
+        });
+
+        modal.style.display = 'block';
+    }
+
+    processMobileMissionReport() {
+        const form = document.getElementById('missionReportForm');
+        const formData = new FormData(form);
+        
+        this.currentMission.report = {
+            summary: formData.get('reportSummary'),
+            observations: formData.get('reportObservations') || '',
+            recommendations: formData.get('reportRecommendations') || '',
+            completedAt: new Date()
+        };
+        this.saveCurrentMission();
+
+        // Disable on-site button after mission report is completed (for patrol missions)
+        if (this.currentMission.type === 'patrol') {
+            const onSiteBtn = document.getElementById('onSiteBtn');
+            if (onSiteBtn) {
+                onSiteBtn.disabled = true;
+            }
+        }
+
+        this.closeModal();
+        this.showNotification('Mission report saved successfully!');
     }
 
     saveMissionReport() {
@@ -1523,28 +1858,45 @@ class FieldOfficerApp {
 
     startDetailedReport() {
         this.consoleWrite('=== DETAILED MISSION REPORT ===');
-        this.consoleWrite('Enter mission report details step by step:');
+        this.consoleWrite('Starting step-by-step mission report...');
         this.consoleWrite('');
-        this.consoleWrite('Step 1: Mission Summary (required)');
-        this.consoleWrite('Command: report_summary [summary]');
-        this.consoleWrite('');
-        this.consoleWrite('Step 2: Key Observations (optional)');
-        this.consoleWrite('Command: report_obs [observations]');
-        this.consoleWrite('');
-        this.consoleWrite('Step 3: Recommendations (optional)');
-        this.consoleWrite('Command: report_rec [recommendations]');
-        this.consoleWrite('');
-        this.consoleWrite('Step 4: Confirm and Save');
-        this.consoleWrite('Command: confirm_report');
-        this.consoleWrite('');
-        this.consoleWrite('Type your commands below:');
         
         // Initialize report details object
         this.pendingReport = {
             summary: '',
             observations: '',
-            recommendations: ''
+            recommendations: '',
+            currentStep: 'summary'
         };
+        
+        this.askNextReportQuestion();
+    }
+
+    askNextReportQuestion() {
+        if (!this.pendingReport) return;
+        
+        switch (this.pendingReport.currentStep) {
+            case 'summary':
+                this.consoleWrite('Step 1 of 3: Please provide a mission summary (required):');
+                this.consoleWrite('Type: report_summary [your summary]');
+                break;
+            case 'observations':
+                this.consoleWrite('Step 2 of 3: Key observations during the mission (optional - press Enter to skip):');
+                this.consoleWrite('Type: report_obs [observations] or press Enter to skip');
+                break;
+            case 'recommendations':
+                this.consoleWrite('Step 3 of 3: Any recommendations for future missions (optional - press Enter to skip):');
+                this.consoleWrite('Type: report_rec [recommendations] or press Enter to skip');
+                break;
+            case 'confirm':
+                this.consoleWrite('Mission report ready for submission:');
+                this.consoleWrite(`Summary: ${this.pendingReport.summary}`);
+                this.consoleWrite(`Observations: ${this.pendingReport.observations || 'None'}`);
+                this.consoleWrite(`Recommendations: ${this.pendingReport.recommendations || 'None'}`);
+                this.consoleWrite('');
+                this.consoleWrite('Type: confirm_report to save report');
+                break;
+        }
     }
 
     confirmReport() {
@@ -1761,7 +2113,7 @@ class FieldOfficerApp {
                             <div class="mission-log-title">${log.id} - ${log.type.charAt(0).toUpperCase() + log.type.slice(1)} Mission</div>
                             <div class="mission-log-date">${this.formatDate(log.startTime)}</div>
                         </div>
-                        <p><strong>Officer:</strong> ${log.details.officerName}</p>
+                        <p><strong>Specialist:</strong> ${log.details.specialistName}</p>
                         <p><strong>Duration:</strong> ${this.formatDuration(log.startTime, log.actualEndTime)}</p>
                         <div class="mission-log-actions">
                             <button class="btn-small btn-primary" onclick="app.viewMissionDetails('${log.id}')">View Details</button>
@@ -1828,7 +2180,7 @@ class FieldOfficerApp {
 
 Mission ID: ${mission.id}
 Mission Type: ${mission.type.charAt(0).toUpperCase() + mission.type.slice(1)}
-Officer: ${mission.details.officerName}
+Specialist: ${mission.details.specialistName}
 Start Time: ${this.formatDateTime(mission.startTime)}
 End Time: ${this.formatDateTime(mission.actualEndTime)}
 Duration: ${this.formatDuration(mission.startTime, mission.actualEndTime)}
@@ -2434,4 +2786,4 @@ Report Generated: ${this.formatDateTime(new Date())}`;
 }
 
 // Initialize the app
-const app = new FieldOfficerApp();
+const app = new SecuritySpecialistApp();
