@@ -25,10 +25,198 @@ class SecuritySpecialistApp {
         this.addBeforeUnloadListener();
         this.addNavigationPrevention();
         this.addSecurityTerminalFeatures();
+        
+        // Initialize prompt system for desktop
+        this.currentPrompt = null;
+        this.promptCallback = null;
     }
 
     isMobileDevice() {
         return window.innerWidth <= 1023;
+    }
+
+    handleDesktopCommandButton(button) {
+        const buttonText = button.textContent.toLowerCase().trim();
+        
+        // Map button actions to console commands or prompts
+        switch(buttonText) {
+            case 'start mission':
+                this.executeConsoleCommand('start');
+                break;
+            case 'go on site':
+                this.startPromptSequence('onsite', [
+                    { prompt: 'location:', key: 'location', required: true },
+                    { prompt: 'details:', key: 'details', required: false }
+                ], (data) => {
+                    this.executeConsoleCommand(`onsite ${data.location} ${data.details || ''}`);
+                });
+                break;
+            case 'go off site':
+                this.executeConsoleCommand('offsite');
+                break;
+            case 'report incident':
+                this.startPromptSequence('incident', [
+                    { prompt: 'type:', key: 'type', required: true },
+                    { prompt: 'location:', key: 'location', required: true },
+                    { prompt: 'description:', key: 'description', required: true },
+                    { prompt: 'action taken:', key: 'action', required: false }
+                ], (data) => {
+                    this.executeConsoleCommand(`incident ${data.type} ${data.location} ${data.description} ${data.action || ''}`);
+                });
+                break;
+            case 'add checkpoint':
+                this.startPromptSequence('checkpoint', [
+                    { prompt: 'checkpoint name:', key: 'name', required: true },
+                    { prompt: 'status:', key: 'status', required: true },
+                    { prompt: 'notes:', key: 'notes', required: false }
+                ], (data) => {
+                    this.executeConsoleCommand(`checkpoint ${data.name} ${data.status} ${data.notes || ''}`);
+                });
+                break;
+            case 'mission report':
+                this.startPromptSequence('report', [
+                    { prompt: 'summary:', key: 'summary', required: true }
+                ], (data) => {
+                    this.executeConsoleCommand(`report ${data.summary}`);
+                });
+                break;
+            case 'end mission':
+                this.executeConsoleCommand('end');
+                break;
+            default:
+                this.consoleWrite(`Unknown button command: ${buttonText}`);
+        }
+    }
+
+    executeConsoleCommand(command) {
+        // Simulate typing the command in console
+        const input = document.getElementById('consoleInput');
+        if (input) {
+            input.value = command;
+            this.handleCommand(command);
+            input.value = '';
+        }
+    }
+
+    startPromptSequence(commandName, prompts, callback) {
+        this.currentPromptSequence = {
+            commandName,
+            prompts,
+            callback,
+            currentIndex: 0,
+            data: {}
+        };
+        
+        this.consoleWrite(`=== ${commandName.toUpperCase()} COMMAND ===`);
+        this.consoleWrite('Fill in the following information (type after the colon and press Enter):');
+        this.consoleWrite('');
+        this.showNextPrompt();
+    }
+
+    showNextPrompt() {
+        if (!this.currentPromptSequence) return;
+        
+        const sequence = this.currentPromptSequence;
+        if (sequence.currentIndex >= sequence.prompts.length) {
+            // All prompts completed, execute callback
+            this.resetConsolePrompt();
+            sequence.callback(sequence.data);
+            this.currentPromptSequence = null;
+            return;
+        }
+        
+        const currentPrompt = sequence.prompts[sequence.currentIndex];
+        this.currentPrompt = currentPrompt;
+        
+        // Show the prompt in console with clear formatting
+        const promptText = currentPrompt.required ? 
+            `${currentPrompt.prompt} (required)` : 
+            `${currentPrompt.prompt} (optional - press Enter to skip)`;
+        
+        this.consoleWrite(promptText);
+        
+        // Update the console input prompt to show the current field
+        this.updateConsolePrompt(currentPrompt.prompt);
+        
+        // Set up the input to handle this prompt
+        this.setupPromptInput();
+    }
+
+    updateConsolePrompt(promptText) {
+        const promptElement = document.querySelector('.console-input-row .prompt');
+        if (promptElement) {
+            promptElement.textContent = `${promptText}`;
+        }
+    }
+
+    resetConsolePrompt() {
+        const promptElement = document.querySelector('.console-input-row .prompt');
+        if (promptElement) {
+            promptElement.textContent = 'GUARD@SEC:~$';
+        }
+    }
+
+    setupPromptInput() {
+        const input = document.getElementById('consoleInput');
+        if (!input) return;
+        
+        // Remove any existing prompt listeners
+        if (this.promptKeyListener) {
+            input.removeEventListener('keydown', this.promptKeyListener);
+        }
+        
+        // Add new prompt listener
+        this.promptKeyListener = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.handlePromptInput(input.value.trim());
+                input.value = '';
+            }
+        };
+        
+        input.addEventListener('keydown', this.promptKeyListener);
+        input.focus();
+    }
+
+    handlePromptInput(value) {
+        if (!this.currentPromptSequence || !this.currentPrompt) return;
+        
+        const sequence = this.currentPromptSequence;
+        const prompt = this.currentPrompt;
+        
+        // Validate required fields
+        if (prompt.required && !value) {
+            this.consoleWrite(`ERROR: ${prompt.prompt} is required. Please enter a value.`);
+            return;
+        }
+        
+        // Store the value
+        sequence.data[prompt.key] = value;
+        
+        // Show what was entered
+        if (value) {
+            this.consoleWrite(`✓ ${prompt.prompt} ${value}`);
+        } else {
+            this.consoleWrite(`✓ ${prompt.prompt} (skipped)`);
+        }
+        
+        // Move to next prompt
+        sequence.currentIndex++;
+        this.currentPrompt = null;
+        
+        // Remove prompt listener and restore normal command handling
+        const input = document.getElementById('consoleInput');
+        if (input && this.promptKeyListener) {
+            input.removeEventListener('keydown', this.promptKeyListener);
+            this.promptKeyListener = null;
+        }
+        
+        // If this was the last prompt, reset the console prompt
+        if (sequence.currentIndex >= sequence.prompts.length) {
+            this.resetConsolePrompt();
+        }
+        
+        this.showNextPrompt();
     }
     
     addSecurityTerminalFeatures() {
@@ -116,6 +304,14 @@ class SecuritySpecialistApp {
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('close') || e.target.classList.contains('modal')) {
                 this.closeModal();
+            }
+        });
+
+        // Desktop command button handling
+        document.addEventListener('click', (e) => {
+            if (!this.isMobileDevice() && e.target.classList.contains('control-btn')) {
+                e.preventDefault();
+                this.handleDesktopCommandButton(e.target);
             }
         });
     }
@@ -532,6 +728,20 @@ class SecuritySpecialistApp {
             return;
         }
 
+        // Use console prompts for desktop, modal for mobile
+        if (this.isMobileDevice()) {
+            this.showMobileOnSiteModal();
+        } else {
+            this.startPromptSequence('onsite', [
+                { prompt: 'location:', key: 'location', required: true },
+                { prompt: 'details:', key: 'details', required: false }
+            ], (data) => {
+                this.processOnSiteFromConsole(data);
+            });
+        }
+    }
+
+    showMobileOnSiteModal() {
         const modal = document.getElementById('logsModal');
         const modalContent = modal.querySelector('.modal-content');
         
@@ -626,6 +836,43 @@ class SecuritySpecialistApp {
         
         this.closeModal();
         this.showNotification('Now on site at ' + formData.get('siteLocation'));
+    }
+
+    processOnSiteFromConsole(data) {
+        this.isOnSite = true;
+        this.currentSiteStartTime = new Date();
+        
+        this.currentPatrolStop = {
+            location: data.location,
+            arrivalTime: this.currentSiteStartTime,
+            departureTime: null,
+            details: data.details || '',
+            incidents: [],
+            checkpoints: []
+        };
+        this.saveCurrentMission();
+        
+        // Update UI
+        const statusElement = document.getElementById('missionStatus');
+        if (statusElement) {
+            statusElement.textContent = 'On Site';
+            statusElement.className = 'mission-status status-onsite';
+        }
+        
+        const onSiteBtn = document.getElementById('onSiteBtn');
+        const offSiteBtn = document.getElementById('offSiteBtn');
+        if (onSiteBtn) onSiteBtn.disabled = true;
+        if (offSiteBtn) offSiteBtn.disabled = false;
+        
+        this.consoleWrite(`✓ Now on site at: ${data.location}`);
+        this.consoleWrite(`✓ Arrival time: ${this.currentSiteStartTime.toLocaleString()}`);
+        if (data.details) {
+            this.consoleWrite(`✓ Details: ${data.details}`);
+        }
+        this.consoleWrite('');
+        
+        this.showNotification('Now on site at ' + data.location);
+        this.updatePatrolStopsList();
     }
 
     goOffSite() {
@@ -1108,6 +1355,12 @@ class SecuritySpecialistApp {
         this.historyIndex = -1;
         
         input.addEventListener('keydown', (e) => {
+            // Check if we're in prompt mode
+            if (this.currentPromptSequence && this.promptKeyListener) {
+                // Let the prompt handler deal with it
+                return;
+            }
+            
             if (e.key === 'Enter') {
                 const cmd = input.value.trim();
                 if (cmd) {
@@ -2135,6 +2388,21 @@ class SecuritySpecialistApp {
             return;
         }
 
+        // Use console prompts for desktop, modal for mobile
+        if (this.isMobileDevice()) {
+            this.showMobileCheckpointModal();
+        } else {
+            this.startPromptSequence('checkpoint', [
+                { prompt: 'checkpoint name:', key: 'name', required: true },
+                { prompt: 'status:', key: 'status', required: true },
+                { prompt: 'notes:', key: 'notes', required: false }
+            ], (data) => {
+                this.processCheckpointFromConsole(data);
+            });
+        }
+    }
+
+    showMobileCheckpointModal() {
         const modal = document.getElementById('logsModal');
         const modalContent = modal.querySelector('.modal-content');
         
@@ -2204,6 +2472,34 @@ class SecuritySpecialistApp {
         this.saveCurrentMission();
 
         this.closeModal();
+        this.showNotification('Checkpoint added successfully!');
+    }
+
+    processCheckpointFromConsole(data) {
+        const checkpoint = {
+            time: new Date(),
+            name: data.name,
+            status: data.status,
+            details: data.notes || ''
+        };
+
+        if (this.isOnSite && this.currentPatrolStop) {
+            this.currentPatrolStop.checkpoints.push(checkpoint);
+            this.consoleWrite(`✓ Checkpoint added to current patrol stop`);
+        } else {
+            this.currentMission.checkpoints.push(checkpoint);
+            this.consoleWrite(`✓ Checkpoint added to mission log`);
+        }
+        this.saveCurrentMission();
+
+        this.consoleWrite(`✓ Checkpoint: ${data.name}`);
+        this.consoleWrite(`✓ Status: ${data.status}`);
+        this.consoleWrite(`✓ Time: ${checkpoint.time.toLocaleString()}`);
+        if (data.notes) {
+            this.consoleWrite(`✓ Notes: ${data.notes}`);
+        }
+        this.consoleWrite('');
+
         this.showNotification('Checkpoint added successfully!');
     }
 
