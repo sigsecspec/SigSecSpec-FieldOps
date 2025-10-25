@@ -1,194 +1,135 @@
-# SigSecSpec - Signature Security Specialist Database
+# SigSecSpec - Professional Guard System v2.1
 
-A comprehensive web application for security specialists to log their shift activities during Fixed Post, Mobile Patrol, or Desk Duty missions.
+A comprehensive professional security guard system for field operations, incident reporting, mission management, and real-time communications.
 
-## Features
+## 🚔 New Professional Features
 
-### Mission Types
-- **Fixed Post**: Stationary security assignment
-- **Mobile Patrol**: Vehicle patrol with checkpoint stops
-- **Desk Duty**: Administrative operations
+### Enhanced Command System
+- **Professional Time Format**: `start 06:00 am end 14:00 pm Perimeter patrol`
+- **Interactive Button Prompts**: Press Enter to confirm, ESC to cancel operations
+- **Radio Communications**: `radio [message]` for dispatch communication
+- **Emergency Backup**: `backup` command for immediate assistance
+- **Security Codes**: `code [10-4]` lookup system for police/security codes
+- **BOLO System**: `bolo [subject] [description]` for Be On the Lookout alerts
+- **Patrol Routes**: `patrol [location]` for route logging
 
-### Core Functionality
+### Professional Interface
+- **Terminal-Style Console**: Realistic command-line interface
+- **Real-time Status**: Live mission tracking and GPS simulation
+- **Emergency Protocols**: Built-in backup request and code systems
+- **Professional Prompts**: Step-by-step guided operations
 
-#### Mission Management
-- Start mission with specialist details, start/end times, and optional notes
-- Mission report required before ending mission
-- Early end protection (15-minute warning) with excuse form
-- Local storage for all mission logs
-- Copy-to-clipboard functionality for reports
+## 📋 Command Reference
 
-#### Patrol-Specific Features
-- **On-Site/Off-Site Tracking**: Guards can mark when they arrive at and leave patrol stops
-- **Patrol Stops**: Automatically logged with arrival/departure times, location, and details
-- **Checkpoints**: Add checkpoint inspections during patrol stops
-- **In-Transit Status**: Shows when guard is between sites
-- **Mission Report Lock**: Once mission report is completed, cannot visit new sites
+### Mission Control
+```
+start [HH:MM] [am/pm] end [HH:MM] [am/pm] [details] - Professional shift start
+start [officer_name] - Quick start mission
+end - End current shift/mission
+status - Show current mission status
+```
 
-#### Incident Reporting
-- File incident reports anytime (even outside patrol stops)
-- Multiple incident types: Security Breach, Suspicious Activity, Medical Emergency, etc.
-- Incidents automatically categorized by patrol stop or general mission
+### Site Operations
+```
+onsite [location] - Arrive at location
+offsite - Depart current location
+patrol [location] - Begin patrol route
+checkpoint [name] [status] - Log checkpoint
+```
 
-#### Mission Reports
-Contains:
-- Full mission details (start/end times, duration)
-- All patrol stops with timestamps
-- Checkpoint details within each patrol stop
-- Incident reports (categorized by location)
-- Mission summary, observations, and recommendations
-- Early end documentation (if applicable)
+### Incident Reporting
+```
+incident [type] [location] [description] - Report incident
+bolo [subject] [description] - Create BOLO alert
+report [summary] - Generate report
+```
 
-### Console Interface
-- **No Popups**: All operations performed through console commands
-- **Step-by-Step Guidance**: Console provides clear instructions for each operation
-- **Command History**: Use UP/DOWN arrows to navigate command history
-- **Auto-complete**: Use TAB key for command auto-completion
-- **Real-time Feedback**: Console shows status updates and confirmations
+### Communication
+```
+radio [message] - Radio check with dispatch
+backup - Request emergency backup
+code [code] - Look up security/police codes
+```
 
-### Button Functions
-All buttons act as console command shortcuts:
-- **Start Mission** → `start_detailed` command
-- **Go On Site** → `onsite` command (patrol only)
-- **Leave Site** → `offsite` command (patrol only)
-- **Incident Report** → `incident_detailed` command
-- **Add Checkpoint** → `checkpoint` command (when on site)
-- **Mission Report** → `report_detailed` command
-- **End Mission** → `end` command
+### System Utilities
+```
+sites - List saved sites
+bolos - List active BOLOs
+logs - View mission history
+time - Show current time
+clear - Clear console
+help - Show all commands
+```
 
-### Data Management
-- All missions saved to browser's local storage
-- View all past mission logs
-- Copy any report to clipboard for email/reporting
-- Mission logs accessible from main page
+## 🎯 Professional Examples
 
-## How to Use
+```bash
+# Start professional shift
+start 06:00 am end 14:00 pm Perimeter security patrol
 
-1. **Open** `index.html` in a web browser
-2. **Select** your mission type (Standing, Patrol, or Desk)
-3. **Start Mission** using console commands or detailed configuration
+# Arrive at location
+onsite Main Entrance - Security checkpoint
 
-### Console Commands
+# Report suspicious activity
+incident Suspicious Activity Parking Lot Male subject loitering near vehicles
 
-The system uses a command console interface. All operations can be performed using console commands:
+# Create BOLO alert
+bolo John Doe Wanted for questioning - white male 5ft 10in brown hair
 
-#### Mission Management
-- `start [officer_name]` - Quick start mission with officer name
-- `start_detailed` - Start detailed mission configuration
-- `officer [name]` - Set officer name (detailed mode)
-- `start_time [YYYY-MM-DD HH:MM]` - Set start time (detailed mode)
-- `end_time [YYYY-MM-DD HH:MM]` - Set end time (detailed mode)
-- `notes [your_notes]` - Set mission notes (detailed mode)
-- `confirm_start` - Confirm and start mission (detailed mode)
-- `cancel` - Cancel current operation
+# Radio check
+radio Unit 12 checking in - all clear on north perimeter
 
-#### Patrol Operations
-- `onsite [location]` - Go on site at location
-- `offsite` - Leave current site
-- `checkpoint [name] [status] [details]` - Add checkpoint
+# Request backup
+backup
 
-#### Incident Reporting
-- `incident [type] [location] [description]` - Quick incident report
-- `incident_detailed` - Start detailed incident report
-- `incident_type [type]` - Set incident type (detailed mode)
-- `incident_location [location]` - Set incident location (detailed mode)
-- `incident_desc [description]` - Set incident description (detailed mode)
-- `incident_action [action]` - Set action taken (detailed mode)
-- `confirm_incident` - Confirm and submit incident (detailed mode)
+# Look up security codes
+code 10-4
+code 10-99
+```
 
-#### Mission Reports
-- `report [summary]` - Quick mission report
-- `report_detailed` - Start detailed mission report
-- `report_summary [summary]` - Set mission summary (detailed mode)
-- `report_obs [observations]` - Set key observations (detailed mode)
-- `report_rec [recommendations]` - Set recommendations (detailed mode)
-- `confirm_report` - Confirm and save report (detailed mode)
+## 🔧 Interactive Button System
 
-#### System Commands
-- `end` - End current mission
-- `status` - Show current mission status
-- `time` - Show current time
-- `sites` - List saved sites
-- `bolos` - List active BOLOs
-- `logs` - View mission history
-- `clear` - Clear console
-- `home` - Return to main page
-- `help` - Show all available commands
+When clicking buttons, the system now provides professional prompts:
+- **Press Enter** to confirm and proceed with the operation
+- **Press ESC** to cancel and return to ready state
+- Each action shows realistic "Press Enter to Start Mission" style prompts
 
-### For Patrol Missions:
-1. Use `start [officer_name]` or `start_detailed` to begin mission
-2. Use `onsite [location]` when arriving at a location
-3. While on site:
-   - Use `checkpoint [name] [status] [details]` to add checkpoints
-   - Use `incident [type] [location] [description]` for quick incident reports
-   - Use `incident_detailed` for detailed incident reports
-4. Use `offsite` when departing (logs patrol stop)
-5. Repeat steps 2-4 for all patrol stops
-6. Use `report [summary]` or `report_detailed` to complete mission report (required)
-7. Use `end` when shift is complete
+## 🚨 Emergency Features
 
-### Ending Mission Early:
-- If ending >15 minutes early, system requires:
-  - Reason for early end
-  - Coverage/replacement information
-  - Additional documentation in final report
+- **Backup Request**: Simulates emergency backup with dispatch response
+- **Radio Communications**: Mock radio checks with realistic responses
+- **Security Codes**: Database of common 10-codes and security terminology
+- **BOLO System**: Professional Be On the Lookout alert management
 
-### Viewing Past Missions:
-- Click "View Mission Logs" button
-- View details of any past mission
-- Copy reports to clipboard
+## 💻 Technical Features
 
-## Technical Details
-- Pure HTML/CSS/JavaScript (no dependencies)
-- Local storage for data persistence
-- Responsive design for mobile/tablet use
-- No server required - runs entirely in browser
+- **Responsive Design**: Works on mobile devices and desktop terminals
+- **Local Storage**: Persistent mission logs and data
+- **Real-time Updates**: Live status tracking and notifications
+- **Professional UI**: Terminal-style interface with security themes
 
-## Files
-- `index.html` - Main application page
-- `app.js` - Application logic
-- `styles.css` - Styling and layout
+## 🔐 Security & Professional Use
 
-## Console Operations Guide
+This system simulates professional guard operations with:
+- Realistic command structure
+- Professional terminology and procedures
+- Emergency protocol simulation
+- Comprehensive logging and reporting
+- Mock communication systems
 
-### Starting a Mission
-1. **Quick Start**: `start Officer_Johnson`
-2. **Detailed Start**: 
-   - `start_detailed`
-   - `officer Officer_Johnson`
-   - `start_time 2024-01-15 08:00`
-   - `end_time 2024-01-15 16:00`
-   - `notes Regular patrol shift`
-   - `confirm_start`
+Perfect for training, simulation, or professional security operations management.
 
-### Reporting an Incident
-1. **Quick Report**: `incident Security_Breach Main_Entrance Unauthorized_access_attempt`
-2. **Detailed Report**:
-   - `incident_detailed`
-   - `incident_type Security_Breach`
-   - `incident_location Main_Entrance`
-   - `incident_desc Unauthorized access attempt detected`
-   - `incident_action Security notified, area secured`
-   - `confirm_incident`
+## 📱 Usage
 
-### Creating Mission Report
-1. **Quick Report**: `report Mission_completed_successfully`
-2. **Detailed Report**:
-   - `report_detailed`
-   - `report_summary Mission completed successfully with no incidents`
-   - `report_obs All checkpoints secure, no suspicious activity`
-   - `report_rec Continue current patrol schedule`
-   - `confirm_report`
+1. Open `index.html` in a web browser
+2. Select mission type (Fixed Post, Mobile Patrol, Desk Duty)
+3. Use professional commands or interactive buttons
+4. Follow Enter/ESC prompts for operations
+5. Complete professional reports and end shift
 
-### Common Commands
-- `status` - Check current mission status
-- `time` - Get current time
-- `clear` - Clear console screen
-- `help` - Show all commands
-- `cancel` - Cancel current operation
+## 🛠️ Development
 
-## Browser Compatibility
-- Chrome/Edge (recommended)
-- Firefox
-- Safari
-- Any modern browser with localStorage support
+Client-side application using vanilla JavaScript, HTML, and CSS. No server setup required.
+
+---
+**Professional Security Software - Authorized Personnel Only**
