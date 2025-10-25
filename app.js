@@ -1,5 +1,41 @@
 class SecuritySpecialistApp {
     constructor() {
+        // User management properties
+        this.currentUser = null;
+        this.isLoggedIn = false;
+        this.isOperationsUser = false;
+        
+        // Initialize user session
+        this.initializeUserSession();
+        
+        // Only initialize app data if user is logged in
+        if (this.isLoggedIn) {
+            this.initializeAppData();
+        }
+        
+        this.init();
+    }
+    
+    initializeUserSession() {
+        // Check for existing session
+        const savedSession = localStorage.getItem('currentUserSession');
+        if (savedSession) {
+            try {
+                const session = JSON.parse(savedSession);
+                // Validate session (could add expiration logic here)
+                if (session.badge && this.isValidBadge(session.badge)) {
+                    this.currentUser = session;
+                    this.isLoggedIn = true;
+                    this.isOperationsUser = session.badge === '99';
+                }
+            } catch (e) {
+                console.error('Invalid session data:', e);
+                localStorage.removeItem('currentUserSession');
+            }
+        }
+    }
+    
+    initializeAppData() {
         this.currentMission = null;
         this.missionLogs = this.loadMissionLogs();
         this.sites = this.loadSites();
@@ -13,27 +49,410 @@ class SecuritySpecialistApp {
         this.currentSiteStartTime = null;
         this.currentPatrolStop = null;
         this.autoSaveInterval = null;
+    }
+    
+    isValidBadge(badge) {
+        // Validate badge format and range
+        if (!badge || typeof badge !== 'string') return false;
         
-        this.init();
+        // Operations badge
+        if (badge === '99') return true;
+        
+        // Guard badges (01-10)
+        const num = parseInt(badge, 10);
+        return badge.length === 2 && num >= 1 && num <= 10 && badge === num.toString().padStart(2, '0');
+    }
+    
+    login(badge) {
+        if (!this.isValidBadge(badge)) {
+            return { success: false, message: 'Invalid badge number. Please enter 01-10 or 99.' };
+        }
+        
+        // Create user session
+        const user = {
+            badge: badge,
+            loginTime: new Date().toISOString(),
+            isOperations: badge === '99'
+        };
+        
+        // Save session
+        localStorage.setItem('currentUserSession', JSON.stringify(user));
+        
+        // Update app state
+        this.currentUser = user;
+        this.isLoggedIn = true;
+        this.isOperationsUser = user.isOperations;
+        
+        // Initialize app data for this user
+        this.initializeAppData();
+        
+        return { success: true, user: user };
+    }
+    
+    logout() {
+        // Save any pending data
+        if (this.isLoggedIn) {
+            this.saveAllData();
+        }
+        
+        // Clear session
+        localStorage.removeItem('currentUserSession');
+        
+        // Reset app state
+        this.currentUser = null;
+        this.isLoggedIn = false;
+        this.isOperationsUser = false;
+        
+        // Clear auto-save interval
+        if (this.autoSaveInterval) {
+            clearInterval(this.autoSaveInterval);
+            this.autoSaveInterval = null;
+        }
+        
+        // Show login screen
+        this.showLoginScreen();
+    }
+    
+    getUserStorageKey(baseKey) {
+        // Create user-specific storage keys
+        if (!this.currentUser) return baseKey;
+        return `${baseKey}_badge_${this.currentUser.badge}`;
+    }
+    
+    saveAllData() {
+        // Save all current data
+        if (this.isLoggedIn && !this.isOperationsUser) {
+            this.saveMissionLogs();
+            this.saveGuardProfile();
+        }
+        // Sites, BOLOs, and POIs are shared, so always save them
+        this.saveSites();
+        this.saveBolos();
+        this.savePOIs();
+    }
+    
+    // Operations-specific functions
+    showAllMissionLogs() {
+        // This will show all mission logs from all guards
+        this.showMissionLogs();
+    }
+    
+    generateWeeklyReport() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        // Get all mission logs from the past week
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        
+        const weeklyLogs = this.missionLogs.filter(log => 
+            new Date(log.startTime) >= oneWeekAgo
+        );
+        
+        // Group by guard badge
+        const logsByGuard = {};
+        weeklyLogs.forEach(log => {
+            const badge = log.guardBadge || 'Unknown';
+            if (!logsByGuard[badge]) {
+                logsByGuard[badge] = [];
+            }
+            logsByGuard[badge].push(log);
+        });
+        
+        let reportHtml = `
+            <div class="modal-header">
+                <h2>Weekly Operations Report</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="copy-area" id="weeklyReportText">
+                    <h3>WEEKLY SECURITY OPERATIONS REPORT</h3>
+                    <p>Report Period: ${oneWeekAgo.toLocaleDateString()} - ${new Date().toLocaleDateString()}</p>
+                    <p>Generated: ${new Date().toLocaleString()}</p>
+                    <hr>
+        `;
+        
+        // Summary statistics
+        const totalMissions = weeklyLogs.length;
+        const totalIncidents = weeklyLogs.reduce((sum, log) => sum + (log.incidents?.length || 0), 0);
+        const totalPatrolStops = weeklyLogs.reduce((sum, log) => sum + (log.patrolStops?.length || 0), 0);
+        
+        reportHtml += `
+                    <h4>SUMMARY STATISTICS</h4>
+                    <p>Total Missions: ${totalMissions}</p>
+                    <p>Total Incidents: ${totalIncidents}</p>
+                    <p>Total Patrol Stops: ${totalPatrolStops}</p>
+                    <p>Active Guards: ${Object.keys(logsByGuard).length}</p>
+                    <hr>
+        `;
+        
+        // Guard activity breakdown
+        reportHtml += `<h4>GUARD ACTIVITY BREAKDOWN</h4>`;
+        Object.keys(logsByGuard).sort().forEach(badge => {
+            const guardLogs = logsByGuard[badge];
+            const guardIncidents = guardLogs.reduce((sum, log) => sum + (log.incidents?.length || 0), 0);
+            const guardPatrolStops = guardLogs.reduce((sum, log) => sum + (log.patrolStops?.length || 0), 0);
+            
+            reportHtml += `
+                        <p><strong>Badge ${badge}:</strong></p>
+                        <p>  - Missions: ${guardLogs.length}</p>
+                        <p>  - Incidents: ${guardIncidents}</p>
+                        <p>  - Patrol Stops: ${guardPatrolStops}</p>
+                        <br>
+            `;
+        });
+        
+        reportHtml += `
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-primary" onclick="app.copyToClipboard('weeklyReportText')">Copy Report</button>
+                    <button type="button" class="btn-secondary" onclick="app.closeModal()">Close</button>
+                </div>
+            </div>
+        `;
+        
+        modalContent.innerHTML = reportHtml;
+        modal.style.display = 'block';
+    }
+    
+    showGuardOverview() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        let overviewHtml = `
+            <div class="modal-header">
+                <h2>Guard Overview</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="guard-overview">
+        `;
+        
+        // Show all guard profiles
+        for (let i = 1; i <= 10; i++) {
+            const badge = i.toString().padStart(2, '0');
+            const profileKey = `guardProfile_badge_${badge}`;
+            
+            try {
+                const profileData = localStorage.getItem(profileKey);
+                const profile = profileData ? JSON.parse(profileData) : null;
+                
+                // Get recent activity for this guard
+                const guardLogs = this.missionLogs.filter(log => log.guardBadge === badge);
+                const recentLogs = guardLogs.slice(0, 3); // Last 3 missions
+                
+                overviewHtml += `
+                            <div class="guard-card">
+                                <h4>Badge ${badge}</h4>
+                `;
+                
+                if (profile && profile.firstName) {
+                    overviewHtml += `
+                                    <p><strong>Name:</strong> ${profile.firstName} ${profile.lastName}</p>
+                                    <p><strong>Department:</strong> ${profile.department || 'Not Set'}</p>
+                                    <p><strong>Contact:</strong> ${profile.contactNumber || 'Not Set'}</p>
+                    `;
+                } else {
+                    overviewHtml += `<p><em>Profile not configured</em></p>`;
+                }
+                
+                overviewHtml += `
+                                <p><strong>Total Missions:</strong> ${guardLogs.length}</p>
+                                <p><strong>Recent Activity:</strong></p>
+                `;
+                
+                if (recentLogs.length > 0) {
+                    recentLogs.forEach(log => {
+                        overviewHtml += `<p>  - ${log.type} (${new Date(log.startTime).toLocaleDateString()})</p>`;
+                    });
+                } else {
+                    overviewHtml += `<p>  - No recent activity</p>`;
+                }
+                
+                overviewHtml += `</div>`;
+                
+            } catch (e) {
+                console.error(`Error loading profile for badge ${badge}:`, e);
+                overviewHtml += `
+                            <div class="guard-card">
+                                <h4>Badge ${badge}</h4>
+                                <p><em>Error loading profile</em></p>
+                            </div>
+                `;
+            }
+        }
+        
+        overviewHtml += `
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="app.closeModal()">Close</button>
+                </div>
+            </div>
+        `;
+        
+        modalContent.innerHTML = overviewHtml;
+        modal.style.display = 'block';
+    }
+    
+    closeModal() {
+        const modal = document.getElementById('logsModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
 
     init() {
-        // Show loading sequence
-        this.showLoadingSequence().then(() => {
-            this.bindEvents();
-            this.restoreCurrentMission();
-            if (!this.currentMission) {
-                this.loadMainPage();
-            }
-            this.startAutoSave();
-            this.addBeforeUnloadListener();
-            this.addNavigationPrevention();
-            this.addSecurityTerminalFeatures();
+        if (!this.isLoggedIn) {
+            // Show login screen if not logged in
+            this.showLoginScreen();
+            this.bindLoginEvents();
+        } else {
+            // Show loading sequence for logged in users
+            this.showLoadingSequence().then(() => {
+                this.bindEvents();
+                this.restoreCurrentMission();
+                if (!this.currentMission) {
+                    this.loadMainPage();
+                }
+                this.startAutoSave();
+                this.addBeforeUnloadListener();
+                this.addNavigationPrevention();
+                this.addSecurityTerminalFeatures();
+                
+                // Initialize prompt system for desktop
+                this.currentPrompt = null;
+                this.promptCallback = null;
+                
+                // Update header with user info
+                this.updateHeaderUserInfo();
+            });
+        }
+    }
+    
+    showLoginScreen() {
+        const mainContent = document.getElementById('mainContent');
+        const loginScreen = document.getElementById('loginScreen');
+        const loadingScreen = document.querySelector('.loading-screen');
+        
+        if (loginScreen) {
+            loginScreen.style.display = 'flex';
+        }
+        if (loadingScreen) {
+            loadingScreen.style.display = 'none';
+        }
+        
+        // Clear any existing content
+        const existingScreens = mainContent.querySelectorAll('.main-screen, .dashboard');
+        existingScreens.forEach(screen => screen.remove());
+    }
+    
+    hideLoginScreen() {
+        const loginScreen = document.getElementById('loginScreen');
+        if (loginScreen) {
+            loginScreen.style.display = 'none';
+        }
+    }
+    
+    bindLoginEvents() {
+        const loginBtn = document.getElementById('loginBtn');
+        const badgeInput = document.getElementById('badgeInput');
+        
+        if (loginBtn) {
+            loginBtn.addEventListener('click', () => this.handleLogin());
+        }
+        
+        if (badgeInput) {
+            // Format input as user types
+            badgeInput.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                if (value.length > 2) value = value.slice(0, 2);
+                if (value.length === 1 && value !== '9') {
+                    value = '0' + value;
+                }
+                e.target.value = value;
+            });
             
-            // Initialize prompt system for desktop
-            this.currentPrompt = null;
-            this.promptCallback = null;
-        });
+            // Handle Enter key
+            badgeInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.handleLogin();
+                }
+            });
+            
+            // Focus on load
+            badgeInput.focus();
+        }
+    }
+    
+    handleLogin() {
+        const badgeInput = document.getElementById('badgeInput');
+        const badge = badgeInput ? badgeInput.value.trim() : '';
+        
+        if (!badge) {
+            this.showLoginError('Please enter a badge number');
+            return;
+        }
+        
+        const result = this.login(badge);
+        
+        if (result.success) {
+            this.hideLoginScreen();
+            this.showLoadingSequence().then(() => {
+                this.bindEvents();
+                this.restoreCurrentMission();
+                if (!this.currentMission) {
+                    this.loadMainPage();
+                }
+                this.startAutoSave();
+                this.addBeforeUnloadListener();
+                this.addNavigationPrevention();
+                this.addSecurityTerminalFeatures();
+                
+                // Initialize prompt system for desktop
+                this.currentPrompt = null;
+                this.promptCallback = null;
+                
+                // Update header with user info
+                this.updateHeaderUserInfo();
+            });
+        } else {
+            this.showLoginError(result.message);
+        }
+    }
+    
+    showLoginError(message) {
+        // Remove any existing error
+        const existingError = document.querySelector('.login-error');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Create error element
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'login-error';
+        errorDiv.textContent = message;
+        
+        // Insert after badge input
+        const badgeInput = document.getElementById('badgeInput');
+        if (badgeInput && badgeInput.parentNode) {
+            badgeInput.parentNode.insertBefore(errorDiv, badgeInput.nextSibling);
+        }
+        
+        // Remove error after 3 seconds
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.parentNode.removeChild(errorDiv);
+            }
+        }, 3000);
+    }
+    
+    updateHeaderUserInfo() {
+        const header = document.querySelector('header');
+        if (header && this.currentUser) {
+            const userType = this.isOperationsUser ? 'OPERATIONS' : 'GUARD';
+            header.setAttribute('data-badge', this.currentUser.badge);
+            header.setAttribute('data-unit', `${userType}-${this.currentUser.badge}`);
+        }
     }
 
     async showLoadingSequence() {
@@ -552,44 +971,118 @@ class SecuritySpecialistApp {
 
     loadMainPage() {
         const mainContent = document.getElementById('mainContent');
-        mainContent.innerHTML = `
-            <div class="main-screen">
-                <div class="database-buttons">
-                    <button id="profileBtn" class="nav-btn">👤 Guard Profile</button>
-                    <button id="viewLogsBtn" class="nav-btn">Database Records</button>
-                    <button id="siteManagerBtn" class="nav-btn">Site Manager</button>
-                    <button id="boloBtn" class="nav-btn">BOLO Board</button>
-                    <button id="poiBtn" class="nav-btn">Person of Interest</button>
-                </div>
-                
-                <div class="mission-selection">
-                    <h2>Select Operation Type</h2>
-                    <div class="mission-cards">
-                        <div class="mission-card" data-mission="standing">
-                            <div class="mission-icon">🛡️</div>
-                            <h3>Fixed Post</h3>
-                            <p>Stationary security assignment</p>
-                        </div>
-                        <div class="mission-card" data-mission="patrol">
-                            <div class="mission-icon">🚔</div>
-                            <h3>Mobile Patrol</h3>
-                            <p>Vehicle patrol with check stops</p>
-                        </div>
-                        <div class="mission-card" data-mission="desk">
-                            <div class="mission-icon">📋</div>
-                            <h3>Desk Duty</h3>
-                            <p>Administrative operations</p>
+        
+        // Different interface for operations vs guards
+        if (this.isOperationsUser) {
+            mainContent.innerHTML = `
+                <div class="main-screen">
+                    <div class="user-info">
+                        <div class="user-badge">Badge: ${this.currentUser.badge} (Operations)</div>
+                        <button id="logoutBtn" class="nav-btn btn-danger">🚪 Logout</button>
+                    </div>
+                    
+                    <div class="database-buttons">
+                        <button id="profileBtn" class="nav-btn">👤 Operations Profile</button>
+                        <button id="viewLogsBtn" class="nav-btn">📊 All Mission Reports</button>
+                        <button id="siteManagerBtn" class="nav-btn">🏢 Site Manager</button>
+                        <button id="boloBtn" class="nav-btn">🚨 BOLO Board</button>
+                        <button id="poiBtn" class="nav-btn">👥 Person of Interest</button>
+                        <button id="weeklyReportBtn" class="nav-btn">📋 Weekly Reports</button>
+                        <button id="guardOverviewBtn" class="nav-btn">👮 Guard Overview</button>
+                    </div>
+                    
+                    <div class="mission-selection">
+                        <h2>Operations Management Dashboard</h2>
+                        <div class="mission-cards">
+                            <div class="mission-card" onclick="app.showAllMissionLogs()">
+                                <div class="mission-icon">📊</div>
+                                <h3>Mission Reports</h3>
+                                <p>View all guard mission reports</p>
+                            </div>
+                            <div class="mission-card" onclick="app.generateWeeklyReport()">
+                                <div class="mission-icon">📋</div>
+                                <h3>Weekly Report</h3>
+                                <p>Generate comprehensive weekly report</p>
+                            </div>
+                            <div class="mission-card" onclick="app.showGuardOverview()">
+                                <div class="mission-icon">👮</div>
+                                <h3>Guard Overview</h3>
+                                <p>View all guard profiles and activity</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+        } else {
+            mainContent.innerHTML = `
+                <div class="main-screen">
+                    <div class="user-info">
+                        <div class="user-badge">Badge: ${this.currentUser.badge} (Guard)</div>
+                        <button id="logoutBtn" class="nav-btn btn-danger">🚪 Logout</button>
+                    </div>
+                    
+                    <div class="database-buttons">
+                        <button id="profileBtn" class="nav-btn">👤 Guard Profile</button>
+                        <button id="viewLogsBtn" class="nav-btn">📊 My Mission Reports</button>
+                        <button id="siteManagerBtn" class="nav-btn">🏢 Site Manager</button>
+                        <button id="boloBtn" class="nav-btn">🚨 BOLO Board</button>
+                        <button id="poiBtn" class="nav-btn">👥 Person of Interest</button>
+                    </div>
+                    
+                    <div class="mission-selection">
+                        <h2>Select Operation Type</h2>
+                        <div class="mission-cards">
+                            <div class="mission-card" data-mission="standing">
+                                <div class="mission-icon">🛡️</div>
+                                <h3>Fixed Post</h3>
+                                <p>Stationary security assignment</p>
+                            </div>
+                            <div class="mission-card" data-mission="patrol">
+                                <div class="mission-icon">🚔</div>
+                                <h3>Mobile Patrol</h3>
+                                <p>Vehicle patrol with check stops</p>
+                            </div>
+                            <div class="mission-card" data-mission="desk">
+                                <div class="mission-icon">📋</div>
+                                <h3>Desk Duty</h3>
+                                <p>Administrative operations</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
         
         // Re-bind the database button events since they're now on the main page
         this.bindDatabaseButtons();
+        
+        // Bind logout button
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => this.logout());
+        }
+        
+        // Bind operations-specific buttons
+        if (this.isOperationsUser) {
+            const weeklyReportBtn = document.getElementById('weeklyReportBtn');
+            const guardOverviewBtn = document.getElementById('guardOverviewBtn');
+            
+            if (weeklyReportBtn) {
+                weeklyReportBtn.addEventListener('click', () => this.generateWeeklyReport());
+            }
+            if (guardOverviewBtn) {
+                guardOverviewBtn.addEventListener('click', () => this.showGuardOverview());
+            }
+        }
     }
 
     startMissionType(type) {
+        // Operations users cannot start missions
+        if (this.isOperationsUser) {
+            this.showNotification('Operations users cannot start missions. This is for guard use only.', 'error');
+            return;
+        }
+        
         this.currentMission = {
             type: type,
             status: 'inactive',
@@ -1600,17 +2093,35 @@ class SecuritySpecialistApp {
     // =====================
     loadSites() {
         try {
-            const raw = localStorage.getItem('fieldOfficerSites');
+            // Operations can see all sites, guards see shared sites
+            if (this.isOperationsUser) {
+                return this.loadAllSites();
+            }
+            
+            // Sites are shared among all guards
+            const raw = localStorage.getItem('fieldOfficerSites_shared');
             return raw ? JSON.parse(raw) : [];
         } catch (e) {
             console.error('Error loading sites:', e);
             return [];
         }
     }
+    
+    loadAllSites() {
+        // Operations can see all sites from all sources
+        try {
+            const shared = localStorage.getItem('fieldOfficerSites_shared');
+            return shared ? JSON.parse(shared) : [];
+        } catch (e) {
+            console.error('Error loading all sites:', e);
+            return [];
+        }
+    }
 
     saveSites() {
         try {
-            localStorage.setItem('fieldOfficerSites', JSON.stringify(this.sites));
+            // Sites are shared among all users
+            localStorage.setItem('fieldOfficerSites_shared', JSON.stringify(this.sites));
         } catch (e) {
             console.error('Error saving sites:', e);
         }
@@ -2350,7 +2861,8 @@ class SecuritySpecialistApp {
     // =====================
     loadBolos() {
         try {
-            const raw = localStorage.getItem('fieldOfficerBolos');
+            // BOLOs are shared among all users (security alerts)
+            const raw = localStorage.getItem('fieldOfficerBolos_shared');
             const bolos = raw ? JSON.parse(raw) : [];
             
             // Ensure all BOLOs have IDs and migrate old data
@@ -2382,10 +2894,11 @@ class SecuritySpecialistApp {
     saveBolos(bolosData = null) {
         try {
             const dataToSave = bolosData || this.bolos;
-            localStorage.setItem('fieldOfficerBolos', JSON.stringify(dataToSave));
+            // BOLOs are shared among all users
+            localStorage.setItem('fieldOfficerBolos_shared', JSON.stringify(dataToSave));
             if (!bolosData) {
                 // Also save the next ID counter
-                localStorage.setItem('fieldOfficerBoloNextId', JSON.stringify(this.getNextBoloId()));
+                localStorage.setItem('fieldOfficerBoloNextId_shared', JSON.stringify(this.getNextBoloId()));
             }
         } catch (e) {
             console.error('Error saving BOLOs:', e);
@@ -2394,7 +2907,7 @@ class SecuritySpecialistApp {
 
     getNextBoloId() {
         try {
-            const stored = localStorage.getItem('fieldOfficerBoloNextId');
+            const stored = localStorage.getItem('fieldOfficerBoloNextId_shared');
             if (stored) {
                 return JSON.parse(stored);
             }
@@ -2764,7 +3277,8 @@ class SecuritySpecialistApp {
     // =====================
     loadPOIs() {
         try {
-            const raw = localStorage.getItem('fieldOfficerPOIs');
+            // POIs are shared among all users (persons of interest)
+            const raw = localStorage.getItem('fieldOfficerPOIs_shared');
             const pois = raw ? JSON.parse(raw) : [];
             
             // Ensure all POIs have IDs and migrate old data
@@ -2800,9 +3314,10 @@ class SecuritySpecialistApp {
     savePOIs(poisData = null) {
         try {
             const dataToSave = poisData || this.pois;
-            localStorage.setItem('fieldOfficerPOIs', JSON.stringify(dataToSave));
+            // POIs are shared among all users
+            localStorage.setItem('fieldOfficerPOIs_shared', JSON.stringify(dataToSave));
             if (!poisData) {
-                localStorage.setItem('fieldOfficerPOINextId', JSON.stringify(this.getNextPOIId()));
+                localStorage.setItem('fieldOfficerPOINextId_shared', JSON.stringify(this.getNextPOIId()));
             }
         } catch (e) {
             console.error('Error saving POIs:', e);
@@ -2811,7 +3326,7 @@ class SecuritySpecialistApp {
 
     getNextPOIId() {
         try {
-            const stored = localStorage.getItem('fieldOfficerPOINextId');
+            const stored = localStorage.getItem('fieldOfficerPOINextId_shared');
             if (stored) {
                 return JSON.parse(stored);
             }
@@ -5176,7 +5691,14 @@ Report Generated: ${this.formatDateTime(new Date())}`;
 
     loadMissionLogs() {
         try {
-            const saved = localStorage.getItem('fieldOfficerMissionLogs');
+            // For operations users, load all mission logs from all guards
+            if (this.isOperationsUser) {
+                return this.loadAllMissionLogs();
+            }
+            
+            // For guards, load their own logs
+            const storageKey = this.getUserStorageKey('fieldOfficerMissionLogs');
+            const saved = localStorage.getItem(storageKey);
             return saved ? JSON.parse(saved) : [];
         } catch (e) {
             console.error('Error loading mission logs:', e);
@@ -5184,10 +5706,43 @@ Report Generated: ${this.formatDateTime(new Date())}`;
             return [];
         }
     }
+    
+    loadAllMissionLogs() {
+        // Operations can see all guard mission logs
+        const allLogs = [];
+        
+        // Load logs from all guard badges (01-10)
+        for (let i = 1; i <= 10; i++) {
+            const badge = i.toString().padStart(2, '0');
+            const storageKey = `fieldOfficerMissionLogs_badge_${badge}`;
+            try {
+                const saved = localStorage.getItem(storageKey);
+                if (saved) {
+                    const logs = JSON.parse(saved);
+                    // Add badge info to each log
+                    logs.forEach(log => {
+                        log.guardBadge = badge;
+                    });
+                    allLogs.push(...logs);
+                }
+            } catch (e) {
+                console.error(`Error loading logs for badge ${badge}:`, e);
+            }
+        }
+        
+        // Sort by date (newest first)
+        return allLogs.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+    }
 
     saveMissionLogs() {
         try {
-            localStorage.setItem('fieldOfficerMissionLogs', JSON.stringify(this.missionLogs));
+            // Don't save if operations user (they only view, don't create)
+            if (this.isOperationsUser) {
+                return true;
+            }
+            
+            const storageKey = this.getUserStorageKey('fieldOfficerMissionLogs');
+            localStorage.setItem(storageKey, JSON.stringify(this.missionLogs));
             return true;
         } catch (e) {
             console.error('Error saving mission logs:', e);
@@ -5195,7 +5750,8 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                 this.showNotification('Storage full! Please clear old mission logs.', 'error');
                 // Try to save to sessionStorage as emergency backup
                 try {
-                    sessionStorage.setItem('fieldOfficerMissionLogs_backup', JSON.stringify(this.missionLogs));
+                    const backupKey = this.getUserStorageKey('fieldOfficerMissionLogs_backup');
+                    sessionStorage.setItem(backupKey, JSON.stringify(this.missionLogs));
                     this.showNotification('Emergency backup created in session storage', 'error');
                 } catch (e2) {
                     console.error('Emergency backup failed:', e2);
@@ -5209,11 +5765,30 @@ Report Generated: ${this.formatDateTime(new Date())}`;
 
     loadGuardProfile() {
         try {
-            const saved = localStorage.getItem('guardProfile');
-            return saved ? JSON.parse(saved) : {
+            // Operations users don't have individual profiles
+            if (this.isOperationsUser) {
+                return {
+                    firstName: 'Operations',
+                    lastName: 'Manager',
+                    badgeNumber: '99',
+                    employeeId: 'OPS-99',
+                    department: 'Operations',
+                    supervisor: 'N/A',
+                    contactNumber: '',
+                    emergencyContact: '',
+                    certifications: ['Operations Management', 'System Administration'],
+                    notes: 'Operations and Management Account',
+                    createdAt: new Date(),
+                    lastUpdated: new Date()
+                };
+            }
+            
+            const storageKey = this.getUserStorageKey('guardProfile');
+            const saved = localStorage.getItem(storageKey);
+            const profile = saved ? JSON.parse(saved) : {
                 firstName: '',
                 lastName: '',
-                badgeNumber: '',
+                badgeNumber: this.currentUser ? this.currentUser.badge : '',
                 employeeId: '',
                 department: '',
                 supervisor: '',
@@ -5224,13 +5799,20 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                 createdAt: new Date(),
                 lastUpdated: new Date()
             };
+            
+            // Ensure badge number matches current user
+            if (this.currentUser && profile.badgeNumber !== this.currentUser.badge) {
+                profile.badgeNumber = this.currentUser.badge;
+            }
+            
+            return profile;
         } catch (e) {
             console.error('Error loading guard profile:', e);
             this.showNotification('Error loading guard profile', 'error');
             return {
                 firstName: '',
                 lastName: '',
-                badgeNumber: '',
+                badgeNumber: this.currentUser ? this.currentUser.badge : '',
                 employeeId: '',
                 department: '',
                 supervisor: '',
@@ -5246,8 +5828,14 @@ Report Generated: ${this.formatDateTime(new Date())}`;
 
     saveGuardProfile() {
         try {
+            // Don't save if operations user
+            if (this.isOperationsUser) {
+                return true;
+            }
+            
             this.guardProfile.lastUpdated = new Date();
-            localStorage.setItem('guardProfile', JSON.stringify(this.guardProfile));
+            const storageKey = this.getUserStorageKey('guardProfile');
+            localStorage.setItem(storageKey, JSON.stringify(this.guardProfile));
             return true;
         } catch (e) {
             console.error('Error saving guard profile:', e);
