@@ -213,7 +213,7 @@ class FieldOfficerApp {
                         <span class="prompt">app@ops:~$</span>
                         <input id="consoleInput" placeholder="Type a command, e.g., help" />
                     </div>
-                    <div class="console-hint">Try: help | start | onsite | offsite | incident | checkpoint | report | end | sites | bolos</div>
+                    <div class="console-hint">Try: help | start [officer] | onsite [location] | offsite | incident [type] [location] [desc] | status | time | clear</div>
                 </div>
 
                 <div class="patrol-stops">
@@ -266,7 +266,7 @@ class FieldOfficerApp {
                         <span class="prompt">app@ops:~$</span>
                         <input id="consoleInput" placeholder="Type a command, e.g., help" />
                     </div>
-                    <div class="console-hint">Try: help | start | incident | report | end | sites | bolos</div>
+                    <div class="console-hint">Try: help | start [officer] | incident [type] [location] [desc] | report [summary] | status | time | clear</div>
                 </div>
 
                 <div class="patrol-stops">
@@ -842,22 +842,88 @@ class FieldOfficerApp {
     bindConsole() {
         const input = document.getElementById('consoleInput');
         if (!input) return;
+        
+        // Command history
+        this.commandHistory = this.commandHistory || [];
+        this.historyIndex = -1;
+        
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 const cmd = input.value.trim();
-                if (cmd) this.handleCommand(cmd);
+                if (cmd) {
+                    this.commandHistory.unshift(cmd);
+                    if (this.commandHistory.length > 50) this.commandHistory.pop();
+                    this.historyIndex = -1;
+                    this.handleCommand(cmd);
+                }
                 input.value = '';
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (this.historyIndex < this.commandHistory.length - 1) {
+                    this.historyIndex++;
+                    input.value = this.commandHistory[this.historyIndex] || '';
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (this.historyIndex > 0) {
+                    this.historyIndex--;
+                    input.value = this.commandHistory[this.historyIndex] || '';
+                } else if (this.historyIndex === 0) {
+                    this.historyIndex = -1;
+                    input.value = '';
+                }
+            } else if (e.key === 'Tab') {
+                e.preventDefault();
+                this.autoComplete(input);
             }
         });
+        
         // Seed greeting
+        this.consoleWrite('=== POLICE COMMAND CONSOLE INITIALIZED ===');
         this.consoleWrite('Type "help" for available commands.');
+        this.consoleWrite('Use quick commands to avoid popups: start [officer], onsite [location], etc.');
+        this.consoleWrite('Use UP/DOWN arrows for command history, TAB for auto-complete.');
     }
 
-    consoleWrite(text) {
+    autoComplete(input) {
+        const value = input.value.toLowerCase();
+        const commands = ['help', 'start', 'onsite', 'offsite', 'incident', 'checkpoint', 'report', 'end', 'sites', 'bolos', 'logs', 'status', 'time', 'clear', 'home'];
+        
+        const matches = commands.filter(cmd => cmd.startsWith(value));
+        if (matches.length === 1) {
+            input.value = matches[0] + ' ';
+        } else if (matches.length > 1) {
+            this.consoleWrite(`Available: ${matches.join(', ')}`);
+        }
+    }
+
+    consoleWrite(text, type = 'info') {
         const out = document.getElementById('consoleOutput');
         if (!out) return;
+        
         const line = document.createElement('div');
-        line.textContent = text;
+        const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
+        
+        // Add styling based on type
+        line.className = `console-line console-${type}`;
+        
+        if (text.startsWith('$')) {
+            // Command input
+            line.innerHTML = `<span class="console-timestamp">[${timestamp}]</span> <span class="console-command">${text}</span>`;
+        } else if (text.startsWith('ERROR:')) {
+            // Error message
+            line.innerHTML = `<span class="console-timestamp">[${timestamp}]</span> <span class="console-error">${text}</span>`;
+        } else if (text.startsWith('WARNING:')) {
+            // Warning message
+            line.innerHTML = `<span class="console-timestamp">[${timestamp}]</span> <span class="console-warning">${text}</span>`;
+        } else if (text.startsWith('===')) {
+            // System message
+            line.innerHTML = `<span class="console-system">${text}</span>`;
+        } else {
+            // Regular output
+            line.innerHTML = `<span class="console-timestamp">[${timestamp}]</span> <span class="console-output-text">${text}</span>`;
+        }
+        
         out.appendChild(line);
         out.scrollTop = out.scrollHeight;
     }
@@ -868,54 +934,326 @@ class FieldOfficerApp {
         this.consoleWrite(`$ ${raw}`);
         switch ((cmd || '').toLowerCase()) {
             case 'help':
-                this.consoleWrite('Commands: start, onsite, offsite, incident, checkpoint, report, end, sites, bolos, logs, home');
+                this.consoleWrite('Available Commands:');
+                this.consoleWrite('  start [officer_name] - Start mission');
+                this.consoleWrite('  onsite [location] - Go on site');
+                this.consoleWrite('  offsite - Leave current site');
+                this.consoleWrite('  incident [type] [location] [description] - Quick incident report');
+                this.consoleWrite('  checkpoint [name] [status] - Add checkpoint');
+                this.consoleWrite('  report [summary] - Mission report');
+                this.consoleWrite('  end - End mission');
+                this.consoleWrite('  sites - List saved sites');
+                this.consoleWrite('  bolos - List active BOLOs');
+                this.consoleWrite('  logs - View mission history');
+                this.consoleWrite('  status - Show current mission status');
+                this.consoleWrite('  time - Show current time');
+                this.consoleWrite('  clear - Clear console');
                 break;
             case 'start':
-                this.showStartMissionModal();
-                this.consoleWrite('Opening Start Mission form...');
+                if (args.length > 0) {
+                    this.quickStartMission(a);
+                } else {
+                    this.showStartMissionModal();
+                    this.consoleWrite('Opening Start Mission form...');
+                }
                 break;
             case 'onsite':
-                this.goOnSite();
-                this.consoleWrite('Opening Go On Site form...');
+                if (args.length > 0) {
+                    this.quickGoOnSite(a);
+                } else {
+                    this.goOnSite();
+                    this.consoleWrite('Opening Go On Site form...');
+                }
                 break;
             case 'offsite':
                 this.goOffSite();
-                this.consoleWrite('Marking off site (if on site)...');
+                this.consoleWrite('Processing off-site...');
                 break;
             case 'incident':
-                this.showIncidentModal();
-                this.consoleWrite('Opening Incident Report form...');
+                if (args.length >= 3) {
+                    this.quickIncident(args);
+                } else {
+                    this.showIncidentModal();
+                    this.consoleWrite('Opening Incident Report form...');
+                }
                 break;
             case 'checkpoint':
-                this.showCheckpointModal();
-                this.consoleWrite('Opening Add Checkpoint form...');
+                if (args.length >= 2) {
+                    this.quickCheckpoint(args);
+                } else {
+                    this.showCheckpointModal();
+                    this.consoleWrite('Opening Add Checkpoint form...');
+                }
                 break;
             case 'report':
-                this.showMissionReportModal();
-                this.consoleWrite('Opening Mission Report form...');
+                if (args.length > 0) {
+                    this.quickReport(a);
+                } else {
+                    this.showMissionReportModal();
+                    this.consoleWrite('Opening Mission Report form...');
+                }
                 break;
             case 'end':
                 this.endMission();
                 this.consoleWrite('Attempting to end mission...');
                 break;
             case 'sites':
-                this.showSiteManager();
-                this.consoleWrite('Opening Site Manager...');
+                this.listSites();
                 break;
             case 'bolos':
-                this.showBoloBoard();
-                this.consoleWrite('Opening BOLO Board...');
+                this.listBolos();
                 break;
             case 'logs':
                 this.showMissionLogs();
                 this.consoleWrite('Opening Mission Logs...');
+                break;
+            case 'status':
+                this.showStatus();
+                break;
+            case 'time':
+                this.showTime();
+                break;
+            case 'clear':
+                this.clearConsole();
                 break;
             case 'home':
                 this.attemptNavigateHome();
                 this.consoleWrite('Navigating to home...');
                 break;
             default:
-                this.consoleWrite(`Unknown command: ${cmd}. Type "help".`);
+                this.consoleWrite(`Unknown command: ${cmd}. Type "help" for available commands.`);
+        }
+    }
+
+    // =====================
+    // Quick Console Commands (No Popups)
+    // =====================
+    quickStartMission(officerName) {
+        if (this.currentMission && this.currentMission.status === 'active') {
+            this.consoleWrite('ERROR: Mission already active. End current mission first.');
+            return;
+        }
+        
+        const now = new Date();
+        const endTime = new Date(now.getTime() + 8 * 60 * 60 * 1000); // 8 hours later
+        
+        this.currentMission = {
+            type: this.currentMission?.type || 'patrol',
+            status: 'active',
+            startTime: now,
+            endTime: endTime,
+            details: {
+                officerName: officerName,
+                patrolRoute: '',
+                notes: 'Started via console'
+            },
+            patrolStops: [],
+            incidents: [],
+            checkpoints: []
+        };
+        
+        this.missionStartTime = now;
+        this.saveCurrentMission();
+        
+        // Update UI
+        document.getElementById('missionStatus').textContent = 'Active';
+        document.getElementById('missionStatus').className = 'mission-status status-active';
+        document.getElementById('startMissionBtn').disabled = true;
+        document.getElementById('missionReportBtn').disabled = false;
+        document.getElementById('endMissionBtn').disabled = false;
+        
+        if (this.currentMission.type === 'patrol') {
+            document.getElementById('onSiteBtn').disabled = false;
+        }
+        
+        this.addNavigationWarning();
+        this.consoleWrite(`Mission started for Officer ${officerName}`);
+        this.consoleWrite(`Expected end time: ${endTime.toLocaleString()}`);
+    }
+
+    quickGoOnSite(location) {
+        if (this.currentMission?.status !== 'active') {
+            this.consoleWrite('ERROR: Mission must be started first!');
+            return;
+        }
+
+        if (this.currentMission.report) {
+            this.consoleWrite('ERROR: Cannot go on site after mission report is completed!');
+            return;
+        }
+
+        if (this.isOnSite) {
+            this.consoleWrite('ERROR: Already on site. Use "offsite" first.');
+            return;
+        }
+
+        const now = new Date();
+        this.isOnSite = true;
+        this.currentSiteStartTime = now;
+        
+        this.currentPatrolStop = {
+            location: location,
+            arrivalTime: now,
+            departureTime: null,
+            details: 'Arrived via console',
+            incidents: [],
+            checkpoints: []
+        };
+        this.saveCurrentMission();
+        
+        // Update UI
+        document.getElementById('missionStatus').textContent = 'On Site';
+        document.getElementById('missionStatus').className = 'mission-status status-onsite';
+        document.getElementById('onSiteBtn').disabled = true;
+        document.getElementById('offSiteBtn').disabled = false;
+        
+        this.consoleWrite(`Now on site at: ${location}`);
+        this.consoleWrite(`Arrival time: ${now.toLocaleString()}`);
+    }
+
+    quickIncident(args) {
+        if (!this.currentMission || this.currentMission.status !== 'active') {
+            this.consoleWrite('ERROR: Mission must be active to report incidents!');
+            return;
+        }
+
+        const [type, location, ...descParts] = args;
+        const description = descParts.join(' ');
+        
+        const incident = {
+            time: new Date(),
+            type: type,
+            location: location,
+            description: description,
+            action: 'Reported via console'
+        };
+
+        // Add to current patrol stop if on site, otherwise to general incidents
+        if (this.isOnSite && this.currentPatrolStop) {
+            this.currentPatrolStop.incidents.push(incident);
+        } else {
+            this.currentMission.incidents.push(incident);
+        }
+        this.saveCurrentMission();
+
+        this.updateIncidentsList();
+        this.consoleWrite(`Incident reported: ${type} at ${location}`);
+        this.consoleWrite(`Description: ${description}`);
+    }
+
+    quickCheckpoint(args) {
+        if (!this.isOnSite) {
+            this.consoleWrite('ERROR: Must be on site to add checkpoint!');
+            return;
+        }
+
+        const [name, status, ...detailsParts] = args;
+        const details = detailsParts.join(' ') || 'Added via console';
+        
+        const checkpoint = {
+            time: new Date(),
+            name: name,
+            status: status,
+            details: details
+        };
+
+        if (this.isOnSite && this.currentPatrolStop) {
+            this.currentPatrolStop.checkpoints.push(checkpoint);
+        } else {
+            this.currentMission.checkpoints.push(checkpoint);
+        }
+        this.saveCurrentMission();
+
+        this.consoleWrite(`Checkpoint added: ${name} - Status: ${status}`);
+        if (details) this.consoleWrite(`Details: ${details}`);
+    }
+
+    quickReport(summary) {
+        if (this.currentMission?.status !== 'active') {
+            this.consoleWrite('ERROR: Mission must be active to create report!');
+            return;
+        }
+
+        this.currentMission.report = {
+            summary: summary,
+            observations: 'Completed via console',
+            recommendations: '',
+            completedAt: new Date()
+        };
+        this.saveCurrentMission();
+
+        // Disable on-site button after mission report is completed (for patrol missions)
+        if (this.currentMission.type === 'patrol') {
+            const onSiteBtn = document.getElementById('onSiteBtn');
+            if (onSiteBtn) {
+                onSiteBtn.disabled = true;
+            }
+            if (this.isOnSite) {
+                this.consoleWrite('WARNING: Mission report completed. Please leave site to end mission.');
+            }
+        }
+
+        this.consoleWrite('Mission report saved successfully!');
+        this.consoleWrite(`Summary: ${summary}`);
+    }
+
+    listSites() {
+        if (this.sites.length === 0) {
+            this.consoleWrite('No saved sites found.');
+            return;
+        }
+        
+        this.consoleWrite('Saved Sites:');
+        this.sites.forEach((site, idx) => {
+            this.consoleWrite(`  ${idx + 1}. ${site.name} - ${site.address || site.details || 'No details'}`);
+        });
+    }
+
+    listBolos() {
+        if (this.bolos.length === 0) {
+            this.consoleWrite('No active BOLOs.');
+            return;
+        }
+        
+        this.consoleWrite('Active BOLOs:');
+        this.bolos.forEach((bolo, idx) => {
+            this.consoleWrite(`  ${idx + 1}. ${bolo.type}: ${bolo.subject}`);
+            if (bolo.notes) this.consoleWrite(`     Notes: ${bolo.notes}`);
+        });
+    }
+
+    showStatus() {
+        if (!this.currentMission) {
+            this.consoleWrite('No active mission.');
+            return;
+        }
+        
+        this.consoleWrite('Mission Status:');
+        this.consoleWrite(`  Type: ${this.currentMission.type}`);
+        this.consoleWrite(`  Status: ${this.currentMission.status}`);
+        this.consoleWrite(`  Officer: ${this.currentMission.details?.officerName || 'Unknown'}`);
+        this.consoleWrite(`  Started: ${this.formatDateTime(this.currentMission.startTime)}`);
+        
+        if (this.isOnSite && this.currentPatrolStop) {
+            this.consoleWrite(`  Current Location: ${this.currentPatrolStop.location}`);
+            this.consoleWrite(`  On Site Since: ${this.formatDateTime(this.currentPatrolStop.arrivalTime)}`);
+        }
+        
+        this.consoleWrite(`  Incidents: ${this.currentMission.incidents?.length || 0}`);
+        this.consoleWrite(`  Patrol Stops: ${this.currentMission.patrolStops?.length || 0}`);
+    }
+
+    showTime() {
+        const now = new Date();
+        this.consoleWrite(`Current Time: ${now.toLocaleString()}`);
+        this.consoleWrite(`UTC: ${now.toISOString()}`);
+    }
+
+    clearConsole() {
+        const out = document.getElementById('consoleOutput');
+        if (out) {
+            out.innerHTML = '';
+            this.consoleWrite('Console cleared. Type "help" for available commands.');
         }
     }
 
