@@ -419,10 +419,10 @@ class SecuritySpecialistApp {
                     <button class="control-btn btn-warning" id="offSiteBtn" onclick="app.confirmOffSite()" disabled>
                         Clear Scene
                     </button>
-                    <button class="control-btn btn-primary" onclick="app.showIncidentModal()">
+                    <button class="control-btn btn-primary" id="incidentReportBtn" onclick="app.showIncidentModal()" disabled>
                         Incident Report
                     </button>
-                    <button class="control-btn btn-primary" onclick="app.showCheckpointModal()">
+                    <button class="control-btn btn-primary" id="checkpointBtn" onclick="app.showCheckpointModal()" disabled>
                         Add Checkpoint
                     </button>
                     <button class="control-btn btn-warning" onclick="app.showMissionReportModal()" id="missionReportBtn" disabled>
@@ -474,7 +474,7 @@ class SecuritySpecialistApp {
                     <button class="control-btn btn-primary" id="startMissionBtn" onclick="app.showStartMissionModal()">
                         Start Mission
                     </button>
-                    <button class="control-btn btn-primary" onclick="app.showIncidentModal()">
+                    <button class="control-btn btn-primary" id="incidentReportBtn" onclick="app.showIncidentModal()" disabled>
                         Incident Report
                     </button>
                     <button class="control-btn btn-warning" onclick="app.showMissionReportModal()" id="missionReportBtn" disabled>
@@ -584,6 +584,7 @@ class SecuritySpecialistApp {
         document.getElementById('startMissionBtn').disabled = true;
         document.getElementById('missionReportBtn').disabled = false;
         document.getElementById('endMissionBtn').disabled = false;
+        document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission starts
         
         if (this.currentMission.type === 'patrol') {
             document.getElementById('onSiteBtn').disabled = false;
@@ -694,6 +695,7 @@ class SecuritySpecialistApp {
         document.getElementById('startMissionBtn').disabled = true;
         document.getElementById('missionReportBtn').disabled = false;
         document.getElementById('endMissionBtn').disabled = false;
+        document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission starts
         
         if (this.currentMission.type === 'patrol') {
             document.getElementById('onSiteBtn').disabled = false;
@@ -845,6 +847,7 @@ class SecuritySpecialistApp {
         document.getElementById('missionStatus').className = 'mission-status status-onsite';
         document.getElementById('onSiteBtn').disabled = true;
         document.getElementById('offSiteBtn').disabled = false;
+        document.getElementById('checkpointBtn').disabled = false; // Enable checkpoint button when on site
         
         this.closeModal();
         this.showNotification('Now on site at ' + formData.get('siteLocation'));
@@ -881,8 +884,10 @@ class SecuritySpecialistApp {
         
         const onSiteBtn = document.getElementById('onSiteBtn');
         const offSiteBtn = document.getElementById('offSiteBtn');
+        const checkpointBtn = document.getElementById('checkpointBtn');
         if (onSiteBtn) onSiteBtn.disabled = true;
         if (offSiteBtn) offSiteBtn.disabled = false;
+        if (checkpointBtn) checkpointBtn.disabled = false; // Enable checkpoint button when on site
         
         this.consoleWrite(`✓ Now on site at: ${data.location}`);
         this.consoleWrite(`✓ Arrival time: ${this.currentSiteStartTime.toLocaleString()}`);
@@ -916,6 +921,7 @@ class SecuritySpecialistApp {
         document.getElementById('missionStatus').className = 'mission-status status-active';
         document.getElementById('onSiteBtn').disabled = false;
         document.getElementById('offSiteBtn').disabled = true;
+        document.getElementById('checkpointBtn').disabled = true; // Disable checkpoint button when off site
         
         this.updatePatrolStopsList();
         this.showNotification('Left site - now in transit');
@@ -971,6 +977,10 @@ class SecuritySpecialistApp {
     }
 
     showIncidentModal() {
+        if (!this.currentMission || this.currentMission.status !== 'active') {
+            this.showNotification('Mission must be started first!', 'error');
+            return;
+        }
         // Always show modal for button clicks
         this.showMobileIncidentModal();
     }
@@ -1918,6 +1928,7 @@ class SecuritySpecialistApp {
             document.getElementById('startMissionBtn').disabled = true;
             document.getElementById('missionReportBtn').disabled = false;
             document.getElementById('endMissionBtn').disabled = false;
+            document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission starts
             
             if (this.currentMission.type === 'patrol') {
                 document.getElementById('onSiteBtn').disabled = false;
@@ -2134,6 +2145,7 @@ class SecuritySpecialistApp {
         document.getElementById('startMissionBtn').disabled = true;
         document.getElementById('missionReportBtn').disabled = false;
         document.getElementById('endMissionBtn').disabled = false;
+        document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission starts
         
         if (this.currentMission.type === 'patrol') {
             document.getElementById('onSiteBtn').disabled = false;
@@ -2179,6 +2191,7 @@ class SecuritySpecialistApp {
         document.getElementById('missionStatus').className = 'mission-status status-onsite';
         document.getElementById('onSiteBtn').disabled = true;
         document.getElementById('offSiteBtn').disabled = false;
+        document.getElementById('checkpointBtn').disabled = false; // Enable checkpoint button when on site
         
         this.consoleWrite(`Now on site at: ${location}`);
         this.consoleWrite(`Arrival time: ${now.toLocaleString()}`);
@@ -2965,6 +2978,10 @@ class SecuritySpecialistApp {
         this.currentPatrolStop = null;
         this.missionStartTime = null;
         
+        // Reset button states
+        document.getElementById('incidentReportBtn').disabled = true;
+        document.getElementById('checkpointBtn').disabled = true;
+        
         this.closeModal();
         this.showNotification('Mission completed successfully! System reset to inactive. Navigation restrictions removed.');
         
@@ -3428,6 +3445,8 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                     document.getElementById('startMissionBtn').disabled = true;
                     document.getElementById('missionReportBtn').disabled = false;
                     document.getElementById('endMissionBtn').disabled = false;
+                    document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission is active
+                    document.getElementById('checkpointBtn').disabled = !this.isOnSite; // Enable checkpoint only when on site
                     
                     if (this.currentMission.type === 'patrol') {
                         document.getElementById('onSiteBtn').disabled = this.isOnSite || !!this.currentMission.report;
