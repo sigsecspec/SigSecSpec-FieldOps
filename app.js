@@ -213,7 +213,7 @@ class FieldOfficerApp {
                         <span class="prompt">app@ops:~$</span>
                         <input id="consoleInput" placeholder="Type a command, e.g., help" />
                     </div>
-                    <div class="console-hint">Try: help | start [officer] | onsite [location] | offsite | incident [type] [location] [desc] | status | time | clear</div>
+                    <div class="console-hint">Commands: help | start [officer] | onsite [location] | offsite | incident [type] [location] [desc] | status | time | clear</div>
                 </div>
 
                 <div class="patrol-stops">
@@ -266,7 +266,7 @@ class FieldOfficerApp {
                         <span class="prompt">app@ops:~$</span>
                         <input id="consoleInput" placeholder="Type a command, e.g., help" />
                     </div>
-                    <div class="console-hint">Try: help | start [officer] | incident [type] [location] [desc] | report [summary] | status | time | clear</div>
+                    <div class="console-hint">Commands: help | start [officer] | incident [type] [location] [desc] | report [summary] | status | time | clear</div>
                 </div>
 
                 <div class="patrol-stops">
@@ -280,75 +280,80 @@ class FieldOfficerApp {
     }
 
     showStartMissionModal() {
-        const modal = document.getElementById('logsModal');
-        const modalContent = modal.querySelector('.modal-content');
-        
-        modalContent.innerHTML = `
-            <div class="modal-header">
-                <h2>Start Mission</h2>
-                <span class="close">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="startMissionForm">
-                    <div class="form-group">
-                        <label for="officerName">Officer Name:</label>
-                        <input type="text" id="officerName" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="missionStartTime">Start Time:</label>
-                        <input type="datetime-local" id="missionStartTime" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="missionEndTime">Expected End Time:</label>
-                        <input type="datetime-local" id="missionEndTime" required>
-                    </div>
-                    ${this.currentMission.type === 'patrol' ? `
-                    <div class="form-group">
-                        <label for="patrolRoute">Patrol Route/Stops (Optional):</label>
-                        <textarea id="patrolRoute" placeholder="List planned patrol stops..."></textarea>
-                    </div>
-                    ` : ''}
-                    <div class="form-group">
-                        <label for="missionNotes">Mission Notes:</label>
-                        <textarea id="missionNotes" placeholder="Additional mission details..."></textarea>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary" onclick="app.closeModal()">Cancel</button>
-                        <button type="submit" class="btn-primary">Start Mission</button>
-                    </div>
-                </form>
-            </div>
-        `;
-
-        // Set default times
-        const now = new Date();
-        const startInput = document.getElementById('missionStartTime');
-        const endInput = document.getElementById('missionEndTime');
-        
-        startInput.value = now.toISOString().slice(0, 16);
-        
-        const endTime = new Date(now.getTime() + 8 * 60 * 60 * 1000); // 8 hours later
-        endInput.value = endTime.toISOString().slice(0, 16);
-
-        document.getElementById('startMissionForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.startMission();
-        });
-
-        modal.style.display = 'block';
+        this.consoleWrite('=== MISSION START CONSOLE ===');
+        this.consoleWrite('Starting mission configuration...');
+        this.consoleWrite('Use console commands to configure mission:');
+        this.consoleWrite('  start [officer_name] - Quick start with officer name');
+        this.consoleWrite('  start_detailed - Start detailed configuration');
+        this.consoleWrite('  cancel - Cancel mission start');
+        this.consoleWrite('');
+        this.consoleWrite('Current mission type: ' + (this.currentMission?.type || 'Not selected'));
+        this.consoleWrite('System status: ' + (this.currentMission?.status || 'Inactive'));
+        this.consoleWrite('');
+        this.consoleWrite('Type your command below:');
     }
 
     startMission() {
-        const form = document.getElementById('startMissionForm');
-        const formData = new FormData(form);
+        // This method is now called from console commands
+        this.consoleWrite('Mission start configuration completed via console.');
+    }
+
+    startDetailedMission() {
+        this.consoleWrite('=== DETAILED MISSION CONFIGURATION ===');
+        this.consoleWrite('Enter mission details step by step:');
+        this.consoleWrite('');
+        this.consoleWrite('Step 1: Officer Name');
+        this.consoleWrite('Command: officer [name]');
+        this.consoleWrite('');
+        this.consoleWrite('Step 2: Start Time (optional - defaults to now)');
+        this.consoleWrite('Command: start_time [YYYY-MM-DD HH:MM]');
+        this.consoleWrite('');
+        this.consoleWrite('Step 3: End Time (optional - defaults to 8 hours from now)');
+        this.consoleWrite('Command: end_time [YYYY-MM-DD HH:MM]');
+        this.consoleWrite('');
+        this.consoleWrite('Step 4: Mission Notes (optional)');
+        this.consoleWrite('Command: notes [your notes]');
+        this.consoleWrite('');
+        this.consoleWrite('Step 5: Confirm and Start');
+        this.consoleWrite('Command: confirm_start');
+        this.consoleWrite('');
+        this.consoleWrite('Type your commands below:');
         
+        // Initialize mission details object
+        this.pendingMissionDetails = {
+            officerName: '',
+            startTime: new Date(),
+            endTime: new Date(Date.now() + 8 * 60 * 60 * 1000),
+            notes: ''
+        };
+    }
+
+    confirmStartMission() {
+        if (!this.pendingMissionDetails) {
+            this.consoleWrite('ERROR: No mission details configured. Use "start_detailed" first.');
+            return;
+        }
+
+        if (!this.pendingMissionDetails.officerName) {
+            this.consoleWrite('ERROR: Officer name is required. Use "officer [name]" first.');
+            return;
+        }
+
+        this.consoleWrite('=== CONFIRMING MISSION START ===');
+        this.consoleWrite(`Officer: ${this.pendingMissionDetails.officerName}`);
+        this.consoleWrite(`Start Time: ${this.pendingMissionDetails.startTime.toLocaleString()}`);
+        this.consoleWrite(`End Time: ${this.pendingMissionDetails.endTime.toLocaleString()}`);
+        this.consoleWrite(`Notes: ${this.pendingMissionDetails.notes || 'None'}`);
+        this.consoleWrite('');
+
+        // Start the mission
         this.currentMission.status = 'active';
-        this.currentMission.startTime = new Date(formData.get('missionStartTime'));
-        this.currentMission.endTime = new Date(formData.get('missionEndTime'));
+        this.currentMission.startTime = this.pendingMissionDetails.startTime;
+        this.currentMission.endTime = this.pendingMissionDetails.endTime;
         this.currentMission.details = {
-            officerName: formData.get('officerName'),
-            patrolRoute: formData.get('patrolRoute') || '',
-            notes: formData.get('missionNotes') || ''
+            officerName: this.pendingMissionDetails.officerName,
+            patrolRoute: '',
+            notes: this.pendingMissionDetails.notes
         };
         
         this.missionStartTime = this.currentMission.startTime;
@@ -368,8 +373,14 @@ class FieldOfficerApp {
         // Add navigation restriction indicator
         this.addNavigationWarning();
         
-        this.closeModal();
-        this.showNotification('Mission started successfully! Navigation is now restricted.');
+        this.consoleWrite('✓ Mission started successfully!');
+        this.consoleWrite('✓ Navigation restrictions activated');
+        this.consoleWrite('✓ System ready for operations');
+        this.consoleWrite('');
+        this.consoleWrite('Available commands: onsite, offsite, incident, checkpoint, report, end');
+        
+        // Clear pending details
+        this.pendingMissionDetails = null;
     }
 
     goOnSite() {
@@ -507,89 +518,100 @@ class FieldOfficerApp {
     }
 
     showIncidentModal() {
-        const modal = document.getElementById('logsModal');
-        const modalContent = modal.querySelector('.modal-content');
-        
-        modalContent.innerHTML = `
-            <div class="modal-header">
-                <h2>Incident Report</h2>
-                <span class="close">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="incidentForm">
-                    <div class="form-group">
-                        <label for="incidentTime">Incident Time:</label>
-                        <input type="datetime-local" id="incidentTime" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="incidentType">Incident Type:</label>
-                        <select id="incidentType" required>
-                            <option value="">Select type...</option>
-                            <option value="Security Breach">Security Breach</option>
-                            <option value="Suspicious Activity">Suspicious Activity</option>
-                            <option value="Equipment Issue">Equipment Issue</option>
-                            <option value="Medical Emergency">Medical Emergency</option>
-                            <option value="Fire/Safety">Fire/Safety</option>
-                            <option value="Theft">Theft</option>
-                            <option value="Vandalism">Vandalism</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="incidentLocation">Location:</label>
-                        <input type="text" id="incidentLocation" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="incidentDescription">Description:</label>
-                        <textarea id="incidentDescription" required placeholder="Detailed description of the incident..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="incidentAction">Action Taken:</label>
-                        <textarea id="incidentAction" placeholder="Describe actions taken to address the incident..."></textarea>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary" onclick="app.closeModal()">Cancel</button>
-                        <button type="submit" class="btn-primary">Submit Report</button>
-                    </div>
-                </form>
-            </div>
-        `;
-
-        // Set default time
-        const now = new Date();
-        document.getElementById('incidentTime').value = now.toISOString().slice(0, 16);
-
-        document.getElementById('incidentForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.addIncident();
-        });
-
-        modal.style.display = 'block';
+        this.consoleWrite('=== INCIDENT REPORT CONSOLE ===');
+        this.consoleWrite('Report an incident using console commands:');
+        this.consoleWrite('');
+        this.consoleWrite('Quick Report:');
+        this.consoleWrite('  incident [type] [location] [description]');
+        this.consoleWrite('');
+        this.consoleWrite('Detailed Report:');
+        this.consoleWrite('  incident_detailed - Start detailed incident report');
+        this.consoleWrite('');
+        this.consoleWrite('Available incident types:');
+        this.consoleWrite('  Security Breach, Suspicious Activity, Equipment Issue');
+        this.consoleWrite('  Medical Emergency, Fire/Safety, Theft, Vandalism, Other');
+        this.consoleWrite('');
+        this.consoleWrite('Type your command below:');
     }
 
     addIncident() {
-        const form = document.getElementById('incidentForm');
-        const formData = new FormData(form);
+        // This method is now called from console commands
+        this.consoleWrite('Incident report completed via console.');
+    }
+
+    startDetailedIncident() {
+        this.consoleWrite('=== DETAILED INCIDENT REPORT ===');
+        this.consoleWrite('Enter incident details step by step:');
+        this.consoleWrite('');
+        this.consoleWrite('Step 1: Incident Type');
+        this.consoleWrite('Command: incident_type [type]');
+        this.consoleWrite('Available types: Security Breach, Suspicious Activity, Equipment Issue, Medical Emergency, Fire/Safety, Theft, Vandalism, Other');
+        this.consoleWrite('');
+        this.consoleWrite('Step 2: Location');
+        this.consoleWrite('Command: incident_location [location]');
+        this.consoleWrite('');
+        this.consoleWrite('Step 3: Description');
+        this.consoleWrite('Command: incident_desc [description]');
+        this.consoleWrite('');
+        this.consoleWrite('Step 4: Action Taken (optional)');
+        this.consoleWrite('Command: incident_action [action]');
+        this.consoleWrite('');
+        this.consoleWrite('Step 5: Confirm and Submit');
+        this.consoleWrite('Command: confirm_incident');
+        this.consoleWrite('');
+        this.consoleWrite('Type your commands below:');
         
+        // Initialize incident details object
+        this.pendingIncident = {
+            type: '',
+            location: '',
+            description: '',
+            action: 'None specified'
+        };
+    }
+
+    confirmIncident() {
+        if (!this.pendingIncident) {
+            this.consoleWrite('ERROR: No incident details configured. Use "incident_detailed" first.');
+            return;
+        }
+
+        if (!this.pendingIncident.type || !this.pendingIncident.location || !this.pendingIncident.description) {
+            this.consoleWrite('ERROR: Type, location, and description are required.');
+            this.consoleWrite('Use incident_type, incident_location, and incident_desc commands.');
+            return;
+        }
+
+        this.consoleWrite('=== CONFIRMING INCIDENT REPORT ===');
+        this.consoleWrite(`Type: ${this.pendingIncident.type}`);
+        this.consoleWrite(`Location: ${this.pendingIncident.location}`);
+        this.consoleWrite(`Description: ${this.pendingIncident.description}`);
+        this.consoleWrite(`Action: ${this.pendingIncident.action}`);
+        this.consoleWrite('');
+
         const incident = {
-            time: new Date(formData.get('incidentTime')),
-            type: formData.get('incidentType'),
-            location: formData.get('incidentLocation'),
-            description: formData.get('incidentDescription'),
-            action: formData.get('incidentAction') || 'None specified'
+            time: new Date(),
+            type: this.pendingIncident.type,
+            location: this.pendingIncident.location,
+            description: this.pendingIncident.description,
+            action: this.pendingIncident.action
         };
 
         // Add to current patrol stop if on site, otherwise to general incidents
         if (this.isOnSite && this.currentPatrolStop) {
             this.currentPatrolStop.incidents.push(incident);
+            this.consoleWrite('✓ Incident added to current patrol stop');
         } else {
             this.currentMission.incidents.push(incident);
+            this.consoleWrite('✓ Incident added to general mission incidents');
         }
         this.saveCurrentMission();
 
         this.updateIncidentsList();
-        this.closeModal();
-        this.showNotification('Incident report added successfully!');
+        this.consoleWrite('✓ Incident report submitted successfully!');
+        
+        // Clear pending incident
+        this.pendingIncident = null;
     }
 
     // =====================
@@ -881,7 +903,7 @@ class FieldOfficerApp {
         // Seed greeting
         this.consoleWrite('=== POLICE COMMAND CONSOLE INITIALIZED ===');
         this.consoleWrite('Type "help" for available commands.');
-        this.consoleWrite('Use quick commands to avoid popups: start [officer], onsite [location], etc.');
+        this.consoleWrite('Use quick commands: start [officer], onsite [location], etc.');
         this.consoleWrite('Use UP/DOWN arrows for command history, TAB for auto-complete.');
     }
 
@@ -954,8 +976,69 @@ class FieldOfficerApp {
                     this.quickStartMission(a);
                 } else {
                     this.showStartMissionModal();
-                    this.consoleWrite('Opening Start Mission form...');
                 }
+                break;
+            case 'start_detailed':
+                this.startDetailedMission();
+                break;
+            case 'officer':
+                if (args.length > 0) {
+                    this.pendingMissionDetails = this.pendingMissionDetails || {};
+                    this.pendingMissionDetails.officerName = a;
+                    this.consoleWrite(`Officer name set: ${a}`);
+                    this.consoleWrite('Next: Set start time with "start_time [YYYY-MM-DD HH:MM]" or continue with "confirm_start"');
+                } else {
+                    this.consoleWrite('ERROR: Please provide officer name. Usage: officer [name]');
+                }
+                break;
+            case 'start_time':
+                if (args.length > 0) {
+                    const timeStr = a;
+                    const startTime = new Date(timeStr);
+                    if (isNaN(startTime.getTime())) {
+                        this.consoleWrite('ERROR: Invalid date format. Use YYYY-MM-DD HH:MM');
+                    } else {
+                        this.pendingMissionDetails = this.pendingMissionDetails || {};
+                        this.pendingMissionDetails.startTime = startTime;
+                        this.consoleWrite(`Start time set: ${startTime.toLocaleString()}`);
+                        this.consoleWrite('Next: Set end time with "end_time [YYYY-MM-DD HH:MM]" or continue with "confirm_start"');
+                    }
+                } else {
+                    this.consoleWrite('ERROR: Please provide start time. Usage: start_time [YYYY-MM-DD HH:MM]');
+                }
+                break;
+            case 'end_time':
+                if (args.length > 0) {
+                    const timeStr = a;
+                    const endTime = new Date(timeStr);
+                    if (isNaN(endTime.getTime())) {
+                        this.consoleWrite('ERROR: Invalid date format. Use YYYY-MM-DD HH:MM');
+                    } else {
+                        this.pendingMissionDetails = this.pendingMissionDetails || {};
+                        this.pendingMissionDetails.endTime = endTime;
+                        this.consoleWrite(`End time set: ${endTime.toLocaleString()}`);
+                        this.consoleWrite('Next: Add notes with "notes [your notes]" or continue with "confirm_start"');
+                    }
+                } else {
+                    this.consoleWrite('ERROR: Please provide end time. Usage: end_time [YYYY-MM-DD HH:MM]');
+                }
+                break;
+            case 'notes':
+                if (args.length > 0) {
+                    this.pendingMissionDetails = this.pendingMissionDetails || {};
+                    this.pendingMissionDetails.notes = a;
+                    this.consoleWrite(`Notes set: ${a}`);
+                    this.consoleWrite('Next: Confirm and start with "confirm_start"');
+                } else {
+                    this.consoleWrite('ERROR: Please provide notes. Usage: notes [your notes]');
+                }
+                break;
+            case 'confirm_start':
+                this.confirmStartMission();
+                break;
+            case 'cancel':
+                this.pendingMissionDetails = null;
+                this.consoleWrite('Mission start cancelled. System remains inactive.');
                 break;
             case 'onsite':
                 if (args.length > 0) {
@@ -974,8 +1057,53 @@ class FieldOfficerApp {
                     this.quickIncident(args);
                 } else {
                     this.showIncidentModal();
-                    this.consoleWrite('Opening Incident Report form...');
                 }
+                break;
+            case 'incident_detailed':
+                this.startDetailedIncident();
+                break;
+            case 'incident_type':
+                if (args.length > 0) {
+                    this.pendingIncident = this.pendingIncident || {};
+                    this.pendingIncident.type = a;
+                    this.consoleWrite(`Incident type set: ${a}`);
+                    this.consoleWrite('Next: Set location with "incident_location [location]"');
+                } else {
+                    this.consoleWrite('ERROR: Please provide incident type. Usage: incident_type [type]');
+                }
+                break;
+            case 'incident_location':
+                if (args.length > 0) {
+                    this.pendingIncident = this.pendingIncident || {};
+                    this.pendingIncident.location = a;
+                    this.consoleWrite(`Location set: ${a}`);
+                    this.consoleWrite('Next: Set description with "incident_desc [description]"');
+                } else {
+                    this.consoleWrite('ERROR: Please provide location. Usage: incident_location [location]');
+                }
+                break;
+            case 'incident_desc':
+                if (args.length > 0) {
+                    this.pendingIncident = this.pendingIncident || {};
+                    this.pendingIncident.description = a;
+                    this.consoleWrite(`Description set: ${a}`);
+                    this.consoleWrite('Next: Set action taken with "incident_action [action]" or confirm with "confirm_incident"');
+                } else {
+                    this.consoleWrite('ERROR: Please provide description. Usage: incident_desc [description]');
+                }
+                break;
+            case 'incident_action':
+                if (args.length > 0) {
+                    this.pendingIncident = this.pendingIncident || {};
+                    this.pendingIncident.action = a;
+                    this.consoleWrite(`Action set: ${a}`);
+                    this.consoleWrite('Next: Confirm with "confirm_incident"');
+                } else {
+                    this.consoleWrite('ERROR: Please provide action. Usage: incident_action [action]');
+                }
+                break;
+            case 'confirm_incident':
+                this.confirmIncident();
                 break;
             case 'checkpoint':
                 if (args.length >= 2) {
@@ -990,8 +1118,43 @@ class FieldOfficerApp {
                     this.quickReport(a);
                 } else {
                     this.showMissionReportModal();
-                    this.consoleWrite('Opening Mission Report form...');
                 }
+                break;
+            case 'report_detailed':
+                this.startDetailedReport();
+                break;
+            case 'report_summary':
+                if (args.length > 0) {
+                    this.pendingReport = this.pendingReport || {};
+                    this.pendingReport.summary = a;
+                    this.consoleWrite(`Summary set: ${a}`);
+                    this.consoleWrite('Next: Set observations with "report_obs [observations]" or confirm with "confirm_report"');
+                } else {
+                    this.consoleWrite('ERROR: Please provide summary. Usage: report_summary [summary]');
+                }
+                break;
+            case 'report_obs':
+                if (args.length > 0) {
+                    this.pendingReport = this.pendingReport || {};
+                    this.pendingReport.observations = a;
+                    this.consoleWrite(`Observations set: ${a}`);
+                    this.consoleWrite('Next: Set recommendations with "report_rec [recommendations]" or confirm with "confirm_report"');
+                } else {
+                    this.consoleWrite('ERROR: Please provide observations. Usage: report_obs [observations]');
+                }
+                break;
+            case 'report_rec':
+                if (args.length > 0) {
+                    this.pendingReport = this.pendingReport || {};
+                    this.pendingReport.recommendations = a;
+                    this.consoleWrite(`Recommendations set: ${a}`);
+                    this.consoleWrite('Next: Confirm with "confirm_report"');
+                } else {
+                    this.consoleWrite('ERROR: Please provide recommendations. Usage: report_rec [recommendations]');
+                }
+                break;
+            case 'confirm_report':
+                this.confirmReport();
                 break;
             case 'end':
                 this.endMission();
@@ -1337,56 +1500,74 @@ class FieldOfficerApp {
 
     showMissionReportModal() {
         if (this.currentMission.status !== 'active') {
-            this.showNotification('Mission must be active to create report!', 'error');
+            this.consoleWrite('ERROR: Mission must be active to create report!');
             return;
         }
 
-        const modal = document.getElementById('logsModal');
-        const modalContent = modal.querySelector('.modal-content');
-        
-        modalContent.innerHTML = `
-            <div class="modal-header">
-                <h2>Mission Report</h2>
-                <span class="close">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="missionReportForm">
-                    <div class="form-group">
-                        <label for="reportSummary">Mission Summary:</label>
-                        <textarea id="reportSummary" required placeholder="Overall summary of the mission..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="reportObservations">Key Observations:</label>
-                        <textarea id="reportObservations" placeholder="Important observations during the mission..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="reportRecommendations">Recommendations:</label>
-                        <textarea id="reportRecommendations" placeholder="Future recommendations or follow-up actions..."></textarea>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary" onclick="app.closeModal()">Cancel</button>
-                        <button type="submit" class="btn-primary">Save Report</button>
-                    </div>
-                </form>
-            </div>
-        `;
-
-        document.getElementById('missionReportForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.saveMissionReport();
-        });
-
-        modal.style.display = 'block';
+        this.consoleWrite('=== MISSION REPORT CONSOLE ===');
+        this.consoleWrite('Create mission report using console commands:');
+        this.consoleWrite('');
+        this.consoleWrite('Quick Report:');
+        this.consoleWrite('  report [summary] - Quick report with summary only');
+        this.consoleWrite('');
+        this.consoleWrite('Detailed Report:');
+        this.consoleWrite('  report_detailed - Start detailed mission report');
+        this.consoleWrite('');
+        this.consoleWrite('Type your command below:');
     }
 
     saveMissionReport() {
-        const form = document.getElementById('missionReportForm');
-        const formData = new FormData(form);
+        // This method is now called from console commands
+        this.consoleWrite('Mission report completed via console.');
+    }
+
+    startDetailedReport() {
+        this.consoleWrite('=== DETAILED MISSION REPORT ===');
+        this.consoleWrite('Enter mission report details step by step:');
+        this.consoleWrite('');
+        this.consoleWrite('Step 1: Mission Summary (required)');
+        this.consoleWrite('Command: report_summary [summary]');
+        this.consoleWrite('');
+        this.consoleWrite('Step 2: Key Observations (optional)');
+        this.consoleWrite('Command: report_obs [observations]');
+        this.consoleWrite('');
+        this.consoleWrite('Step 3: Recommendations (optional)');
+        this.consoleWrite('Command: report_rec [recommendations]');
+        this.consoleWrite('');
+        this.consoleWrite('Step 4: Confirm and Save');
+        this.consoleWrite('Command: confirm_report');
+        this.consoleWrite('');
+        this.consoleWrite('Type your commands below:');
         
+        // Initialize report details object
+        this.pendingReport = {
+            summary: '',
+            observations: '',
+            recommendations: ''
+        };
+    }
+
+    confirmReport() {
+        if (!this.pendingReport) {
+            this.consoleWrite('ERROR: No report details configured. Use "report_detailed" first.');
+            return;
+        }
+
+        if (!this.pendingReport.summary) {
+            this.consoleWrite('ERROR: Summary is required. Use "report_summary [summary]" first.');
+            return;
+        }
+
+        this.consoleWrite('=== CONFIRMING MISSION REPORT ===');
+        this.consoleWrite(`Summary: ${this.pendingReport.summary}`);
+        this.consoleWrite(`Observations: ${this.pendingReport.observations || 'None'}`);
+        this.consoleWrite(`Recommendations: ${this.pendingReport.recommendations || 'None'}`);
+        this.consoleWrite('');
+
         this.currentMission.report = {
-            summary: formData.get('reportSummary'),
-            observations: formData.get('reportObservations') || '',
-            recommendations: formData.get('reportRecommendations') || '',
+            summary: this.pendingReport.summary,
+            observations: this.pendingReport.observations || '',
+            recommendations: this.pendingReport.recommendations || '',
             completedAt: new Date()
         };
         this.saveCurrentMission();
@@ -1399,12 +1580,15 @@ class FieldOfficerApp {
             }
             // If currently on site, force them to leave
             if (this.isOnSite) {
-                this.showNotification('Mission report completed. Please leave site to end mission.', 'error');
+                this.consoleWrite('WARNING: Mission report completed. Please leave site to end mission.');
             }
         }
 
-        this.closeModal();
-        this.showNotification('Mission report saved successfully! Cannot visit new sites after report completion.');
+        this.consoleWrite('✓ Mission report saved successfully!');
+        this.consoleWrite('✓ Cannot visit new sites after report completion');
+        
+        // Clear pending report
+        this.pendingReport = null;
     }
 
     endMission() {
@@ -1517,12 +1701,19 @@ class FieldOfficerApp {
         // Remove navigation restriction indicator
         this.removeNavigationWarning();
         
-        this.closeModal();
-        this.showNotification('Mission completed successfully! Navigation restrictions removed.');
+        // Force system to inactive state
+        this.currentMission = null;
+        this.isOnSite = false;
+        this.currentSiteStartTime = null;
+        this.currentPatrolStop = null;
+        this.missionStartTime = null;
         
-        // Show completion summary
+        this.closeModal();
+        this.showNotification('Mission completed successfully! System reset to inactive. Navigation restrictions removed.');
+        
+        // Return to main page to allow new mission start
         setTimeout(() => {
-            this.showMissionSummary();
+            this.loadMainPage();
         }, 1000);
     }
 
@@ -2009,11 +2200,18 @@ Report Generated: ${this.formatDateTime(new Date())}`;
         // Remove navigation warning
         this.removeNavigationWarning();
         
+        // Force complete reset to inactive state
         this.currentMission = null;
         this.isOnSite = false;
         this.currentSiteStartTime = null;
         this.currentPatrolStop = null;
         this.missionStartTime = null;
+        
+        // Clear any auto-save interval
+        if (this.autoSaveInterval) {
+            clearInterval(this.autoSaveInterval);
+            this.autoSaveInterval = null;
+        }
     }
 
     showAutoSaveIndicator() {
