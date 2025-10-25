@@ -366,10 +366,19 @@ class SecuritySpecialistApp {
             badgeInput.addEventListener('input', (e) => {
                 let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
                 if (value.length > 2) value = value.slice(0, 2);
-                if (value.length === 1 && value !== '9') {
+                
+                // Auto-format single digits (except 9 which could be part of 99)
+                if (value.length === 1 && value !== '9' && value !== '0') {
                     value = '0' + value;
                 }
+                
                 e.target.value = value;
+                
+                // Remove any existing error messages when user starts typing
+                const existingError = document.querySelector('.login-error');
+                if (existingError) {
+                    existingError.remove();
+                }
             });
             
             // Handle Enter key
@@ -1053,6 +1062,11 @@ class SecuritySpecialistApp {
             `;
         }
         
+        // Check if there's a restored mission and show notification
+        if (this.currentMission && this.currentMission.status === 'active') {
+            this.showRestoredMissionNotification();
+        }
+        
         // Re-bind the database button events since they're now on the main page
         this.bindDatabaseButtons();
         
@@ -1074,6 +1088,135 @@ class SecuritySpecialistApp {
                 guardOverviewBtn.addEventListener('click', () => this.showGuardOverview());
             }
         }
+    }
+
+    showRestoredMissionNotification() {
+        // Create a notification banner for restored mission
+        const mainScreen = document.querySelector('.main-screen');
+        if (!mainScreen) return;
+        
+        const notification = document.createElement('div');
+        notification.id = 'restoredMissionNotification';
+        notification.style.cssText = `
+            background: var(--desktop-warning, var(--mobile-warning));
+            color: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 2px solid var(--desktop-border, var(--mobile-border));
+            text-align: center;
+            font-weight: bold;
+        `;
+        
+        const missionTypeText = this.currentMission.type.charAt(0).toUpperCase() + this.currentMission.type.slice(1);
+        
+        notification.innerHTML = `
+            <div style="margin-bottom: 10px;">
+                ⚠️ Active ${missionTypeText} Mission Found
+            </div>
+            <div style="font-size: 14px; margin-bottom: 15px; opacity: 0.9;">
+                You have an active mission from a previous session. Would you like to continue or start fresh?
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button id="continueMissionBtn" style="
+                    background: var(--desktop-success, var(--mobile-success));
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-weight: bold;
+                ">Continue Mission</button>
+                <button id="startFreshBtn" style="
+                    background: var(--desktop-danger, var(--mobile-danger));
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-weight: bold;
+                ">Start Fresh</button>
+                <button id="dismissNotificationBtn" style="
+                    background: var(--desktop-text-muted, var(--mobile-text-muted));
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-weight: bold;
+                ">Dismiss</button>
+            </div>
+        `;
+        
+        // Insert at the top of main screen
+        mainScreen.insertBefore(notification, mainScreen.firstChild);
+        
+        // Bind button events
+        const continueMissionBtn = document.getElementById('continueMissionBtn');
+        const startFreshBtn = document.getElementById('startFreshBtn');
+        const dismissNotificationBtn = document.getElementById('dismissNotificationBtn');
+        
+        if (continueMissionBtn) {
+            continueMissionBtn.addEventListener('click', () => {
+                this.continuePreviousMission();
+                notification.remove();
+            });
+        }
+        
+        if (startFreshBtn) {
+            startFreshBtn.addEventListener('click', () => {
+                this.clearPreviousMission();
+                notification.remove();
+            });
+        }
+        
+        if (dismissNotificationBtn) {
+            dismissNotificationBtn.addEventListener('click', () => {
+                notification.remove();
+            });
+        }
+    }
+
+    continuePreviousMission() {
+        // Restore the mission dashboard
+        if (this.currentMission.type === 'patrol') {
+            this.showPatrolDashboard();
+        } else {
+            this.showGenericDashboard(this.currentMission.type);
+        }
+        
+        // Restore UI state
+        if (this.currentMission.status === 'active') {
+            this.safeUpdateStatus(this.isOnSite ? 'On Site' : 'Active', this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active');
+            this.safeSetButtonState('startMissionBtn', true);
+            this.safeSetButtonState('missionReportBtn', false);
+            this.safeSetButtonState('endMissionBtn', false);
+            this.safeSetButtonState('incidentReportBtn', false);
+            this.safeSetButtonState('checkBtn', !this.isOnSite);
+            
+            // Enable BOLO and POI buttons only when on site
+            const boloListBtn = document.getElementById('boloListBtn');
+            const poiListBtn = document.getElementById('poiListBtn');
+            if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
+            if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
+        }
+        
+        this.showNotification('Previous mission restored successfully', 'success');
+    }
+
+    clearPreviousMission() {
+        // Clear the saved mission
+        this.currentMission = null;
+        this.isOnSite = false;
+        this.currentSiteStartTime = null;
+        this.currentPatrolStop = null;
+        this.missionStartTime = null;
+        
+        // Clear localStorage
+        localStorage.removeItem('fieldOfficerCurrentMission');
+        sessionStorage.removeItem('fieldOfficerCurrentMission');
+        
+        this.showNotification('Previous mission cleared. You can now start a new mission.', 'success');
     }
 
     startMissionType(type) {
@@ -5905,14 +6048,9 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                     this.currentMission.endTime = new Date(this.currentMission.endTime);
                 }
                 
-                // Restore the appropriate dashboard
-                if (this.currentMission.type === 'patrol') {
-                    this.showPatrolDashboard();
-                    // Patrol stops now shown in modal
-                } else {
-                    this.showGenericDashboard(this.currentMission.type);
-                }
-                // Incidents now shown in modal
+                // Don't automatically restore dashboard - let user choose
+                // Store the mission data but show main page first
+                console.log('Previous mission found:', this.currentMission.type, 'Status:', this.currentMission.status);
                 
                 // Restore UI state
                 if (this.currentMission.status === 'active') {
