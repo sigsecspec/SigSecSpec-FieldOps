@@ -190,6 +190,7 @@ header {
 .nav-buttons {
     display: flex;
     gap: 10px;
+    align-items: center;
 }
 
 /* Desktop Navigation - Toughbook Style */
@@ -253,6 +254,20 @@ header {
     justify-content: center;
     gap: 15px;
     flex-wrap: wrap;
+}
+
+/* Profile button special styling */
+#profileBtn {
+    background: linear-gradient(135deg, var(--desktop-accent, var(--mobile-accent)) 0%, var(--desktop-success, var(--mobile-success)) 100%);
+    color: white;
+    font-weight: bold;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+#profileBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 .mission-selection {
@@ -715,6 +730,17 @@ header {
         box-shadow: 0 0 12px var(--desktop-danger);
     }
     
+    .btn-info {
+        border-color: var(--desktop-text-primary);
+        color: var(--desktop-text-primary);
+    }
+    
+    .btn-info:hover:not(:disabled) {
+        background: var(--desktop-text-primary);
+        color: var(--desktop-bg-primary);
+        box-shadow: 0 0 12px var(--desktop-text-primary);
+    }
+    
     .control-btn:disabled {
         opacity: 0.3;
         cursor: not-allowed;
@@ -759,6 +785,15 @@ header {
     
     .btn-danger:hover:not(:disabled) {
         background: #c53030;
+    }
+    
+    .btn-info {
+        background: var(--mobile-text-primary);
+        color: var(--mobile-bg-primary);
+    }
+    
+    .btn-info:hover:not(:disabled) {
+        background: var(--mobile-text-muted);
     }
     
     .control-btn:disabled {
@@ -862,6 +897,13 @@ header {
 /* Command Console Styles */
 .command-console {
     margin-top: 20px;
+}
+
+/* Hide console on mobile devices */
+@media (max-width: 1023px) {
+    .command-console {
+        display: none;
+    }
 }
 
 /* Desktop console - terminal look */
