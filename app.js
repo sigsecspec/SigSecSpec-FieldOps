@@ -5,6 +5,7 @@ class SecuritySpecialistApp {
         this.sites = this.loadSites();
         this.bolos = this.loadBolos();
         this.pois = this.loadPOIs();
+        this.guardProfile = this.loadGuardProfile();
         this.currentPatrolStops = [];
         this.currentIncidents = [];
         this.missionStartTime = null;
@@ -34,6 +35,50 @@ class SecuritySpecialistApp {
 
     isMobileDevice() {
         return window.innerWidth <= 1023;
+    }
+
+    // Mobile-specific helper functions
+    showMobileQuickActions() {
+        if (!this.isMobileDevice()) return;
+        
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>Quick Actions</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="dashboard-controls">
+                    ${this.currentMission && this.currentMission.status === 'active' ? `
+                        ${!this.isOnSite ? `
+                            <button class="control-btn btn-success" onclick="app.showOnSiteModal(); app.closeModal();">
+                                Arrive On Scene
+                            </button>
+                        ` : `
+                            <button class="control-btn btn-warning" onclick="app.confirmOffSite(); app.closeModal();">
+                                Clear Scene
+                            </button>
+                        `}
+                        <button class="control-btn btn-primary" onclick="app.showIncidentModal(); app.closeModal();">
+                            Report Incident
+                        </button>
+                        ${this.isOnSite ? `
+                            <button class="control-btn btn-primary" onclick="app.showCheckpointModal(); app.closeModal();">
+                                Add Checkpoint
+                            </button>
+                        ` : ''}
+                    ` : `
+                        <button class="control-btn btn-primary" onclick="app.showStartMissionModal(); app.closeModal();">
+                            Start Mission
+                        </button>
+                    `}
+                </div>
+            </div>
+        `;
+        
+        modal.style.display = 'block';
     }
 
     handleDesktopCommandButton(button) {
@@ -447,6 +492,13 @@ class SecuritySpecialistApp {
 
     bindDatabaseButtons() {
         // Navigation buttons - only bind if they exist (on main page)
+        const profileBtn = document.getElementById('profileBtn');
+        if (profileBtn) {
+            profileBtn.addEventListener('click', () => {
+                this.showGuardProfile();
+            });
+        }
+        
         const viewLogsBtn = document.getElementById('viewLogsBtn');
         if (viewLogsBtn) {
             viewLogsBtn.addEventListener('click', () => {
@@ -481,6 +533,7 @@ class SecuritySpecialistApp {
         mainContent.innerHTML = `
             <div class="main-screen">
                 <div class="database-buttons">
+                    <button id="profileBtn" class="nav-btn">👤 Guard Profile</button>
                     <button id="viewLogsBtn" class="nav-btn">Database Records</button>
                     <button id="siteManagerBtn" class="nav-btn">Site Manager</button>
                     <button id="boloBtn" class="nav-btn">BOLO Board</button>
@@ -543,7 +596,10 @@ class SecuritySpecialistApp {
                         <h2>Mobile Patrol Operation</h2>
                         <div class="mission-status status-inactive" id="missionStatus">Inactive</div>
                     </div>
-                    <button class="nav-btn" onclick="app.attemptNavigateHome()">← Back to Home</button>
+                    <div class="nav-buttons">
+                        <button class="nav-btn" onclick="app.showMobileQuickActions()" style="margin-right: 10px;">⚡ Quick Actions</button>
+                        <button class="nav-btn" onclick="app.attemptNavigateHome()">← Back to Home</button>
+                    </div>
                 </div>
 
                 <div class="dashboard-controls">
@@ -562,6 +618,12 @@ class SecuritySpecialistApp {
                     <button class="control-btn btn-primary" id="checkpointBtn" onclick="app.showCheckpointModal()" disabled>
                         Add Checkpoint
                     </button>
+                    <button class="control-btn btn-info" id="viewIncidentsBtn" onclick="app.showIncidentsListModal()" disabled>
+                        View Incidents
+                    </button>
+                    <button class="control-btn btn-info" id="viewPatrolStopsBtn" onclick="app.showPatrolStopsListModal()" disabled>
+                        View Patrol Stops
+                    </button>
                     <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showCurrentLocationBolos()" disabled>
                         BOLO's (Location)
                     </button>
@@ -584,15 +646,6 @@ class SecuritySpecialistApp {
                     </div>
                 </div>
 
-                <div class="patrol-stops">
-                    <h3>Patrol Stops</h3>
-                    <div id="patrolStopsList"></div>
-                </div>
-
-                <div class="patrol-stops">
-                    <h3>Incidents</h3>
-                    <div id="incidentsList"></div>
-                </div>
             </div>
         `;
 
@@ -610,7 +663,10 @@ class SecuritySpecialistApp {
                         <h2>${typeTitle} Operation</h2>
                         <div class="mission-status status-inactive" id="missionStatus">Inactive</div>
                     </div>
-                    <button class="nav-btn" onclick="app.attemptNavigateHome()">← Back to Home</button>
+                    <div class="nav-buttons">
+                        <button class="nav-btn" onclick="app.showMobileQuickActions()" style="margin-right: 10px;">⚡ Quick Actions</button>
+                        <button class="nav-btn" onclick="app.attemptNavigateHome()">← Back to Home</button>
+                    </div>
                 </div>
 
                 <div class="dashboard-controls">
@@ -619,6 +675,9 @@ class SecuritySpecialistApp {
                     </button>
                     <button class="control-btn btn-primary" id="incidentReportBtn" onclick="app.showIncidentModal()" disabled>
                         Incident Report
+                    </button>
+                    <button class="control-btn btn-info" id="viewIncidentsBtn" onclick="app.showIncidentsListModal()" disabled>
+                        View Incidents
                     </button>
                     <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showCurrentLocationBolos()" disabled>
                         BOLO's (Location)
@@ -642,10 +701,6 @@ class SecuritySpecialistApp {
                     </div>
                 </div>
 
-                <div class="patrol-stops">
-                    <h3>Incidents</h3>
-                    <div id="incidentsList"></div>
-                </div>
             </div>
         `;
 
@@ -670,7 +725,7 @@ class SecuritySpecialistApp {
                 <form id="startMissionForm">
                     <div class="form-group">
                         <label for="specialistName">Specialist Name:</label>
-                        <input type="text" id="specialistName" required placeholder="Enter your name">
+                        <input type="text" id="specialistName" value="${this.guardProfile.firstName} ${this.guardProfile.lastName}" required placeholder="Enter your name">
                     </div>
                     <div class="form-group">
                         <label for="missionStartTime">Start Time:</label>
@@ -739,6 +794,7 @@ class SecuritySpecialistApp {
             document.getElementById('onSiteBtn').disabled = false;
         }
         
+        this.enableViewButtons(); // Enable view buttons when mission starts
         this.addNavigationWarning();
         this.closeModal();
         this.showNotification('Mission started successfully!');
@@ -850,6 +906,7 @@ class SecuritySpecialistApp {
             document.getElementById('onSiteBtn').disabled = false;
         }
         
+        this.enableViewButtons(); // Enable view buttons when mission starts
         // Add navigation restriction indicator
         this.addNavigationWarning();
         
@@ -1111,7 +1168,7 @@ class SecuritySpecialistApp {
         this.consoleWrite('');
         
         this.showNotification('Now on site at ' + data.location);
-        this.updatePatrolStopsList();
+        // Patrol stops now shown in modal
     }
 
     goOffSite() {
@@ -1120,36 +1177,41 @@ class SecuritySpecialistApp {
             return;
         }
 
-        const departureTime = new Date();
-        this.currentPatrolStop.departureTime = departureTime;
-        
-        // Add to patrol stops
-        this.currentMission.patrolStops.push(this.currentPatrolStop);
-        
-        this.isOnSite = false;
-        this.currentPatrolStop = null;
-        this.saveCurrentMission();
-        
-        // Update UI
-        document.getElementById('missionStatus').textContent = 'Active (In Transit)';
-        document.getElementById('missionStatus').className = 'mission-status status-active';
-        document.getElementById('onSiteBtn').disabled = false;
-        document.getElementById('offSiteBtn').disabled = true;
-        document.getElementById('checkpointBtn').disabled = true; // Disable checkpoint button when off site
-        
-        // Disable BOLO and POI buttons when off site
-        const boloListBtn = document.getElementById('boloListBtn');
-        const poiListBtn = document.getElementById('poiListBtn');
-        if (boloListBtn) boloListBtn.disabled = true;
-        if (poiListBtn) poiListBtn.disabled = true;
-        
-        this.updatePatrolStopsList();
-        this.showNotification('Left site - now in transit');
-        
-        // Log to console as if command was executed
-        this.consoleWrite(`Departed site: ${this.currentMission.patrolStops[this.currentMission.patrolStops.length - 1].location}`);
-        this.consoleWrite(`Departure time: ${departureTime.toLocaleString()}`);
-        this.consoleWrite('Status: IN TRANSIT');
+        try {
+            const departureTime = new Date();
+            this.currentPatrolStop.departureTime = departureTime;
+            
+            // Add to patrol stops
+            this.currentMission.patrolStops.push(this.currentPatrolStop);
+            
+            this.isOnSite = false;
+            this.currentPatrolStop = null;
+            this.saveCurrentMission();
+            
+            // Update UI
+            document.getElementById('missionStatus').textContent = 'Active (In Transit)';
+            document.getElementById('missionStatus').className = 'mission-status status-active';
+            document.getElementById('onSiteBtn').disabled = false;
+            document.getElementById('offSiteBtn').disabled = true;
+            document.getElementById('checkpointBtn').disabled = true; // Disable checkpoint button when off site
+            
+            // Disable BOLO and POI buttons when off site
+            const boloListBtn = document.getElementById('boloListBtn');
+            const poiListBtn = document.getElementById('poiListBtn');
+            if (boloListBtn) boloListBtn.disabled = true;
+            if (poiListBtn) poiListBtn.disabled = true;
+            
+            // Patrol stops now shown in modal
+            this.showNotification('Left site - now in transit');
+            
+            // Log to console as if command was executed
+            this.consoleWrite(`Departed site: ${this.currentMission.patrolStops[this.currentMission.patrolStops.length - 1].location}`);
+            this.consoleWrite(`Departure time: ${departureTime.toLocaleString()}`);
+            this.consoleWrite('Status: IN TRANSIT');
+        } catch (error) {
+            console.error('Error in goOffSite:', error);
+            this.showNotification('Error clearing scene. Please try again.', 'error');
+        }
     }
 
     confirmOffSite() {
@@ -1178,13 +1240,17 @@ class SecuritySpecialistApp {
             </div>
         `;
 
-        this.bindModalEvents();
         modal.style.display = 'block';
     }
 
     processOffSite() {
-        this.closeModal();
-        this.goOffSite();
+        try {
+            this.closeModal();
+            this.goOffSite();
+        } catch (error) {
+            console.error('Error in processOffSite:', error);
+            this.showNotification('Error clearing scene. Please try again.', 'error');
+        }
     }
 
     getTimeOnSite() {
@@ -1264,6 +1330,14 @@ class SecuritySpecialistApp {
                         <label for="incidentAction">Action Taken (optional):</label>
                         <textarea id="incidentAction" placeholder="What action was taken?"></textarea>
                     </div>
+                    <div class="form-group">
+                        <label for="incidentReporter">Reported By:</label>
+                        <input type="text" id="incidentReporter" value="${this.guardProfile.firstName} ${this.guardProfile.lastName}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="incidentReporterBadge">Badge Number:</label>
+                        <input type="text" id="incidentReporterBadge" value="${this.guardProfile.badgeNumber}" readonly>
+                    </div>
                     <div class="form-actions">
                         <button type="button" class="btn-secondary" onclick="app.closeModal()">Cancel</button>
                         <button type="submit" class="btn-primary">Submit Report</button>
@@ -1289,7 +1363,10 @@ class SecuritySpecialistApp {
             type: formData.get('incidentType'),
             location: formData.get('incidentLocation'),
             description: formData.get('incidentDescription'),
-            action: formData.get('incidentAction') || 'None specified'
+            action: formData.get('incidentAction') || 'None specified',
+            reporter: document.getElementById('incidentReporter').value,
+            reporterBadge: document.getElementById('incidentReporterBadge').value,
+            reporterDepartment: this.guardProfile.department
         };
 
         // Add to current patrol stop if on site, otherwise to general incidents
@@ -1300,7 +1377,7 @@ class SecuritySpecialistApp {
         }
         this.saveCurrentMission();
 
-        this.updateIncidentsList();
+        // Incidents now shown in modal
         this.closeModal();
         this.showNotification('Incident report submitted successfully!');
         
@@ -1405,7 +1482,7 @@ class SecuritySpecialistApp {
         }
         this.saveCurrentMission();
 
-        this.updateIncidentsList();
+        // Incidents now shown in modal
         this.consoleWrite('✓ Incident report submitted successfully!');
         
         // Clear pending incident
@@ -1837,7 +1914,7 @@ class SecuritySpecialistApp {
         const modal = document.getElementById('logsModal');
         const modalContent = modal.querySelector('.modal-content');
 
-        // Create Excel-like table with enhanced styling
+        // Create Excel-like table with enhanced styling and add details buttons
         const tableRows = locationBolos.map((bolo, i) => `
             <tr style="border-bottom: 1px solid var(--desktop-border, var(--mobile-border));">
                 <td style="padding: 8px; font-weight: bold;">${bolo.id || (i + 1)}</td>
@@ -1852,6 +1929,9 @@ class SecuritySpecialistApp {
                           color: white;">
                         ${bolo.active !== false ? 'ACTIVE' : 'INACTIVE'}
                     </span>
+                </td>
+                <td style="padding: 8px;">
+                    <button class="btn-small btn-primary" onclick="app.addBoloDetails(${i})" style="padding: 4px 8px; font-size: 10px;">Add Details</button>
                 </td>
             </tr>
         `).join('');
@@ -1879,10 +1959,11 @@ class SecuritySpecialistApp {
                                 <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Priority</th>
                                 <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Created</th>
                                 <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Status</th>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${tableRows || '<tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--desktop-text-muted, var(--mobile-text-muted));">No active BOLOs for this location</td></tr>'}
+                            ${tableRows || '<tr><td colspan="8" style="padding: 20px; text-align: center; color: var(--desktop-text-muted, var(--mobile-text-muted));">No active BOLOs for this location</td></tr>'}
                         </tbody>
                     </table>
                 </div>
@@ -2206,6 +2287,9 @@ class SecuritySpecialistApp {
                 <td style="padding: 8px;">${(poi.locations || []).join(', ')}</td>
                 <td style="padding: 8px;">${poi.notes || 'No description'}</td>
                 <td style="padding: 8px; font-size: 11px;">${this.formatDateTime(poi.createdAt || new Date())}</td>
+                <td style="padding: 8px;">
+                    <button class="btn-small btn-primary" onclick="app.addPoiDetails(${i})" style="padding: 4px 8px; font-size: 10px;">Add Details</button>
+                </td>
             </tr>
         `).join('');
 
@@ -2232,10 +2316,11 @@ class SecuritySpecialistApp {
                                 <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Locations</th>
                                 <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Notes</th>
                                 <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Created</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${tableRows || '<tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--desktop-text-muted, var(--mobile-text-muted));">No POIs found for this location</td></tr>'}
+                            ${tableRows || '<tr><td colspan="8" style="padding: 20px; text-align: center; color: var(--desktop-text-muted, var(--mobile-text-muted));">No POIs found for this location</td></tr>'}
                         </tbody>
                     </table>
                 </div>
@@ -2875,6 +2960,7 @@ class SecuritySpecialistApp {
                 document.getElementById('onSiteBtn').disabled = false;
             }
             
+            this.enableViewButtons(); // Enable view buttons when mission starts
             this.addNavigationWarning();
             
             this.consoleWrite('=== PROFESSIONAL SHIFT INITIATED ===');
@@ -3092,6 +3178,7 @@ class SecuritySpecialistApp {
             document.getElementById('onSiteBtn').disabled = false;
         }
         
+        this.enableViewButtons(); // Enable view buttons when mission starts
         this.addNavigationWarning();
         this.consoleWrite(`Mission started for Specialist ${specialistName}`);
         this.consoleWrite(`Expected end time: ${endTime.toLocaleString()}`);
@@ -3163,7 +3250,7 @@ class SecuritySpecialistApp {
         }
         this.saveCurrentMission();
 
-        this.updateIncidentsList();
+        // Incidents now shown in modal
         this.consoleWrite(`Incident reported: ${type} at ${location}`);
         this.consoleWrite(`Description: ${description}`);
     }
@@ -3844,7 +3931,6 @@ class SecuritySpecialistApp {
             </div>
         `;
 
-        this.bindModalEvents();
         modal.style.display = 'block';
     }
 
@@ -4213,51 +4299,7 @@ Report Generated: ${this.formatDateTime(new Date())}`;
         return report;
     }
 
-    updatePatrolStopsList() {
-        const list = document.getElementById('patrolStopsList');
-        if (!list) return;
-
-        let html = '';
-        this.currentMission.patrolStops.forEach((stop, index) => {
-            html += `
-                <div class="patrol-stop">
-                    <div class="patrol-stop-header">
-                        <div class="patrol-stop-time">${this.formatDateTime(stop.arrivalTime)} - ${this.formatDateTime(stop.departureTime)}</div>
-                        <div class="patrol-stop-location">${stop.location}</div>
-                    </div>
-                    <p>${stop.details || 'No details'}</p>
-                    ${stop.incidents.length > 0 ? `<p><strong>Incidents:</strong> ${stop.incidents.length}</p>` : ''}
-                    ${stop.checkpoints.length > 0 ? `<p><strong>Checkpoints:</strong> ${stop.checkpoints.length}</p>` : ''}
-                </div>
-            `;
-        });
-
-        list.innerHTML = html || '<p>No patrol stops recorded yet.</p>';
-    }
-
-    updateIncidentsList() {
-        const list = document.getElementById('incidentsList');
-        if (!list) return;
-
-        let html = '';
-        
-        // Show general incidents
-        this.currentMission.incidents.forEach(incident => {
-            html += `
-                <div class="patrol-stop">
-                    <div class="patrol-stop-header">
-                        <div class="patrol-stop-time">${this.formatDateTime(incident.time)}</div>
-                        <div class="patrol-stop-location">${incident.location}</div>
-                    </div>
-                    <p><strong>${incident.type}</strong></p>
-                    <p>${incident.description}</p>
-                    <p><strong>Action:</strong> ${incident.action}</p>
-                </div>
-            `;
-        });
-
-        list.innerHTML = html || '<p>No incidents recorded yet.</p>';
-    }
+    // Old update functions removed - incidents and patrol stops now shown in modals
 
     copyToClipboard(elementId) {
         const element = document.getElementById(elementId);
@@ -4360,6 +4402,55 @@ Report Generated: ${this.formatDateTime(new Date())}`;
         }
     }
 
+    loadGuardProfile() {
+        try {
+            const saved = localStorage.getItem('guardProfile');
+            return saved ? JSON.parse(saved) : {
+                firstName: '',
+                lastName: '',
+                badgeNumber: '',
+                employeeId: '',
+                department: '',
+                supervisor: '',
+                contactNumber: '',
+                emergencyContact: '',
+                certifications: [],
+                notes: '',
+                createdAt: new Date(),
+                lastUpdated: new Date()
+            };
+        } catch (e) {
+            console.error('Error loading guard profile:', e);
+            this.showNotification('Error loading guard profile', 'error');
+            return {
+                firstName: '',
+                lastName: '',
+                badgeNumber: '',
+                employeeId: '',
+                department: '',
+                supervisor: '',
+                contactNumber: '',
+                emergencyContact: '',
+                certifications: [],
+                notes: '',
+                createdAt: new Date(),
+                lastUpdated: new Date()
+            };
+        }
+    }
+
+    saveGuardProfile() {
+        try {
+            this.guardProfile.lastUpdated = new Date();
+            localStorage.setItem('guardProfile', JSON.stringify(this.guardProfile));
+            return true;
+        } catch (e) {
+            console.error('Error saving guard profile:', e);
+            this.showNotification('Error saving guard profile', 'error');
+            return false;
+        }
+    }
+
     saveCurrentMission() {
         if (this.currentMission) {
             const missionState = {
@@ -4424,11 +4515,11 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                 // Restore the appropriate dashboard
                 if (this.currentMission.type === 'patrol') {
                     this.showPatrolDashboard();
-                    this.updatePatrolStopsList();
+                    // Patrol stops now shown in modal
                 } else {
                     this.showGenericDashboard(this.currentMission.type);
                 }
-                this.updateIncidentsList();
+                // Incidents now shown in modal
                 
                 // Restore UI state
                 if (this.currentMission.status === 'active') {
@@ -4451,6 +4542,7 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                         document.getElementById('offSiteBtn').disabled = !this.isOnSite;
                     }
                     
+                    this.enableViewButtons(); // Enable view buttons when restoring mission
                     // Restore navigation warning for active missions
                     this.addNavigationWarning();
                 }
@@ -4711,6 +4803,764 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                 console.log('Saved on page hide');
             }
         });
+    }
+
+    // Helper function to enable view buttons
+    enableViewButtons() {
+        const viewIncidentsBtn = document.getElementById('viewIncidentsBtn');
+        if (viewIncidentsBtn) viewIncidentsBtn.disabled = false;
+        
+        if (this.currentMission && this.currentMission.type === 'patrol') {
+            const viewPatrolStopsBtn = document.getElementById('viewPatrolStopsBtn');
+            if (viewPatrolStopsBtn) viewPatrolStopsBtn.disabled = false;
+        }
+    }
+
+    // New modal functions for viewing incidents and patrol stops
+    showIncidentsListModal() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>Incident Reports</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="incidentsModalList"></div>
+            </div>
+        `;
+
+        this.renderIncidentsInModal();
+        modal.style.display = 'block';
+    }
+
+    showPatrolStopsListModal() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>Patrol Stops</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="patrolStopsModalList"></div>
+            </div>
+        `;
+
+        this.renderPatrolStopsInModal();
+        modal.style.display = 'block';
+    }
+
+    renderIncidentsInModal() {
+        const list = document.getElementById('incidentsModalList');
+        if (!list) return;
+
+        let html = '';
+        
+        // Show general incidents
+        this.currentMission.incidents.forEach((incident, index) => {
+            html += `
+                <div class="mission-log">
+                    <div class="mission-log-header">
+                        <div class="mission-log-title">${incident.type} - ${incident.location}</div>
+                        <div class="mission-log-actions">
+                            <button class="btn-small btn-primary" onclick="app.editIncident(${index})">Edit</button>
+                            <button class="btn-small btn-danger" onclick="app.deleteIncident(${index})">Delete</button>
+                        </div>
+                    </div>
+                    <div class="mission-log-date">${this.formatDateTime(incident.time)}</div>
+                    <p><strong>Description:</strong> ${incident.description}</p>
+                    <p><strong>Action Taken:</strong> ${incident.action}</p>
+                </div>
+            `;
+        });
+
+        // Show incidents from patrol stops
+        this.currentMission.patrolStops.forEach((stop, stopIndex) => {
+            stop.incidents.forEach((incident, incidentIndex) => {
+                html += `
+                    <div class="mission-log">
+                        <div class="mission-log-header">
+                            <div class="mission-log-title">${incident.type} - ${stop.location}</div>
+                            <div class="mission-log-actions">
+                                <button class="btn-small btn-primary" onclick="app.editPatrolStopIncident(${stopIndex}, ${incidentIndex})">Edit</button>
+                                <button class="btn-small btn-danger" onclick="app.deletePatrolStopIncident(${stopIndex}, ${incidentIndex})">Delete</button>
+                            </div>
+                        </div>
+                        <div class="mission-log-date">${this.formatDateTime(incident.time)}</div>
+                        <p><strong>Description:</strong> ${incident.description}</p>
+                        <p><strong>Action Taken:</strong> ${incident.action}</p>
+                        <p><em>From patrol stop: ${stop.location}</em></p>
+                    </div>
+                `;
+            });
+        });
+
+        list.innerHTML = html || '<p>No incidents recorded yet.</p>';
+    }
+
+    renderPatrolStopsInModal() {
+        const list = document.getElementById('patrolStopsModalList');
+        if (!list) return;
+
+        let html = '';
+        this.currentMission.patrolStops.forEach((stop, index) => {
+            html += `
+                <div class="mission-log">
+                    <div class="mission-log-header">
+                        <div class="mission-log-title">${stop.location}</div>
+                        <div class="mission-log-actions">
+                            <button class="btn-small btn-primary" onclick="app.editPatrolStop(${index})">Edit</button>
+                            <button class="btn-small btn-danger" onclick="app.deletePatrolStop(${index})">Delete</button>
+                        </div>
+                    </div>
+                    <div class="mission-log-date">${this.formatDateTime(stop.arrivalTime)} - ${this.formatDateTime(stop.departureTime)}</div>
+                    <p><strong>Details:</strong> ${stop.details || 'No details'}</p>
+                    <p><strong>Incidents:</strong> ${stop.incidents.length}</p>
+                    <p><strong>Checkpoints:</strong> ${stop.checkpoints.length}</p>
+                </div>
+            `;
+        });
+
+        list.innerHTML = html || '<p>No patrol stops recorded yet.</p>';
+    }
+
+    // Edit and delete functions for incidents
+    editIncident(index) {
+        const incident = this.currentMission.incidents[index];
+        this.showEditIncidentModal(incident, index);
+    }
+
+    deleteIncident(index) {
+        if (confirm('Are you sure you want to delete this incident?')) {
+            this.currentMission.incidents.splice(index, 1);
+            this.saveCurrentMission();
+            this.renderIncidentsInModal(); // Refresh the modal
+            this.showNotification('Incident deleted successfully');
+        }
+    }
+
+    editPatrolStopIncident(stopIndex, incidentIndex) {
+        const incident = this.currentMission.patrolStops[stopIndex].incidents[incidentIndex];
+        this.showEditIncidentModal(incident, incidentIndex, stopIndex);
+    }
+
+    deletePatrolStopIncident(stopIndex, incidentIndex) {
+        if (confirm('Are you sure you want to delete this incident?')) {
+            this.currentMission.patrolStops[stopIndex].incidents.splice(incidentIndex, 1);
+            this.saveCurrentMission();
+            this.renderIncidentsInModal(); // Refresh the modal
+            this.showNotification('Incident deleted successfully');
+        }
+    }
+
+    // Edit and delete functions for patrol stops
+    editPatrolStop(index) {
+        const stop = this.currentMission.patrolStops[index];
+        this.showEditPatrolStopModal(stop, index);
+    }
+
+    deletePatrolStop(index) {
+        if (confirm('Are you sure you want to delete this patrol stop?')) {
+            this.currentMission.patrolStops.splice(index, 1);
+            this.saveCurrentMission();
+            this.renderPatrolStopsInModal(); // Refresh the modal
+            this.showNotification('Patrol stop deleted successfully');
+        }
+    }
+
+    showEditIncidentModal(incident, incidentIndex, stopIndex = null) {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>Edit Incident</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editIncidentForm">
+                    <div class="form-group">
+                        <label for="editIncidentType">Incident Type:</label>
+                        <input type="text" id="editIncidentType" value="${incident.type}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editIncidentLocation">Location:</label>
+                        <input type="text" id="editIncidentLocation" value="${incident.location}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editIncidentDescription">Description:</label>
+                        <textarea id="editIncidentDescription" required>${incident.description}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editIncidentAction">Action Taken:</label>
+                        <textarea id="editIncidentAction">${incident.action}</textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="app.showIncidentsListModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Update Incident</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.getElementById('editIncidentForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const updatedIncident = {
+                ...incident,
+                type: document.getElementById('editIncidentType').value,
+                location: document.getElementById('editIncidentLocation').value,
+                description: document.getElementById('editIncidentDescription').value,
+                action: document.getElementById('editIncidentAction').value
+            };
+
+            if (stopIndex !== null) {
+                this.currentMission.patrolStops[stopIndex].incidents[incidentIndex] = updatedIncident;
+            } else {
+                this.currentMission.incidents[incidentIndex] = updatedIncident;
+            }
+
+            this.saveCurrentMission();
+            this.showIncidentsListModal(); // Go back to incidents list
+            this.showNotification('Incident updated successfully');
+        });
+
+        modal.style.display = 'block';
+    }
+
+    showEditPatrolStopModal(stop, index) {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>Edit Patrol Stop</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editPatrolStopForm">
+                    <div class="form-group">
+                        <label for="editStopLocation">Location:</label>
+                        <input type="text" id="editStopLocation" value="${stop.location}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editStopDetails">Details:</label>
+                        <textarea id="editStopDetails">${stop.details || ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editStopArrival">Arrival Time:</label>
+                        <input type="datetime-local" id="editStopArrival" value="${new Date(stop.arrivalTime).toISOString().slice(0, 16)}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editStopDeparture">Departure Time:</label>
+                        <input type="datetime-local" id="editStopDeparture" value="${new Date(stop.departureTime).toISOString().slice(0, 16)}" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="app.showPatrolStopsListModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Update Patrol Stop</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.getElementById('editPatrolStopForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const updatedStop = {
+                ...stop,
+                location: document.getElementById('editStopLocation').value,
+                details: document.getElementById('editStopDetails').value,
+                arrivalTime: new Date(document.getElementById('editStopArrival').value),
+                departureTime: new Date(document.getElementById('editStopDeparture').value)
+            };
+
+            this.currentMission.patrolStops[index] = updatedStop;
+            this.saveCurrentMission();
+            this.showPatrolStopsListModal(); // Go back to patrol stops list
+            this.showNotification('Patrol stop updated successfully');
+        });
+
+        modal.style.display = 'block';
+    }
+
+    // Functions to add details to BOLOs and POIs (not edit existing data)
+    addBoloDetails(boloIndex) {
+        const currentLocation = this.currentPatrolStop.location;
+        const locationBolos = this.bolos.filter(bolo => 
+            bolo.active !== false && (
+                !bolo.location || 
+                bolo.location.toLowerCase().includes(currentLocation.toLowerCase()) ||
+                currentLocation.toLowerCase().includes(bolo.location?.toLowerCase() || '')
+            )
+        );
+        
+        const bolo = locationBolos[boloIndex];
+        if (!bolo) return;
+
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>Add Details to BOLO: ${bolo.subject || 'Unknown'}</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; padding: 12px; background: var(--desktop-bg-tertiary, var(--mobile-bg-tertiary)); border-radius: 4px;">
+                    <h3>Current BOLO Information (Read-Only)</h3>
+                    <p><strong>Subject:</strong> ${bolo.subject || 'N/A'}</p>
+                    <p><strong>Type:</strong> ${bolo.type || 'Person'}</p>
+                    <p><strong>Description:</strong> ${bolo.description || bolo.notes || 'No description'}</p>
+                    <p><strong>Priority:</strong> ${bolo.priority || 'Medium'}</p>
+                </div>
+                
+                <form id="addBoloDetailsForm">
+                    <div class="form-group">
+                        <label for="boloAdditionalDetails">Additional Details/Observations:</label>
+                        <textarea id="boloAdditionalDetails" required placeholder="Enter any additional details, observations, or updates about this BOLO..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="boloObserverName">Observer Name:</label>
+                        <input type="text" id="boloObserverName" value="${this.guardProfile.firstName} ${this.guardProfile.lastName}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="boloObserverBadge">Badge Number:</label>
+                        <input type="text" id="boloObserverBadge" value="${this.guardProfile.badgeNumber}" readonly>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="app.showCurrentLocationBolos()">Cancel</button>
+                        <button type="submit" class="btn-primary">Add Details</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.getElementById('addBoloDetailsForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const additionalDetails = document.getElementById('boloAdditionalDetails').value;
+            const observerName = document.getElementById('boloObserverName').value;
+            const observerBadge = document.getElementById('boloObserverBadge').value;
+            
+            // Add the details as a new entry in the mission log, don't modify the original BOLO
+            const detailEntry = {
+                type: 'BOLO Update',
+                time: new Date(),
+                location: this.currentPatrolStop.location,
+                description: `Additional details for BOLO: ${bolo.subject || 'Unknown'}`,
+                action: `Details: ${additionalDetails}`,
+                observer: observerName,
+                observerBadge: observerBadge,
+                observerDepartment: this.guardProfile.department,
+                boloId: bolo.id,
+                originalBolo: {
+                    subject: bolo.subject,
+                    type: bolo.type,
+                    description: bolo.description || bolo.notes
+                }
+            };
+
+            this.currentMission.incidents.push(detailEntry);
+            this.saveCurrentMission();
+            
+            this.showCurrentLocationBolos(); // Go back to BOLO list
+            this.showNotification('BOLO details added successfully');
+            
+            // Log to console
+            this.consoleWrite(`BOLO details added for: ${bolo.subject || 'Unknown'}`);
+            this.consoleWrite(`Observer: ${observerName} (Badge: ${observerBadge})`);
+            this.consoleWrite(`Details: ${additionalDetails}`);
+        });
+
+        modal.style.display = 'block';
+    }
+
+    addPoiDetails(poiIndex) {
+        const currentLocation = this.currentPatrolStop.location;
+        const locationPOIs = this.pois.filter(poi => 
+            poi.locations && (
+                poi.locations.includes('All Sites') ||
+                poi.locations.some(loc => 
+                    loc.toLowerCase().includes(currentLocation.toLowerCase()) ||
+                    currentLocation.toLowerCase().includes(loc.toLowerCase())
+                )
+            )
+        );
+        
+        const poi = locationPOIs[poiIndex];
+        if (!poi) return;
+
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>Add Details to POI: ${poi.firstName} ${poi.lastName}</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; padding: 12px; background: var(--desktop-bg-tertiary, var(--mobile-bg-tertiary)); border-radius: 4px;">
+                    <h3>Current POI Information (Read-Only)</h3>
+                    <p><strong>Name:</strong> ${poi.firstName} ${poi.lastName}</p>
+                    <p><strong>Status:</strong> ${poi.status || 'Active'}</p>
+                    <p><strong>Locations:</strong> ${(poi.locations || []).join(', ')}</p>
+                    <p><strong>Notes:</strong> ${poi.notes || 'No description'}</p>
+                </div>
+                
+                <form id="addPoiDetailsForm">
+                    <div class="form-group">
+                        <label for="poiAdditionalDetails">Additional Details/Observations:</label>
+                        <textarea id="poiAdditionalDetails" required placeholder="Enter any additional details, observations, or updates about this POI..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="poiObserverName">Observer Name:</label>
+                        <input type="text" id="poiObserverName" value="${this.guardProfile.firstName} ${this.guardProfile.lastName}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="poiObserverBadge">Badge Number:</label>
+                        <input type="text" id="poiObserverBadge" value="${this.guardProfile.badgeNumber}" readonly>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="app.showCurrentLocationPOIs()">Cancel</button>
+                        <button type="submit" class="btn-primary">Add Details</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.getElementById('addPoiDetailsForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const additionalDetails = document.getElementById('poiAdditionalDetails').value;
+            const observerName = document.getElementById('poiObserverName').value;
+            const observerBadge = document.getElementById('poiObserverBadge').value;
+            
+            // Add the details as a new entry in the mission log, don't modify the original POI
+            const detailEntry = {
+                type: 'POI Update',
+                time: new Date(),
+                location: this.currentPatrolStop.location,
+                description: `Additional details for POI: ${poi.firstName} ${poi.lastName}`,
+                action: `Details: ${additionalDetails}`,
+                observer: observerName,
+                observerBadge: observerBadge,
+                observerDepartment: this.guardProfile.department,
+                poiId: poi.id,
+                originalPoi: {
+                    firstName: poi.firstName,
+                    lastName: poi.lastName,
+                    status: poi.status,
+                    locations: poi.locations,
+                    notes: poi.notes
+                }
+            };
+
+            this.currentMission.incidents.push(detailEntry);
+            this.saveCurrentMission();
+            
+            this.showCurrentLocationPOIs(); // Go back to POI list
+            this.showNotification('POI details added successfully');
+            
+            // Log to console
+            this.consoleWrite(`POI details added for: ${poi.firstName} ${poi.lastName}`);
+            this.consoleWrite(`Observer: ${observerName} (Badge: ${observerBadge})`);
+            this.consoleWrite(`Details: ${additionalDetails}`);
+        });
+
+        modal.style.display = 'block';
+    }
+
+    // Guard Profile Management
+    showGuardProfile() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>👤 Guard Profile & Reports</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                    <button class="btn-primary" onclick="app.showProfileEditor()">Edit Profile</button>
+                    <button class="btn-secondary" onclick="app.showMyReports()">My Reports</button>
+                    <button class="btn-info" onclick="app.showContributionHistory()">My Contributions</button>
+                </div>
+                
+                <div style="background: var(--desktop-bg-tertiary, var(--mobile-bg-tertiary)); padding: 20px; border-radius: 8px;">
+                    <h3>Current Profile Information</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div>
+                            <strong>Name:</strong> ${this.guardProfile.firstName} ${this.guardProfile.lastName || 'Not Set'}
+                        </div>
+                        <div>
+                            <strong>Badge Number:</strong> ${this.guardProfile.badgeNumber || 'Not Set'}
+                        </div>
+                        <div>
+                            <strong>Employee ID:</strong> ${this.guardProfile.employeeId || 'Not Set'}
+                        </div>
+                        <div>
+                            <strong>Department:</strong> ${this.guardProfile.department || 'Not Set'}
+                        </div>
+                        <div>
+                            <strong>Supervisor:</strong> ${this.guardProfile.supervisor || 'Not Set'}
+                        </div>
+                        <div>
+                            <strong>Contact:</strong> ${this.guardProfile.contactNumber || 'Not Set'}
+                        </div>
+                    </div>
+                    
+                    ${this.guardProfile.certifications && this.guardProfile.certifications.length > 0 ? `
+                        <div style="margin-top: 15px;">
+                            <strong>Certifications:</strong>
+                            <div style="margin-top: 5px;">
+                                ${this.guardProfile.certifications.map(cert => `
+                                    <span style="display: inline-block; background: var(--desktop-accent, var(--mobile-accent)); color: white; padding: 2px 8px; border-radius: 4px; margin: 2px; font-size: 12px;">
+                                        ${cert}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${this.guardProfile.notes ? `
+                        <div style="margin-top: 15px;">
+                            <strong>Notes:</strong>
+                            <p style="margin-top: 5px; font-style: italic;">${this.guardProfile.notes}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div style="margin-top: 15px; font-size: 12px; color: var(--desktop-text-muted, var(--mobile-text-muted));">
+                        <strong>Profile Created:</strong> ${this.formatDateTime(new Date(this.guardProfile.createdAt))}<br>
+                        <strong>Last Updated:</strong> ${this.formatDateTime(new Date(this.guardProfile.lastUpdated))}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'block';
+    }
+
+    showProfileEditor() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>Edit Guard Profile</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="guardProfileForm">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                        <div class="form-group">
+                            <label for="firstName">First Name:</label>
+                            <input type="text" id="firstName" value="${this.guardProfile.firstName}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name:</label>
+                            <input type="text" id="lastName" value="${this.guardProfile.lastName}">
+                        </div>
+                        <div class="form-group">
+                            <label for="badgeNumber">Badge Number:</label>
+                            <input type="text" id="badgeNumber" value="${this.guardProfile.badgeNumber}">
+                        </div>
+                        <div class="form-group">
+                            <label for="employeeId">Employee ID:</label>
+                            <input type="text" id="employeeId" value="${this.guardProfile.employeeId}">
+                        </div>
+                        <div class="form-group">
+                            <label for="department">Department:</label>
+                            <input type="text" id="department" value="${this.guardProfile.department}">
+                        </div>
+                        <div class="form-group">
+                            <label for="supervisor">Supervisor:</label>
+                            <input type="text" id="supervisor" value="${this.guardProfile.supervisor}">
+                        </div>
+                        <div class="form-group">
+                            <label for="contactNumber">Contact Number:</label>
+                            <input type="tel" id="contactNumber" value="${this.guardProfile.contactNumber}">
+                        </div>
+                        <div class="form-group">
+                            <label for="emergencyContact">Emergency Contact:</label>
+                            <input type="tel" id="emergencyContact" value="${this.guardProfile.emergencyContact}">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="certifications">Certifications (comma-separated):</label>
+                        <input type="text" id="certifications" value="${this.guardProfile.certifications ? this.guardProfile.certifications.join(', ') : ''}" 
+                               placeholder="e.g., CPR, First Aid, Security License">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="profileNotes">Notes:</label>
+                        <textarea id="profileNotes" rows="3" placeholder="Additional notes about yourself...">${this.guardProfile.notes}</textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="app.showGuardProfile()">Cancel</button>
+                        <button type="submit" class="btn-primary">Save Profile</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.getElementById('guardProfileForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveProfileChanges();
+        });
+
+        modal.style.display = 'block';
+    }
+
+    saveProfileChanges() {
+        const formData = {
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            badgeNumber: document.getElementById('badgeNumber').value,
+            employeeId: document.getElementById('employeeId').value,
+            department: document.getElementById('department').value,
+            supervisor: document.getElementById('supervisor').value,
+            contactNumber: document.getElementById('contactNumber').value,
+            emergencyContact: document.getElementById('emergencyContact').value,
+            certifications: document.getElementById('certifications').value.split(',').map(cert => cert.trim()).filter(cert => cert),
+            notes: document.getElementById('profileNotes').value
+        };
+
+        // Update the guard profile
+        this.guardProfile = {
+            ...this.guardProfile,
+            ...formData,
+            lastUpdated: new Date()
+        };
+
+        if (this.saveGuardProfile()) {
+            this.showNotification('Profile updated successfully!', 'success');
+            this.showGuardProfile(); // Go back to profile view
+        }
+    }
+
+    showMyReports() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        // Filter mission logs by current guard
+        const guardName = `${this.guardProfile.firstName} ${this.guardProfile.lastName}`.trim();
+        const myReports = this.missionLogs.filter(log => 
+            log.details && log.details.specialistName === guardName
+        );
+
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>📋 My Mission Reports</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px;">
+                    <button class="btn-secondary" onclick="app.showGuardProfile()">← Back to Profile</button>
+                </div>
+                
+                ${myReports.length > 0 ? `
+                    <div style="margin-bottom: 15px;">
+                        <strong>Total Reports:</strong> ${myReports.length}
+                    </div>
+                    
+                    ${myReports.map(log => `
+                        <div class="mission-log">
+                            <div class="mission-log-header">
+                                <div class="mission-log-title">${log.type.charAt(0).toUpperCase() + log.type.slice(1)} - ${this.formatDateTime(log.startTime)}</div>
+                                <div class="mission-log-actions">
+                                    <button class="btn-small btn-primary" onclick="app.viewMissionDetails('${log.id}')">View Details</button>
+                                    <button class="btn-small btn-secondary" onclick="app.copyMissionReport('${log.id}')">Copy Report</button>
+                                </div>
+                            </div>
+                            <div class="mission-log-date">Duration: ${this.formatDateTime(log.startTime)} - ${this.formatDateTime(log.endTime)}</div>
+                            <p><strong>Status:</strong> ${log.status}</p>
+                            <p><strong>Incidents:</strong> ${log.incidents ? log.incidents.length : 0}</p>
+                            <p><strong>Patrol Stops:</strong> ${log.patrolStops ? log.patrolStops.length : 0}</p>
+                        </div>
+                    `).join('')}
+                ` : `
+                    <div style="text-align: center; padding: 40px; color: var(--desktop-text-muted, var(--mobile-text-muted));">
+                        <p>No mission reports found for ${guardName || 'current guard'}.</p>
+                        <p style="margin-top: 10px; font-size: 14px;">Complete missions will appear here.</p>
+                    </div>
+                `}
+            </div>
+        `;
+
+        modal.style.display = 'block';
+    }
+
+    showContributionHistory() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        // Get contributions from mission logs
+        const guardName = `${this.guardProfile.firstName} ${this.guardProfile.lastName}`.trim();
+        const contributions = [];
+        
+        // Search through all mission logs for contributions
+        this.missionLogs.forEach(log => {
+            if (log.incidents) {
+                log.incidents.forEach(incident => {
+                    if (incident.observer === guardName || incident.type === 'POI Update' || incident.type === 'BOLO Update') {
+                        contributions.push({
+                            type: incident.type,
+                            description: incident.description,
+                            date: incident.time,
+                            mission: log.id,
+                            details: incident.action
+                        });
+                    }
+                });
+            }
+        });
+
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>📝 My Contributions</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px;">
+                    <button class="btn-secondary" onclick="app.showGuardProfile()">← Back to Profile</button>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <p>Contributions include POI details, BOLO details, incident reports, and other observations.</p>
+                    <strong>Total Contributions:</strong> ${contributions.length}
+                </div>
+                
+                ${contributions.length > 0 ? `
+                    ${contributions.map(contribution => `
+                        <div class="mission-log">
+                            <div class="mission-log-header">
+                                <div class="mission-log-title">${contribution.type}</div>
+                                <div class="mission-log-date">${this.formatDateTime(contribution.date)}</div>
+                            </div>
+                            <p><strong>Description:</strong> ${contribution.description}</p>
+                            <p><strong>Details:</strong> ${contribution.details}</p>
+                            <p style="font-size: 12px; color: var(--desktop-text-muted, var(--mobile-text-muted));">
+                                <strong>Mission:</strong> ${contribution.mission}<br>
+                                <strong>Observer:</strong> ${guardName}${this.guardProfile.badgeNumber ? ` (Badge: ${this.guardProfile.badgeNumber})` : ''}
+                            </p>
+                        </div>
+                    `).join('')}
+                ` : `
+                    <div style="text-align: center; padding: 40px; color: var(--desktop-text-muted, var(--mobile-text-muted));">
+                        <p>No contributions found.</p>
+                        <p style="margin-top: 10px; font-size: 14px;">Add details to POIs/BOLOs or file incident reports to see them here.</p>
+                    </div>
+                `}
+            </div>
+        `;
+
+        modal.style.display = 'block';
     }
 }
 
