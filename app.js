@@ -530,14 +530,14 @@ class SecuritySpecialistApp {
         const boloBtn = document.getElementById('boloBtn');
         if (boloBtn) {
             boloBtn.addEventListener('click', () => {
-                this.showBoloBoard();
+                this.showBoloMenu();
             });
         }
         
         const poiBtn = document.getElementById('poiBtn');
         if (poiBtn) {
             poiBtn.addEventListener('click', () => {
-                this.showPOIBoard();
+                this.showPOIMenu();
             });
         }
     }
@@ -1724,6 +1724,599 @@ class SecuritySpecialistApp {
     }
 
     // =====================
+    // Menu System for BOLO and POI Management
+    // ========================================
+    
+    showBoloMenu() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>🚨 BOLO Management System</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="popup-menu">
+                    <div class="popup-menu-title">Select an Action</div>
+                    <div class="menu-options">
+                        <div class="menu-option-card" onclick="app.showBoloList()">
+                            <div class="menu-option-icon">📋</div>
+                            <div class="menu-option-title">View All BOLOs</div>
+                            <div class="menu-option-desc">Browse and manage all BOLO records</div>
+                        </div>
+                        <div class="menu-option-card" onclick="app.showBoloAddForm()">
+                            <div class="menu-option-icon">➕</div>
+                            <div class="menu-option-title">Add New BOLO</div>
+                            <div class="menu-option-desc">Create a new BOLO alert</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="control-btn btn-secondary" onclick="app.closeModal()">Close</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        modal.style.display = 'block';
+    }
+    
+    showPOIMenu() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>👤 POI Management System</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="popup-menu">
+                    <div class="popup-menu-title">Select an Action</div>
+                    <div class="menu-options">
+                        <div class="menu-option-card" onclick="app.showPOIList()">
+                            <div class="menu-option-icon">📋</div>
+                            <div class="menu-option-title">View All POIs</div>
+                            <div class="menu-option-desc">Browse and manage all person of interest records</div>
+                        </div>
+                        <div class="menu-option-card" onclick="app.showPOIAddForm()">
+                            <div class="menu-option-icon">➕</div>
+                            <div class="menu-option-title">Add New POI</div>
+                            <div class="menu-option-desc">Create a new person of interest record</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="control-btn btn-secondary" onclick="app.closeModal()">Close</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        modal.style.display = 'block';
+    }
+    
+    showBoloList() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+
+        const rows = this.bolos.map((b, i) => `
+            <tr>
+                <td style="font-weight: bold; color: var(--desktop-accent, var(--mobile-accent));">${b.id || 'N/A'}</td>
+                <td>${b.subject || ''}</td>
+                <td>${b.type || ''}</td>
+                <td>${b.location || 'All Sites'}</td>
+                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${b.notes || ''}</td>
+                <td style="font-size: 11px;">${this.formatDateTime(b.createdAt)}</td>
+                <td>
+                    <button class="btn-small btn-primary" data-edit-b="${i}">Edit</button>
+                    <button class="btn-small btn-danger" data-del-b="${i}">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>🚨 BOLO Board - All Records (${this.bolos.length})</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 16px; display: flex; gap: 10px;">
+                    <button class="control-btn btn-primary" onclick="app.showBoloAddForm()">➕ Add New BOLO</button>
+                    <button class="control-btn btn-secondary" onclick="app.showBoloMenu()">◀ Back to Menu</button>
+                </div>
+                <div class="copy-area" style="max-height: 400px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background: var(--desktop-bg-tertiary, var(--mobile-bg-tertiary)); position: sticky; top: 0;">
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">ID</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Subject</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Type</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Location</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Notes</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Created</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="boloTable">${rows || '<tr><td colspan="7" style="padding: 20px; text-align: center;">No BOLOs posted.</td></tr>'}</tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'block';
+
+        modal.querySelectorAll('[data-del-b]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = Number(btn.getAttribute('data-del-b'));
+                const bolo = this.bolos[idx];
+                if (confirm(`Delete BOLO #${bolo.id}: ${bolo.subject}?`)) {
+                    this.bolos.splice(idx, 1);
+                    this.saveBolos();
+                    this.showBoloList();
+                    this.showNotification('BOLO deleted');
+                }
+            });
+        });
+
+        modal.querySelectorAll('[data-edit-b]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = Number(btn.getAttribute('data-edit-b'));
+                this.showBoloEditForm(idx);
+            });
+        });
+    }
+    
+    showBoloAddForm() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        const siteOptions = this.sites.map(site => 
+            `<option value="${site.name}">${site.name}</option>`
+        ).join('');
+
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>➕ Add New BOLO</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="boloForm">
+                    <div class="form-group">
+                        <label for="boloSubject">Subject (Name/Plate/Item)</label>
+                        <input id="boloSubject" required placeholder="Enter subject name, license plate, or item description">
+                    </div>
+                    <div class="form-group">
+                        <label for="boloType">Type</label>
+                        <select id="boloType" required>
+                            <option value="Person">Person</option>
+                            <option value="Vehicle">Vehicle</option>
+                            <option value="Item">Item</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="boloLocation">Location</label>
+                        <select id="boloLocation" required>
+                            <option value="All Sites">All Sites</option>
+                            ${siteOptions}
+                            <option value="custom">Custom Location...</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="customLocationGroup" style="display: none;">
+                        <label for="boloCustomLocation">Custom Location</label>
+                        <input id="boloCustomLocation" placeholder="Enter custom location name">
+                    </div>
+                    <div class="form-group">
+                        <label for="boloNotes">Description/Notes</label>
+                        <textarea id="boloNotes" placeholder="Detailed description, identifying features, etc..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="control-btn btn-secondary" onclick="app.showBoloList()">Cancel</button>
+                        <button type="submit" class="control-btn btn-success">Add BOLO</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.getElementById('boloLocation').addEventListener('change', (e) => {
+            const customGroup = document.getElementById('customLocationGroup');
+            if (e.target.value === 'custom') {
+                customGroup.style.display = 'block';
+                document.getElementById('boloCustomLocation').required = true;
+            } else {
+                customGroup.style.display = 'none';
+                document.getElementById('boloCustomLocation').required = false;
+            }
+        });
+
+        modal.style.display = 'block';
+
+        document.getElementById('boloForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            let location = document.getElementById('boloLocation').value;
+            if (location === 'custom') {
+                location = document.getElementById('boloCustomLocation').value.trim();
+                if (!location) {
+                    this.showNotification('Please enter a custom location name', 'error');
+                    return;
+                }
+                if (!this.sites.find(s => s.name === location)) {
+                    this.sites.push({
+                        name: location,
+                        address: 'Auto-created from BOLO',
+                        details: 'Automatically created when adding BOLO'
+                    });
+                    this.saveSites();
+                }
+            }
+            
+            const bolo = {
+                id: this.generateBoloId(),
+                subject: document.getElementById('boloSubject').value.trim(),
+                type: document.getElementById('boloType').value,
+                location: location,
+                notes: document.getElementById('boloNotes').value.trim(),
+                createdAt: new Date().toISOString(),
+                active: true
+            };
+            this.bolos.push(bolo);
+            this.saveBolos();
+            this.showBoloList();
+            this.showNotification('BOLO added with ID #' + bolo.id);
+        });
+    }
+    
+    showBoloEditForm(idx) {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        const b = this.bolos[idx];
+        
+        const siteOptions = this.sites.map(site => 
+            `<option value="${site.name}">${site.name}</option>`
+        ).join('');
+
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>✏️ Edit BOLO #${b.id}</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="boloEditForm">
+                    <div class="form-group">
+                        <label for="boloSubject">Subject (Name/Plate/Item)</label>
+                        <input id="boloSubject" required placeholder="Enter subject name, license plate, or item description" value="${b.subject || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label for="boloType">Type</label>
+                        <select id="boloType" required>
+                            <option value="Person" ${b.type === 'Person' ? 'selected' : ''}>Person</option>
+                            <option value="Vehicle" ${b.type === 'Vehicle' ? 'selected' : ''}>Vehicle</option>
+                            <option value="Item" ${b.type === 'Item' ? 'selected' : ''}>Item</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="boloLocation">Location</label>
+                        <select id="boloLocation" required>
+                            <option value="All Sites" ${b.location === 'All Sites' ? 'selected' : ''}>All Sites</option>
+                            ${siteOptions}
+                            <option value="custom">Custom Location...</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="customLocationGroup" style="display: none;">
+                        <label for="boloCustomLocation">Custom Location</label>
+                        <input id="boloCustomLocation" placeholder="Enter custom location name">
+                    </div>
+                    <div class="form-group">
+                        <label for="boloNotes">Description/Notes</label>
+                        <textarea id="boloNotes" placeholder="Detailed description, identifying features, etc...">${b.notes || ''}</textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="control-btn btn-secondary" onclick="app.showBoloList()">Cancel</button>
+                        <button type="submit" class="control-btn btn-success">Update BOLO</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        // Handle custom location display
+        if (b.location && !this.sites.find(s => s.name === b.location) && b.location !== 'All Sites') {
+            document.getElementById('boloLocation').value = 'custom';
+            document.getElementById('customLocationGroup').style.display = 'block';
+            document.getElementById('boloCustomLocation').value = b.location;
+            document.getElementById('boloCustomLocation').required = true;
+        }
+
+        document.getElementById('boloLocation').addEventListener('change', (e) => {
+            const customGroup = document.getElementById('customLocationGroup');
+            if (e.target.value === 'custom') {
+                customGroup.style.display = 'block';
+                document.getElementById('boloCustomLocation').required = true;
+            } else {
+                customGroup.style.display = 'none';
+                document.getElementById('boloCustomLocation').required = false;
+            }
+        });
+
+        modal.style.display = 'block';
+
+        document.getElementById('boloEditForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            let location = document.getElementById('boloLocation').value;
+            if (location === 'custom') {
+                location = document.getElementById('boloCustomLocation').value.trim();
+                if (!location) {
+                    this.showNotification('Please enter a custom location name', 'error');
+                    return;
+                }
+                if (!this.sites.find(s => s.name === location)) {
+                    this.sites.push({
+                        name: location,
+                        address: 'Auto-created from BOLO',
+                        details: 'Automatically created when editing BOLO'
+                    });
+                    this.saveSites();
+                }
+            }
+            
+            this.bolos[idx] = {
+                id: b.id,
+                subject: document.getElementById('boloSubject').value.trim(),
+                type: document.getElementById('boloType').value,
+                location: location,
+                notes: document.getElementById('boloNotes').value.trim(),
+                createdAt: b.createdAt,
+                active: b.active !== undefined ? b.active : true
+            };
+            this.saveBolos();
+            this.showBoloList();
+            this.showNotification('BOLO updated');
+        });
+    }
+    
+    showPOIList() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+
+        const rows = this.pois.map((p, i) => `
+            <tr>
+                <td style="font-weight: bold; color: var(--desktop-accent, var(--mobile-accent));">${p.id || 'N/A'}</td>
+                <td>${p.firstName || ''}</td>
+                <td>${p.lastName || ''}</td>
+                <td>${p.status || 'Active'}</td>
+                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis;">${(p.locations || []).join(', ')}</td>
+                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${p.notes || ''}</td>
+                <td style="font-size: 11px;">${this.formatDateTime(p.createdAt)}</td>
+                <td>
+                    <button class="btn-small btn-primary" data-edit-p="${i}">Edit</button>
+                    <button class="btn-small btn-danger" data-del-p="${i}">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>👤 POI Database - All Records (${this.pois.length})</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 16px; display: flex; gap: 10px;">
+                    <button class="control-btn btn-primary" onclick="app.showPOIAddForm()">➕ Add New POI</button>
+                    <button class="control-btn btn-secondary" onclick="app.showPOIMenu()">◀ Back to Menu</button>
+                </div>
+                <div class="copy-area" style="max-height: 400px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background: var(--desktop-bg-tertiary, var(--mobile-bg-tertiary)); position: sticky; top: 0;">
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">ID</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">First Name</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Last Name</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Status</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Locations</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Notes</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Created</th>
+                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="poiTable">${rows || '<tr><td colspan="8" style="padding: 20px; text-align: center;">No POIs recorded.</td></tr>'}</tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'block';
+
+        modal.querySelectorAll('[data-del-p]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = Number(btn.getAttribute('data-del-p'));
+                const poi = this.pois[idx];
+                if (confirm(`Delete POI #${poi.id}: ${poi.firstName} ${poi.lastName}?`)) {
+                    this.pois.splice(idx, 1);
+                    this.savePOIs();
+                    this.showPOIList();
+                    this.showNotification('POI deleted');
+                }
+            });
+        });
+
+        modal.querySelectorAll('[data-edit-p]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = Number(btn.getAttribute('data-edit-p'));
+                this.showPOIEditForm(idx);
+            });
+        });
+    }
+    
+    showPOIAddForm() {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        const siteOptions = this.sites.map(site => 
+            `<option value="${site.name}">${site.name}</option>`
+        ).join('');
+
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>➕ Add New Person of Interest</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="poiForm">
+                    <div class="form-group">
+                        <label for="poiFirstName">First Name</label>
+                        <input id="poiFirstName" required placeholder="Enter first name">
+                    </div>
+                    <div class="form-group">
+                        <label for="poiLastName">Last Name</label>
+                        <input id="poiLastName" required placeholder="Enter last name">
+                    </div>
+                    <div class="form-group">
+                        <label for="poiStatus">Status</label>
+                        <select id="poiStatus" required>
+                            <option value="Banned">Banned</option>
+                            <option value="Warned">Warned</option>
+                            <option value="Talked To">Talked To</option>
+                            <option value="Continuous Problem">Continuous Problem</option>
+                            <option value="Watch List">Watch List</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="poiLocations">Locations (hold Ctrl/Cmd for multiple)</label>
+                        <select id="poiLocations" multiple style="height: 100px;">
+                            <option value="All Sites">All Sites</option>
+                            ${siteOptions}
+                        </select>
+                        <small style="color: var(--desktop-text-muted, var(--mobile-text-muted));">Select multiple locations where this person has been encountered</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="poiNotes">Description/Notes</label>
+                        <textarea id="poiNotes" placeholder="Physical description, incidents, behavior patterns, etc..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="control-btn btn-secondary" onclick="app.showPOIList()">Cancel</button>
+                        <button type="submit" class="control-btn btn-success">Add POI</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        modal.style.display = 'block';
+
+        document.getElementById('poiForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const selectedLocations = Array.from(document.getElementById('poiLocations').selectedOptions)
+                .map(option => option.value);
+            
+            if (selectedLocations.length === 0) {
+                this.showNotification('Please select at least one location', 'error');
+                return;
+            }
+            
+            const poi = {
+                id: this.generatePOIId(),
+                firstName: document.getElementById('poiFirstName').value.trim(),
+                lastName: document.getElementById('poiLastName').value.trim(),
+                status: document.getElementById('poiStatus').value,
+                locations: selectedLocations,
+                notes: document.getElementById('poiNotes').value.trim(),
+                createdAt: new Date().toISOString()
+            };
+            
+            this.pois.push(poi);
+            this.savePOIs();
+            this.showPOIList();
+            this.showNotification(`POI added: ${poi.firstName} ${poi.lastName} (ID #${poi.id})`);
+        });
+    }
+    
+    showPOIEditForm(idx) {
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        const p = this.pois[idx];
+        
+        const siteOptions = this.sites.map(site => 
+            `<option value="${site.name}" ${(p.locations || []).includes(site.name) ? 'selected' : ''}>${site.name}</option>`
+        ).join('');
+
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>✏️ Edit POI #${p.id}</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="poiEditForm">
+                    <div class="form-group">
+                        <label for="poiFirstName">First Name</label>
+                        <input id="poiFirstName" required placeholder="Enter first name" value="${p.firstName || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label for="poiLastName">Last Name</label>
+                        <input id="poiLastName" required placeholder="Enter last name" value="${p.lastName || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label for="poiStatus">Status</label>
+                        <select id="poiStatus" required>
+                            <option value="Banned" ${p.status === 'Banned' ? 'selected' : ''}>Banned</option>
+                            <option value="Warned" ${p.status === 'Warned' ? 'selected' : ''}>Warned</option>
+                            <option value="Talked To" ${p.status === 'Talked To' ? 'selected' : ''}>Talked To</option>
+                            <option value="Continuous Problem" ${p.status === 'Continuous Problem' ? 'selected' : ''}>Continuous Problem</option>
+                            <option value="Watch List" ${p.status === 'Watch List' ? 'selected' : ''}>Watch List</option>
+                            <option value="Active" ${p.status === 'Active' ? 'selected' : ''}>Active</option>
+                            <option value="Inactive" ${p.status === 'Inactive' ? 'selected' : ''}>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="poiLocations">Locations (hold Ctrl/Cmd for multiple)</label>
+                        <select id="poiLocations" multiple style="height: 100px;">
+                            <option value="All Sites" ${(p.locations || []).includes('All Sites') ? 'selected' : ''}>All Sites</option>
+                            ${siteOptions}
+                        </select>
+                        <small style="color: var(--desktop-text-muted, var(--mobile-text-muted));">Select multiple locations where this person has been encountered</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="poiNotes">Description/Notes</label>
+                        <textarea id="poiNotes" placeholder="Physical description, incidents, behavior patterns, etc...">${p.notes || ''}</textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="control-btn btn-secondary" onclick="app.showPOIList()">Cancel</button>
+                        <button type="submit" class="control-btn btn-success">Update POI</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        modal.style.display = 'block';
+
+        document.getElementById('poiEditForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const selectedLocations = Array.from(document.getElementById('poiLocations').selectedOptions)
+                .map(option => option.value);
+            
+            if (selectedLocations.length === 0) {
+                this.showNotification('Please select at least one location', 'error');
+                return;
+            }
+            
+            this.pois[idx] = {
+                id: p.id,
+                firstName: document.getElementById('poiFirstName').value.trim(),
+                lastName: document.getElementById('poiLastName').value.trim(),
+                status: document.getElementById('poiStatus').value,
+                locations: selectedLocations,
+                notes: document.getElementById('poiNotes').value.trim(),
+                createdAt: p.createdAt
+            };
+            
+            this.savePOIs();
+            this.showPOIList();
+            this.showNotification('POI updated');
+        });
+    }
+
     // BOLO Board (Person of Interest → BOLO)
     // =====================
     loadBolos() {
@@ -2029,14 +2622,16 @@ class SecuritySpecialistApp {
         const modal = document.getElementById('logsModal');
         const modalContent = modal.querySelector('.modal-content');
 
-        // Create Excel-like table with enhanced styling and add details buttons
+        // Map location BOLOs to their original indices for editing/deleting
+        const locationBoloIndices = locationBolos.map(bolo => this.bolos.indexOf(bolo));
+
+        // Create Excel-like table with enhanced styling and edit/delete buttons
         const tableRows = locationBolos.map((bolo, i) => `
             <tr style="border-bottom: 1px solid var(--desktop-border, var(--mobile-border));">
                 <td style="padding: 8px; font-weight: bold;">${bolo.id || (i + 1)}</td>
                 <td style="padding: 8px;">${bolo.subject || 'N/A'}</td>
                 <td style="padding: 8px;">${bolo.type || 'Person'}</td>
-                <td style="padding: 8px;">${bolo.description || bolo.notes || 'No description'}</td>
-                <td style="padding: 8px;">${bolo.priority || 'Medium'}</td>
+                <td style="padding: 8px; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${bolo.description || bolo.notes || 'No description'}</td>
                 <td style="padding: 8px; font-size: 11px;">${this.formatDateTime(bolo.createdAt || new Date())}</td>
                 <td style="padding: 8px;">
                     <span style="padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; 
@@ -2046,7 +2641,8 @@ class SecuritySpecialistApp {
                     </span>
                 </td>
                 <td style="padding: 8px;">
-                    <button class="btn-small btn-primary" onclick="app.addBoloDetails(${i})" style="padding: 4px 8px; font-size: 10px;">Add Details</button>
+                    <button class="btn-small btn-primary" data-edit-loc-b="${locationBoloIndices[i]}" style="padding: 4px 8px; font-size: 10px;">Edit</button>
+                    <button class="btn-small btn-danger" data-del-loc-b="${locationBoloIndices[i]}" style="padding: 4px 8px; font-size: 10px;">Delete</button>
                 </td>
             </tr>
         `).join('');
@@ -2063,6 +2659,11 @@ class SecuritySpecialistApp {
                     <strong>Active BOLOs:</strong> ${locationBolos.length}
                 </div>
                 
+                <div style="margin-bottom: 16px; display: flex; gap: 10px;">
+                    <button class="control-btn btn-primary" onclick="app.showBoloAddForm(); app.showNotification('Remember to set location to ${currentLocation}', 'info')">➕ Add New BOLO</button>
+                    <button class="control-btn btn-info" onclick="app.showBoloList()">📋 View All BOLOs</button>
+                </div>
+                
                 <div style="overflow-x: auto; max-height: 400px; border: 1px solid var(--desktop-border, var(--mobile-border)); border-radius: 4px;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                         <thead style="background: var(--desktop-bg-secondary, var(--mobile-bg-secondary)); position: sticky; top: 0;">
@@ -2071,25 +2672,41 @@ class SecuritySpecialistApp {
                                 <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Subject</th>
                                 <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Type</th>
                                 <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Description</th>
-                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Priority</th>
                                 <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Created</th>
                                 <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Status</th>
                                 <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${tableRows || '<tr><td colspan="8" style="padding: 20px; text-align: center; color: var(--desktop-text-muted, var(--mobile-text-muted));">No active BOLOs for this location</td></tr>'}
+                            ${tableRows || '<tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--desktop-text-muted, var(--mobile-text-muted));">No active BOLOs for this location</td></tr>'}
                         </tbody>
                     </table>
-                </div>
-                
-                <div style="margin-top: 16px; padding: 8px; background: var(--desktop-bg-primary, var(--mobile-bg-primary)); border-radius: 4px; font-size: 11px;">
-                    <strong>Console Command:</strong> Type "bolos" to view all system BOLOs or "bolo [subject] [description]" to create new BOLO
                 </div>
             </div>
         `;
 
         modal.style.display = 'block';
+        
+        // Add event listeners for edit and delete
+        modal.querySelectorAll('[data-del-loc-b]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = Number(btn.getAttribute('data-del-loc-b'));
+                const bolo = this.bolos[idx];
+                if (confirm(`Delete BOLO #${bolo.id}: ${bolo.subject}?`)) {
+                    this.bolos.splice(idx, 1);
+                    this.saveBolos();
+                    this.showCurrentLocationBolos();
+                    this.showNotification('BOLO deleted');
+                }
+            });
+        });
+
+        modal.querySelectorAll('[data-edit-loc-b]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = Number(btn.getAttribute('data-edit-loc-b'));
+                this.showBoloEditForm(idx);
+            });
+        });
         
         // Also log to console
         this.consoleWrite(`=== LOCATION-SPECIFIC BOLO ALERTS ===`);
@@ -2388,6 +3005,9 @@ class SecuritySpecialistApp {
         const modal = document.getElementById('logsModal');
         const modalContent = modal.querySelector('.modal-content');
 
+        // Map location POIs to their original indices for editing/deleting
+        const locationPOIIndices = locationPOIs.map(poi => this.pois.indexOf(poi));
+
         const tableRows = locationPOIs.map((poi, i) => `
             <tr style="border-bottom: 1px solid var(--desktop-border, var(--mobile-border));">
                 <td style="padding: 8px; font-weight: bold;">${poi.id || (i + 1)}</td>
@@ -2399,11 +3019,12 @@ class SecuritySpecialistApp {
                         ${poi.status || 'Active'}
                     </span>
                 </td>
-                <td style="padding: 8px;">${(poi.locations || []).join(', ')}</td>
-                <td style="padding: 8px;">${poi.notes || 'No description'}</td>
+                <td style="padding: 8px; max-width: 150px; overflow: hidden; text-overflow: ellipsis;">${(poi.locations || []).join(', ')}</td>
+                <td style="padding: 8px; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${poi.notes || 'No description'}</td>
                 <td style="padding: 8px; font-size: 11px;">${this.formatDateTime(poi.createdAt || new Date())}</td>
                 <td style="padding: 8px;">
-                    <button class="btn-small btn-primary" onclick="app.addPoiDetails(${i})" style="padding: 4px 8px; font-size: 10px;">Add Details</button>
+                    <button class="btn-small btn-primary" data-edit-loc-p="${locationPOIIndices[i]}" style="padding: 4px 8px; font-size: 10px;">Edit</button>
+                    <button class="btn-small btn-danger" data-del-loc-p="${locationPOIIndices[i]}" style="padding: 4px 8px; font-size: 10px;">Delete</button>
                 </td>
             </tr>
         `).join('');
@@ -2420,18 +3041,23 @@ class SecuritySpecialistApp {
                     <strong>POIs for Location:</strong> ${locationPOIs.length}
                 </div>
                 
+                <div style="margin-bottom: 16px; display: flex; gap: 10px;">
+                    <button class="control-btn btn-primary" onclick="app.showPOIAddForm(); app.showNotification('Remember to add ${currentLocation} to locations', 'info')">➕ Add New POI</button>
+                    <button class="control-btn btn-info" onclick="app.showPOIList()">📋 View All POIs</button>
+                </div>
+                
                 <div style="overflow-x: auto; max-height: 400px; border: 1px solid var(--desktop-border, var(--mobile-border)); border-radius: 4px;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                        <thead>
-                            <tr style="background: var(--desktop-bg-tertiary, var(--mobile-bg-tertiary));">
-                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">ID</th>
-                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">First Name</th>
-                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Last Name</th>
-                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Status</th>
-                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Locations</th>
-                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Notes</th>
-                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Created</th>
-                                <th style="padding: 8px; border: 1px solid var(--desktop-border, var(--mobile-border));">Actions</th>
+                        <thead style="background: var(--desktop-bg-secondary, var(--mobile-bg-secondary)); position: sticky; top: 0;">
+                            <tr>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">ID</th>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">First Name</th>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Last Name</th>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Status</th>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Locations</th>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Notes</th>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Created</th>
+                                <th style="padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--desktop-border, var(--mobile-border)); font-weight: bold;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2439,14 +3065,31 @@ class SecuritySpecialistApp {
                         </tbody>
                     </table>
                 </div>
-                
-                <div style="margin-top: 16px; padding: 8px; background: var(--desktop-bg-primary, var(--mobile-bg-primary)); border-radius: 4px; font-size: 11px;">
-                    <strong>Console Command:</strong> Type "pois" to view all POIs or manage POI database from main menu
-                </div>
             </div>
         `;
 
         modal.style.display = 'block';
+        
+        // Add event listeners for edit and delete
+        modal.querySelectorAll('[data-del-loc-p]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = Number(btn.getAttribute('data-del-loc-p'));
+                const poi = this.pois[idx];
+                if (confirm(`Delete POI #${poi.id}: ${poi.firstName} ${poi.lastName}?`)) {
+                    this.pois.splice(idx, 1);
+                    this.savePOIs();
+                    this.showCurrentLocationPOIs();
+                    this.showNotification('POI deleted');
+                }
+            });
+        });
+
+        modal.querySelectorAll('[data-edit-loc-p]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = Number(btn.getAttribute('data-edit-loc-p'));
+                this.showPOIEditForm(idx);
+            });
+        });
         
         // Also log to console
         this.consoleWrite(`=== LOCATION-SPECIFIC POI ALERTS ===`);
