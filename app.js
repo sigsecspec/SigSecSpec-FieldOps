@@ -410,25 +410,25 @@ class SecuritySpecialistApp {
                 </div>
 
                 <div class="dashboard-controls">
-                    <button class="control-btn btn-primary" id="startMissionBtn" onclick="app.showInteractivePrompt('startMission')">
+                    <button class="control-btn btn-primary" id="startMissionBtn" onclick="app.showStartMissionModal()">
                         Begin Operation
                     </button>
-                    <button class="control-btn btn-success" id="onSiteBtn" onclick="app.showInteractivePrompt('onSite')" disabled>
+                    <button class="control-btn btn-success" id="onSiteBtn" onclick="app.showOnSiteModal()" disabled>
                         Arrive On Scene
                     </button>
-                    <button class="control-btn btn-warning" id="offSiteBtn" onclick="app.showInteractivePrompt('offSite')" disabled>
+                    <button class="control-btn btn-warning" id="offSiteBtn" onclick="app.confirmOffSite()" disabled>
                         Clear Scene
                     </button>
-                    <button class="control-btn btn-primary" onclick="app.showInteractivePrompt('incident')">
+                    <button class="control-btn btn-primary" onclick="app.showIncidentModal()">
                         Incident Report
                     </button>
-                    <button class="control-btn btn-primary" onclick="app.showInteractivePrompt('checkpoint')">
+                    <button class="control-btn btn-primary" onclick="app.showCheckpointModal()">
                         Add Checkpoint
                     </button>
-                    <button class="control-btn btn-warning" onclick="app.showInteractivePrompt('report')" id="missionReportBtn" disabled>
+                    <button class="control-btn btn-warning" onclick="app.showMissionReportModal()" id="missionReportBtn" disabled>
                         Mission Report
                     </button>
-                    <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.showInteractivePrompt('endMission')" disabled>
+                    <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.confirmEndMission()" disabled>
                         End Mission
                     </button>
                 </div>
@@ -471,16 +471,16 @@ class SecuritySpecialistApp {
                 </div>
 
                 <div class="dashboard-controls">
-                    <button class="control-btn btn-primary" id="startMissionBtn" onclick="app.showInteractivePrompt('startMission')">
+                    <button class="control-btn btn-primary" id="startMissionBtn" onclick="app.showStartMissionModal()">
                         Start Mission
                     </button>
-                    <button class="control-btn btn-primary" onclick="app.showInteractivePrompt('incident')">
+                    <button class="control-btn btn-primary" onclick="app.showIncidentModal()">
                         Incident Report
                     </button>
-                    <button class="control-btn btn-warning" onclick="app.showInteractivePrompt('report')" id="missionReportBtn" disabled>
+                    <button class="control-btn btn-warning" onclick="app.showMissionReportModal()" id="missionReportBtn" disabled>
                         Mission Report
                     </button>
-                    <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.showInteractivePrompt('endMission')" disabled>
+                    <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.confirmEndMission()" disabled>
                         End Mission
                     </button>
                 </div>
@@ -504,21 +504,8 @@ class SecuritySpecialistApp {
     }
 
     showStartMissionModal() {
-        if (this.isMobileDevice()) {
-            this.showMobileStartMissionModal();
-        } else {
-            this.consoleWrite('=== MISSION START CONSOLE ===');
-            this.consoleWrite('Starting mission configuration...');
-            this.consoleWrite('Use console commands to configure mission:');
-            this.consoleWrite('  start [specialist_name] - Quick start with specialist name');
-            this.consoleWrite('  start_detailed - Start detailed configuration');
-            this.consoleWrite('  cancel - Cancel mission start');
-            this.consoleWrite('');
-            this.consoleWrite('Current mission type: ' + (this.currentMission?.type || 'Not selected'));
-            this.consoleWrite('System status: ' + (this.currentMission?.status || 'Inactive'));
-            this.consoleWrite('');
-            this.consoleWrite('Type your command below:');
-        }
+        // Always show modal for button clicks (both desktop and mobile)
+        this.showMobileStartMissionModal();
     }
 
     showMobileStartMissionModal() {
@@ -605,6 +592,15 @@ class SecuritySpecialistApp {
         this.addNavigationWarning();
         this.closeModal();
         this.showNotification('Mission started successfully!');
+        
+        // Log to console as if command was executed
+        this.consoleWrite(`Mission started for Specialist ${specialistName}`);
+        this.consoleWrite(`Start time: ${startTime.toLocaleString()}`);
+        this.consoleWrite(`Expected end time: ${endTime.toLocaleString()}`);
+        if (notes) {
+            this.consoleWrite(`Notes: ${notes}`);
+        }
+        this.consoleWrite('Mission status: ACTIVE');
     }
 
     startMission() {
@@ -716,6 +712,22 @@ class SecuritySpecialistApp {
         this.pendingMissionDetails = null;
     }
 
+    showOnSiteModal() {
+        if (this.currentMission.status !== 'active') {
+            this.showNotification('Mission must be started first!', 'error');
+            return;
+        }
+
+        // Check if mission report has been completed
+        if (this.currentMission.report) {
+            this.showNotification('Cannot go on site after mission report is completed!', 'error');
+            return;
+        }
+
+        // Always show modal for button clicks
+        this.showMobileOnSiteModal();
+    }
+
     goOnSite() {
         if (this.currentMission.status !== 'active') {
             this.showNotification('Mission must be started first!', 'error');
@@ -728,7 +740,7 @@ class SecuritySpecialistApp {
             return;
         }
 
-        // Use console prompts for desktop, modal for mobile
+        // For console commands: Use console prompts for desktop, modal for mobile
         if (this.isMobileDevice()) {
             this.showMobileOnSiteModal();
         } else {
@@ -836,6 +848,14 @@ class SecuritySpecialistApp {
         
         this.closeModal();
         this.showNotification('Now on site at ' + formData.get('siteLocation'));
+        
+        // Log to console as if command was executed
+        this.consoleWrite(`Arrived on site: ${formData.get('siteLocation')}`);
+        this.consoleWrite(`Arrival time: ${this.currentSiteStartTime.toLocaleString()}`);
+        if (formData.get('siteDetails')) {
+            this.consoleWrite(`Details: ${formData.get('siteDetails')}`);
+        }
+        this.consoleWrite('Status: ON SITE');
     }
 
     processOnSiteFromConsole(data) {
@@ -899,9 +919,64 @@ class SecuritySpecialistApp {
         
         this.updatePatrolStopsList();
         this.showNotification('Left site - now in transit');
+        
+        // Log to console as if command was executed
+        this.consoleWrite(`Departed site: ${this.currentMission.patrolStops[this.currentMission.patrolStops.length - 1].location}`);
+        this.consoleWrite(`Departure time: ${departureTime.toLocaleString()}`);
+        this.consoleWrite('Status: IN TRANSIT');
+    }
+
+    confirmOffSite() {
+        if (!this.isOnSite) {
+            this.showNotification('Not currently on site!', 'error');
+            return;
+        }
+
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>Clear Scene</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to clear the scene and go off-site?</p>
+                <p><strong>Current Location:</strong> ${this.currentPatrolStop?.location || 'Unknown'}</p>
+                <p><strong>Time on Site:</strong> ${this.getTimeOnSite()}</p>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="app.closeModal()">Cancel</button>
+                    <button type="button" class="btn-warning" onclick="app.processOffSite()">Clear Scene</button>
+                </div>
+            </div>
+        `;
+
+        this.bindModalEvents();
+        modal.style.display = 'block';
+    }
+
+    processOffSite() {
+        this.closeModal();
+        this.goOffSite();
+    }
+
+    getTimeOnSite() {
+        if (!this.currentSiteStartTime) return 'Unknown';
+        const now = new Date();
+        const diff = now - this.currentSiteStartTime;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        return `${hours}h ${minutes}m`;
     }
 
     showIncidentModal() {
+        // Always show modal for button clicks
+        this.showMobileIncidentModal();
+    }
+
+    showIncidentConsolePrompt() {
+        // For console commands: Use console prompts for desktop, modal for mobile
         if (this.isMobileDevice()) {
             this.showMobileIncidentModal();
         } else {
@@ -998,6 +1073,14 @@ class SecuritySpecialistApp {
         this.updateIncidentsList();
         this.closeModal();
         this.showNotification('Incident report submitted successfully!');
+        
+        // Log to console as if command was executed
+        this.consoleWrite(`Incident reported: ${incident.type}`);
+        this.consoleWrite(`Location: ${incident.location}`);
+        this.consoleWrite(`Time: ${incident.time.toLocaleString()}`);
+        this.consoleWrite(`Description: ${incident.description}`);
+        this.consoleWrite(`Action taken: ${incident.action}`);
+        this.consoleWrite('Incident logged successfully');
     }
 
     addIncident() {
@@ -1600,7 +1683,7 @@ class SecuritySpecialistApp {
                 if (args.length >= 3) {
                     this.quickIncident(args);
                 } else {
-                    this.showIncidentModal();
+                    this.showIncidentConsolePrompt();
                 }
                 break;
             case 'incident_detailed':
@@ -1661,15 +1744,14 @@ class SecuritySpecialistApp {
                 if (args.length >= 2) {
                     this.quickCheckpoint(args);
                 } else {
-                    this.showCheckpointModal();
-                    this.consoleWrite('Opening Add Checkpoint form...');
+                    this.showCheckpointConsolePrompt();
                 }
                 break;
             case 'report':
                 if (args.length > 0) {
                     this.quickReport(a);
                 } else {
-                    this.showMissionReportModal();
+                    this.showMissionReportConsolePrompt();
                 }
                 break;
             case 'report_detailed':
@@ -2388,7 +2470,17 @@ class SecuritySpecialistApp {
             return;
         }
 
-        // Use console prompts for desktop, modal for mobile
+        // Always show modal for button clicks
+        this.showMobileCheckpointModal();
+    }
+
+    showCheckpointConsolePrompt() {
+        if (!this.isOnSite) {
+            this.showNotification('Must be on site to add checkpoint!', 'error');
+            return;
+        }
+
+        // For console commands: Use console prompts for desktop, modal for mobile
         if (this.isMobileDevice()) {
             this.showMobileCheckpointModal();
         } else {
@@ -2400,6 +2492,7 @@ class SecuritySpecialistApp {
                 this.processCheckpointFromConsole(data);
             });
         }
+        this.consoleWrite('Opening Add Checkpoint form...');
     }
 
     showMobileCheckpointModal() {
@@ -2473,6 +2566,15 @@ class SecuritySpecialistApp {
 
         this.closeModal();
         this.showNotification('Checkpoint added successfully!');
+        
+        // Log to console as if command was executed
+        this.consoleWrite(`Checkpoint logged: ${checkpoint.name}`);
+        this.consoleWrite(`Status: ${checkpoint.status}`);
+        this.consoleWrite(`Time: ${checkpoint.time.toLocaleString()}`);
+        if (checkpoint.details) {
+            this.consoleWrite(`Details: ${checkpoint.details}`);
+        }
+        this.consoleWrite('Checkpoint saved successfully');
     }
 
     processCheckpointFromConsole(data) {
@@ -2509,6 +2611,17 @@ class SecuritySpecialistApp {
             return;
         }
 
+        // Always show modal for button clicks
+        this.showMobileMissionReportModal();
+    }
+
+    showMissionReportConsolePrompt() {
+        if (this.currentMission.status !== 'active') {
+            this.consoleWrite('ERROR: Mission must be active to create report!');
+            return;
+        }
+
+        // For console commands: Use console prompts for desktop, modal for mobile
         if (this.isMobileDevice()) {
             this.showMobileMissionReportModal();
         } else {
@@ -2586,6 +2699,18 @@ class SecuritySpecialistApp {
 
         this.closeModal();
         this.showNotification('Mission report saved successfully!');
+        
+        // Log to console as if command was executed
+        this.consoleWrite('Mission report completed successfully');
+        this.consoleWrite(`Summary: ${this.currentMission.report.summary}`);
+        if (this.currentMission.report.observations) {
+            this.consoleWrite(`Observations: ${this.currentMission.report.observations}`);
+        }
+        if (this.currentMission.report.recommendations) {
+            this.consoleWrite(`Recommendations: ${this.currentMission.report.recommendations}`);
+        }
+        this.consoleWrite(`Completed at: ${this.currentMission.report.completedAt.toLocaleString()}`);
+        this.consoleWrite('Report saved - ready to end mission');
     }
 
     saveMissionReport() {
@@ -2678,6 +2803,49 @@ class SecuritySpecialistApp {
         
         // Clear pending report
         this.pendingReport = null;
+    }
+
+    confirmEndMission() {
+        if (!this.currentMission.report) {
+            this.showNotification('Mission report must be completed before ending mission!', 'error');
+            return;
+        }
+
+        const modal = document.getElementById('logsModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        const now = new Date();
+        const expectedEndTime = new Date(this.currentMission.endTime);
+        const timeDiff = (expectedEndTime - now) / (1000 * 60); // minutes
+        const isEarly = timeDiff > 15;
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>End Mission</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to end the current mission?</p>
+                <p><strong>Mission Type:</strong> ${this.currentMission.type}</p>
+                <p><strong>Specialist:</strong> ${this.currentMission.details.specialistName}</p>
+                <p><strong>Start Time:</strong> ${new Date(this.currentMission.startTime).toLocaleString()}</p>
+                <p><strong>Expected End:</strong> ${expectedEndTime.toLocaleString()}</p>
+                ${isEarly ? '<p style="color: orange;"><strong>Warning:</strong> Ending more than 15 minutes early</p>' : ''}
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="app.closeModal()">Cancel</button>
+                    <button type="button" class="btn-danger" onclick="app.processEndMission()">End Mission</button>
+                </div>
+            </div>
+        `;
+
+        this.bindModalEvents();
+        modal.style.display = 'block';
+    }
+
+    processEndMission() {
+        this.closeModal();
+        this.endMission();
     }
 
     endMission() {
@@ -2799,6 +2967,13 @@ class SecuritySpecialistApp {
         
         this.closeModal();
         this.showNotification('Mission completed successfully! System reset to inactive. Navigation restrictions removed.');
+        
+        // Log to console as if command was executed
+        this.consoleWrite(`Mission ${missionId} completed successfully`);
+        this.consoleWrite(`End time: ${this.currentMission.actualEndTime.toLocaleString()}`);
+        this.consoleWrite(`Specialist: ${this.currentMission.details.specialistName}`);
+        this.consoleWrite('Status: COMPLETED');
+        this.consoleWrite('System reset to inactive state');
         
         // Return to main page to allow new mission start
         setTimeout(() => {
