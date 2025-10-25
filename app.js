@@ -582,10 +582,10 @@ class SecuritySpecialistApp {
                         View Patrol Stops
                     </button>
                     <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showCurrentLocationBolos()" disabled>
-                        BOLO's (Location)
+                        BOLO's
                     </button>
                     <button class="control-btn btn-warning" id="poiListBtn" onclick="app.showCurrentLocationPOIs()" disabled>
-                        POI's (Location)
+                        POI's
                     </button>
                     <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.confirmEndMission()" disabled>
                         End Mission
@@ -626,17 +626,29 @@ class SecuritySpecialistApp {
                     <button class="control-btn btn-primary" id="startMissionBtn" onclick="app.showStartMissionModal()">
                         Start Mission
                     </button>
+                    <button class="control-btn btn-success" id="onSiteBtn" onclick="app.showOnSiteModal()" disabled>
+                        Go On Site
+                    </button>
+                    <button class="control-btn btn-warning" id="offSiteBtn" onclick="app.confirmOffSite()" disabled>
+                        Go Off Site
+                    </button>
+                    <button class="control-btn btn-info" id="checkBtn" onclick="app.showCheckModal()" disabled>
+                        Security Check
+                    </button>
                     <button class="control-btn btn-primary" id="incidentReportBtn" onclick="app.showIncidentModal()" disabled>
                         Incident Report
                     </button>
                     <button class="control-btn btn-info" id="viewIncidentsBtn" onclick="app.showIncidentsListModal()" disabled>
                         View Incidents
                     </button>
+                    <button class="control-btn btn-info" id="viewPatrolStopsBtn" onclick="app.showPatrolStopsListModal()" disabled>
+                        View Site Visits
+                    </button>
                     <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showCurrentLocationBolos()" disabled>
-                        BOLO's (Location)
+                        BOLO's
                     </button>
                     <button class="control-btn btn-warning" id="poiListBtn" onclick="app.showCurrentLocationPOIs()" disabled>
-                        POI's (Location)
+                        POI's
                     </button>
                     <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.confirmEndMission()" disabled>
                         End Mission
@@ -730,19 +742,35 @@ class SecuritySpecialistApp {
         };
         
         this.missionStartTime = startTime;
+        
+        // Auto-set location for standing and desk missions
+        if (this.currentMission.type === 'standing') {
+            this.autoSetMissionLocation('Fixed Post Alpha', 'Assigned fixed security post');
+        } else if (this.currentMission.type === 'desk') {
+            this.autoSetMissionLocation('Security Station', 'Administrative desk duty assignment');
+        }
+        
         this.saveCurrentMission();
         
         // Update UI
-        document.getElementById('missionStatus').textContent = 'Active';
-        document.getElementById('missionStatus').className = 'mission-status status-active';
+        document.getElementById('missionStatus').textContent = this.isOnSite ? 'On Site' : 'Active';
+        document.getElementById('missionStatus').className = this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active';
         document.getElementById('startMissionBtn').disabled = true;
         document.getElementById('missionReportBtn').disabled = false;
         document.getElementById('endMissionBtn').disabled = false;
         document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission starts
         
-        if (this.currentMission.type === 'patrol') {
-            document.getElementById('onSiteBtn').disabled = false;
-        }
+        // Enable/disable onSite button based on current status
+        document.getElementById('onSiteBtn').disabled = this.isOnSite;
+        document.getElementById('offSiteBtn').disabled = !this.isOnSite;
+        
+        // Enable BOLO and POI buttons if onsite
+        const boloListBtn = document.getElementById('boloListBtn');
+        const poiListBtn = document.getElementById('poiListBtn');
+        const checkBtn = document.getElementById('checkBtn');
+        if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
+        if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
+        if (checkBtn) checkBtn.disabled = !this.isOnSite;
         
         this.enableViewButtons(); // Enable view buttons when mission starts
         this.addNavigationWarning();
@@ -842,19 +870,35 @@ class SecuritySpecialistApp {
         };
         
         this.missionStartTime = this.currentMission.startTime;
+        
+        // Auto-set location for standing and desk missions
+        if (this.currentMission.type === 'standing') {
+            this.autoSetMissionLocation('Fixed Post Alpha', 'Assigned fixed security post');
+        } else if (this.currentMission.type === 'desk') {
+            this.autoSetMissionLocation('Security Station', 'Administrative desk duty assignment');
+        }
+        
         this.saveCurrentMission();
         
         // Update UI
-        document.getElementById('missionStatus').textContent = 'Active';
-        document.getElementById('missionStatus').className = 'mission-status status-active';
+        document.getElementById('missionStatus').textContent = this.isOnSite ? 'On Site' : 'Active';
+        document.getElementById('missionStatus').className = this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active';
         document.getElementById('startMissionBtn').disabled = true;
         document.getElementById('missionReportBtn').disabled = false;
         document.getElementById('endMissionBtn').disabled = false;
         document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission starts
         
-        if (this.currentMission.type === 'patrol') {
-            document.getElementById('onSiteBtn').disabled = false;
-        }
+        // Enable/disable onSite button based on current status
+        document.getElementById('onSiteBtn').disabled = this.isOnSite;
+        document.getElementById('offSiteBtn').disabled = !this.isOnSite;
+        
+        // Enable BOLO and POI buttons if onsite
+        const boloListBtn = document.getElementById('boloListBtn');
+        const poiListBtn = document.getElementById('poiListBtn');
+        const checkBtn = document.getElementById('checkBtn');
+        if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
+        if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
+        if (checkBtn) checkBtn.disabled = !this.isOnSite;
         
         this.enableViewButtons(); // Enable view buttons when mission starts
         // Add navigation restriction indicator
@@ -900,6 +944,14 @@ class SecuritySpecialistApp {
         };
 
         this.missionStartTime = startTime;
+        
+        // Auto-set location for standing and desk missions
+        if (this.currentMission.type === 'standing') {
+            this.autoSetMissionLocation('Fixed Post Alpha', 'Assigned fixed security post');
+        } else if (this.currentMission.type === 'desk') {
+            this.autoSetMissionLocation('Security Station', 'Administrative desk duty assignment');
+        }
+        
         this.saveCurrentMission();
 
         // Update UI buttons
@@ -910,9 +962,17 @@ class SecuritySpecialistApp {
         document.getElementById('endMissionBtn').disabled = false;
         document.getElementById('incidentReportBtn').disabled = false;
 
-        if (this.currentMission.type === 'patrol') {
-            document.getElementById('onSiteBtn').disabled = false;
-        }
+        // Enable/disable onSite button based on current status
+        document.getElementById('onSiteBtn').disabled = this.isOnSite;
+        document.getElementById('offSiteBtn').disabled = !this.isOnSite;
+        
+        // Enable BOLO and POI buttons if onsite
+        const boloListBtn = document.getElementById('boloListBtn');
+        const poiListBtn = document.getElementById('poiListBtn');
+        const checkBtn = document.getElementById('checkBtn');
+        if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
+        if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
+        if (checkBtn) checkBtn.disabled = !this.isOnSite;
 
         // Add navigation restriction indicator
         this.addNavigationWarning();
@@ -1066,6 +1126,12 @@ class SecuritySpecialistApp {
         document.getElementById('offSiteBtn').disabled = false;
         document.getElementById('checkBtn').disabled = false; // Enable check button when on site
         
+        // Enable BOLO and POI buttons when on site
+        const boloListBtn = document.getElementById('boloListBtn');
+        const poiListBtn = document.getElementById('poiListBtn');
+        if (boloListBtn) boloListBtn.disabled = false;
+        if (poiListBtn) poiListBtn.disabled = false;
+        
         this.closeModal();
         this.showNotification('Now on site at ' + formData.get('siteLocation'));
         
@@ -1210,6 +1276,54 @@ class SecuritySpecialistApp {
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         return `${hours}h ${minutes}m`;
+    }
+
+    autoSetMissionLocation(location, details) {
+        // Automatically set standing and desk missions to their designated location
+        this.isOnSite = true;
+        this.currentSiteStartTime = new Date();
+        
+        this.currentPatrolStop = {
+            location: location,
+            arrivalTime: this.currentSiteStartTime,
+            departureTime: null,
+            details: details,
+            incidents: [],
+            checks: []
+        };
+        
+        // Add to patrol stops
+        if (!this.currentMission.patrolStops) {
+            this.currentMission.patrolStops = [];
+        }
+        this.currentMission.patrolStops.push(this.currentPatrolStop);
+        
+        // Update UI to show onsite status
+        setTimeout(() => {
+            const statusElement = document.getElementById('missionStatus');
+            if (statusElement) {
+                statusElement.textContent = 'On Site';
+                statusElement.className = 'mission-status status-onsite';
+            }
+            
+            // Enable BOLO and POI buttons since we're now onsite
+            const boloListBtn = document.getElementById('boloListBtn');
+            const poiListBtn = document.getElementById('poiListBtn');
+            const checkBtn = document.getElementById('checkBtn');
+            const onSiteBtn = document.getElementById('onSiteBtn');
+            const offSiteBtn = document.getElementById('offSiteBtn');
+            
+            if (boloListBtn) boloListBtn.disabled = false;
+            if (poiListBtn) poiListBtn.disabled = false;
+            if (checkBtn) checkBtn.disabled = false;
+            if (onSiteBtn) onSiteBtn.disabled = true; // Disable since already onsite
+            if (offSiteBtn) offSiteBtn.disabled = false; // Enable offsite option
+        }, 100);
+        
+        this.consoleWrite(`✓ Automatically assigned to: ${location}`);
+        this.consoleWrite(`✓ Assignment time: ${this.currentSiteStartTime.toLocaleString()}`);
+        this.consoleWrite(`✓ Details: ${details}`);
+        this.consoleWrite('✓ Status: ON SITE');
     }
 
     showIncidentModal() {
@@ -2896,6 +3010,14 @@ class SecuritySpecialistApp {
             };
 
             this.missionStartTime = startTime;
+            
+            // Auto-set location for standing and desk missions
+            if (this.currentMission.type === 'standing') {
+                this.autoSetMissionLocation('Fixed Post Alpha', 'Assigned fixed security post');
+            } else if (this.currentMission.type === 'desk') {
+                this.autoSetMissionLocation('Security Station', 'Administrative desk duty assignment');
+            }
+            
             this.saveCurrentMission();
             
             // Update UI
@@ -2906,9 +3028,8 @@ class SecuritySpecialistApp {
             document.getElementById('endMissionBtn').disabled = false;
             document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission starts
             
-            if (this.currentMission.type === 'patrol') {
-                document.getElementById('onSiteBtn').disabled = false;
-            }
+            // Enable onSite button for all mission types
+            document.getElementById('onSiteBtn').disabled = false;
             
             this.enableViewButtons(); // Enable view buttons when mission starts
             this.addNavigationWarning();
@@ -3114,19 +3235,35 @@ class SecuritySpecialistApp {
         };
         
         this.missionStartTime = now;
+        
+        // Auto-set location for standing and desk missions
+        if (this.currentMission.type === 'standing') {
+            this.autoSetMissionLocation('Fixed Post Alpha', 'Assigned fixed security post');
+        } else if (this.currentMission.type === 'desk') {
+            this.autoSetMissionLocation('Security Station', 'Administrative desk duty assignment');
+        }
+        
         this.saveCurrentMission();
         
         // Update UI
-        document.getElementById('missionStatus').textContent = 'Active';
-        document.getElementById('missionStatus').className = 'mission-status status-active';
+        document.getElementById('missionStatus').textContent = this.isOnSite ? 'On Site' : 'Active';
+        document.getElementById('missionStatus').className = this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active';
         document.getElementById('startMissionBtn').disabled = true;
         document.getElementById('missionReportBtn').disabled = false;
         document.getElementById('endMissionBtn').disabled = false;
         document.getElementById('incidentReportBtn').disabled = false; // Enable incident report when mission starts
         
-        if (this.currentMission.type === 'patrol') {
-            document.getElementById('onSiteBtn').disabled = false;
-        }
+        // Enable/disable onSite button based on current status
+        document.getElementById('onSiteBtn').disabled = this.isOnSite;
+        document.getElementById('offSiteBtn').disabled = !this.isOnSite;
+        
+        // Enable BOLO and POI buttons if onsite
+        const boloListBtn = document.getElementById('boloListBtn');
+        const poiListBtn = document.getElementById('poiListBtn');
+        const checkBtn = document.getElementById('checkBtn');
+        if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
+        if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
+        if (checkBtn) checkBtn.disabled = !this.isOnSite;
         
         this.enableViewButtons(); // Enable view buttons when mission starts
         this.addNavigationWarning();
@@ -3246,15 +3383,13 @@ class SecuritySpecialistApp {
         };
         this.saveCurrentMission();
 
-        // Disable on-site button after mission report is completed (for patrol missions)
-        if (this.currentMission.type === 'patrol') {
-            const onSiteBtn = document.getElementById('onSiteBtn');
-            if (onSiteBtn) {
-                onSiteBtn.disabled = true;
-            }
-            if (this.isOnSite) {
-                this.consoleWrite('WARNING: Mission report completed. Please leave site to end mission.');
-            }
+        // Disable on-site button after mission report is completed (for all missions)
+        const onSiteBtn = document.getElementById('onSiteBtn');
+        if (onSiteBtn) {
+            onSiteBtn.disabled = true;
+        }
+        if (this.isOnSite) {
+            this.consoleWrite('WARNING: Mission report completed. Please leave site to end mission.');
         }
 
         this.consoleWrite('Mission report saved successfully!');
@@ -3731,12 +3866,10 @@ class SecuritySpecialistApp {
         };
         this.saveCurrentMission();
 
-        // Disable on-site button after mission report is completed (for patrol missions)
-        if (this.currentMission.type === 'patrol') {
-            const onSiteBtn = document.getElementById('onSiteBtn');
-            if (onSiteBtn) {
-                onSiteBtn.disabled = true;
-            }
+        // Disable on-site button after mission report is completed (for all missions)
+        const onSiteBtn = document.getElementById('onSiteBtn');
+        if (onSiteBtn) {
+            onSiteBtn.disabled = true;
         }
 
         this.closeModal();
@@ -3828,16 +3961,14 @@ class SecuritySpecialistApp {
         };
         this.saveCurrentMission();
 
-        // Disable on-site button after mission report is completed (for patrol missions)
-        if (this.currentMission.type === 'patrol') {
-            const onSiteBtn = document.getElementById('onSiteBtn');
-            if (onSiteBtn) {
-                onSiteBtn.disabled = true;
-            }
-            // If currently on site, force them to leave
-            if (this.isOnSite) {
-                this.consoleWrite('WARNING: Mission report completed. Please leave site to end mission.');
-            }
+        // Disable on-site button after mission report is completed (for all missions)
+        const onSiteBtn = document.getElementById('onSiteBtn');
+        if (onSiteBtn) {
+            onSiteBtn.disabled = true;
+        }
+        // If currently on site, force them to leave
+        if (this.isOnSite) {
+            this.consoleWrite('WARNING: Mission report completed. Please leave site to end mission.');
         }
 
         this.consoleWrite('✓ Mission report saved successfully!');
@@ -4489,10 +4620,9 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                     if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
                     if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
                     
-                    if (this.currentMission.type === 'patrol') {
-                        document.getElementById('onSiteBtn').disabled = this.isOnSite || !!this.currentMission.report;
-                        document.getElementById('offSiteBtn').disabled = !this.isOnSite;
-                    }
+                    // Enable/disable onSite/offSite buttons for all mission types
+                    document.getElementById('onSiteBtn').disabled = this.isOnSite || !!this.currentMission.report;
+                    document.getElementById('offSiteBtn').disabled = !this.isOnSite;
                     
                     this.enableViewButtons(); // Enable view buttons when restoring mission
                     // Restore navigation warning for active missions
@@ -4762,10 +4892,9 @@ Report Generated: ${this.formatDateTime(new Date())}`;
         const viewIncidentsBtn = document.getElementById('viewIncidentsBtn');
         if (viewIncidentsBtn) viewIncidentsBtn.disabled = false;
         
-        if (this.currentMission && this.currentMission.type === 'patrol') {
-            const viewPatrolStopsBtn = document.getElementById('viewPatrolStopsBtn');
-            if (viewPatrolStopsBtn) viewPatrolStopsBtn.disabled = false;
-        }
+        // Enable patrol stops/site visits view for all mission types
+        const viewPatrolStopsBtn = document.getElementById('viewPatrolStopsBtn');
+        if (viewPatrolStopsBtn) viewPatrolStopsBtn.disabled = false;
     }
 
     // New modal functions for viewing incidents and patrol stops
