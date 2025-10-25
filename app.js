@@ -378,6 +378,14 @@ class SecuritySpecialistApp {
         }
     }
     
+    showMainContent() {
+        const mainContent = document.getElementById('mainContent');
+        if (mainContent) {
+            mainContent.style.display = 'flex';
+            mainContent.style.flexDirection = 'column';
+        }
+    }
+    
     bindLoginEvents() {
         const loginBtn = document.getElementById('loginBtn');
         const badgeInput = document.getElementById('badgeInput');
@@ -489,7 +497,24 @@ class SecuritySpecialistApp {
         }
     }
 
+    showLoadingScreen() {
+        const loadingScreen = document.querySelector('.loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'flex';
+        }
+    }
+    
+    hideLoadingScreen() {
+        const loadingScreen = document.querySelector('.loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'none';
+        }
+    }
+
     async showLoadingSequence() {
+        // Show the loading screen first
+        this.showLoadingScreen();
+        
         return new Promise((resolve) => {
             const loadingSteps = [
                 'Initializing security protocols...',
@@ -510,6 +535,9 @@ class SecuritySpecialistApp {
                     currentStep++;
                 } else {
                     clearInterval(stepInterval);
+                    // Hide loading screen and show main content when done
+                    this.hideLoadingScreen();
+                    this.showMainContent();
                     resolve();
                 }
             }, 400);
@@ -7329,5 +7357,7 @@ Report Generated: ${this.formatDateTime(new Date())}`;
     }
 }
 
-// Initialize the app and expose to global scope for onclick handlers
-window.app = new SecuritySpecialistApp();
+// Initialize the app when DOM is ready and expose to global scope for onclick handlers
+document.addEventListener('DOMContentLoaded', function() {
+    window.app = new SecuritySpecialistApp();
+});
