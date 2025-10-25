@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SigSecSpec Multi-User Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .credentials {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .badge {
+            display: inline-block;
+            background: #007acc;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 2px;
+        }
+        .management {
+            background: #d4af37;
+        }
+        .launch-btn {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+        .launch-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚔 SigSecSpec Multi-User System - Test Page</h1>
+    
+    <div class="test-section">
+        <h2>System Overview</h2>
+        <p>The SigSecSpec system has been successfully converted to a multi-user guard system with the following features:</p>
+        <ul>
+            <li><strong>Badge-based Authentication:</strong> Secure login using 4-digit badge numbers</li>
+            <li><strong>Role-based Access:</strong> Separate permissions for guards and management</li>
+            <li><strong>Shared Data:</strong> All reports and missions are stored centrally and accessible based on user role</li>
+            <li><strong>Management Interface:</strong> Enhanced privileges for viewing, editing, and managing all reports</li>
+            <li><strong>Access Logging:</strong> Complete audit trail of all user access</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>Available User Accounts</h2>
+        
+        <h3>Guard Accounts</h3>
+        <div class="credentials">
+            <strong>All guards have the same access level and can:</strong>
+            <ul>
+                <li>View their own reports and shared reports</li>
+                <li>Create new missions and incidents</li>
+                <li>Access all standard guard functions</li>
+            </ul>
+            <p><strong>Password for all guards:</strong> <code>MobileUnit1</code></p>
+            <p><strong>Available Badge Numbers:</strong></p>
+            <span class="badge">0110</span>
+            <span class="badge">0220</span>
+            <span class="badge">0330</span>
+            <span class="badge">0440</span>
+            <span class="badge">0550</span>
+            <span class="badge">0660</span>
+            <span class="badge">0770</span>
+            <span class="badge">0880</span>
+            <span class="badge">0990</span>
+        </div>
+
+        <h3>Management Account</h3>
+        <div class="credentials">
+            <strong>Management has enhanced privileges and can:</strong>
+            <ul>
+                <li>View ALL reports from all guards</li>
+                <li>Edit any report or add management notes</li>
+                <li>Access management panel with system statistics</li>
+                <li>Export all system data</li>
+                <li>View complete access logs</li>
+            </ul>
+            <p><strong>Badge Number:</strong> <span class="badge management">0099</span></p>
+            <p><strong>Password:</strong> <code>MobileUnit1Management</code></p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Key Features Implemented</h2>
+        
+        <h3>✅ Authentication System</h3>
+        <ul>
+            <li>Secure badge number and password login</li>
+            <li>Session persistence across browser refreshes</li>
+            <li>Automatic logout and session cleanup</li>
+        </ul>
+
+        <h3>✅ Multi-User Data Management</h3>
+        <ul>
+            <li>All reports tagged with user information</li>
+            <li>Role-based data access (guards see own + shared, management sees all)</li>
+            <li>Persistent storage using localStorage</li>
+        </ul>
+
+        <h3>✅ Management Interface</h3>
+        <ul>
+            <li>Management panel with system overview</li>
+            <li>Ability to add notes to any report</li>
+            <li>Complete access logging and audit trail</li>
+            <li>Data export functionality</li>
+        </ul>
+
+        <h3>✅ Enhanced UI</h3>
+        <ul>
+            <li>Current user display in header</li>
+            <li>Role-based button visibility</li>
+            <li>Logout functionality</li>
+            <li>Responsive design for mobile and desktop</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>Testing Instructions</h2>
+        <ol>
+            <li><strong>Launch the application</strong> using the button below</li>
+            <li><strong>Test Guard Login:</strong> Use any guard badge (0110-0990) with password "MobileUnit1"</li>
+            <li><strong>Create some reports:</strong> Start a mission, add incidents, complete mission</li>
+            <li><strong>Logout and login as different guard:</strong> Verify you can see shared reports</li>
+            <li><strong>Test Management Login:</strong> Use badge 0099 with password "MobileUnit1Management"</li>
+            <li><strong>Verify Management Features:</strong> Access management panel, view all reports, add notes</li>
+        </ol>
+    </div>
+
+    <div class="test-section" style="text-align: center;">
+        <h2>Launch Application</h2>
+        <a href="index.html" class="launch-btn">🚔 Launch SigSecSpec Multi-User System</a>
+    </div>
+
+    <div class="test-section">
+        <h2>Technical Notes</h2>
+        <ul>
+            <li><strong>Data Storage:</strong> All data is stored in browser localStorage for persistence</li>
+            <li><strong>Security:</strong> This is a demonstration system - in production, use proper server-side authentication</li>
+            <li><strong>Compatibility:</strong> Works on both desktop and mobile devices with responsive design</li>
+            <li><strong>Data Sharing:</strong> All guards share the same data pool but with role-based access control</li>
+        </ul>
+    </div>
+</body>
+</html>
