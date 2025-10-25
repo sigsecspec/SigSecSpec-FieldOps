@@ -2613,7 +2613,9 @@ class SecuritySpecialistApp {
     // Enhanced BOLO functionality for current location
     // Location-specific BOLO menu - shows popup menu for BOLOs at current location
     showLocationBoloMenu() {
+        console.log('showLocationBoloMenu called - isOnSite:', this.isOnSite, 'currentPatrolStop:', this.currentPatrolStop);
         if (!this.isOnSite || !this.currentPatrolStop) {
+            console.warn('Cannot show BOLO menu - isOnSite:', this.isOnSite, 'currentPatrolStop:', this.currentPatrolStop);
             this.showNotification('Must be on site to view location-specific BOLOs!', 'error');
             return;
         }
@@ -2628,7 +2630,17 @@ class SecuritySpecialistApp {
         );
 
         const modal = document.getElementById('logsModal');
+        if (!modal) {
+            console.error('Modal element not found!');
+            this.showNotification('Error: Modal not found. Please reload the page.', 'error');
+            return;
+        }
         const modalContent = modal.querySelector('.modal-content');
+        if (!modalContent) {
+            console.error('Modal content element not found!');
+            this.showNotification('Error: Modal content not found. Please reload the page.', 'error');
+            return;
+        }
 
         modalContent.innerHTML = `
             <div class="modal-header">
@@ -2670,7 +2682,9 @@ class SecuritySpecialistApp {
 
     // Location-specific POI menu - shows popup menu for POIs at current location
     showLocationPOIMenu() {
+        console.log('showLocationPOIMenu called - isOnSite:', this.isOnSite, 'currentPatrolStop:', this.currentPatrolStop);
         if (!this.isOnSite || !this.currentPatrolStop) {
+            console.warn('Cannot show POI menu - isOnSite:', this.isOnSite, 'currentPatrolStop:', this.currentPatrolStop);
             this.showNotification('Must be on site to view location-specific POIs!', 'error');
             return;
         }
@@ -2687,7 +2701,17 @@ class SecuritySpecialistApp {
         );
 
         const modal = document.getElementById('logsModal');
+        if (!modal) {
+            console.error('Modal element not found!');
+            this.showNotification('Error: Modal not found. Please reload the page.', 'error');
+            return;
+        }
         const modalContent = modal.querySelector('.modal-content');
+        if (!modalContent) {
+            console.error('Modal content element not found!');
+            this.showNotification('Error: Modal content not found. Please reload the page.', 'error');
+            return;
+        }
 
         modalContent.innerHTML = `
             <div class="modal-header">
@@ -2746,7 +2770,17 @@ class SecuritySpecialistApp {
         );
 
         const modal = document.getElementById('logsModal');
+        if (!modal) {
+            console.error('Modal element not found!');
+            this.showNotification('Error: Modal not found. Please reload the page.', 'error');
+            return;
+        }
         const modalContent = modal.querySelector('.modal-content');
+        if (!modalContent) {
+            console.error('Modal content element not found!');
+            this.showNotification('Error: Modal content not found. Please reload the page.', 'error');
+            return;
+        }
 
         // Map location BOLOs to their original indices for editing/deleting
         const locationBoloIndices = locationBolos.map(bolo => this.bolos.indexOf(bolo));
@@ -3130,7 +3164,17 @@ class SecuritySpecialistApp {
         );
 
         const modal = document.getElementById('logsModal');
+        if (!modal) {
+            console.error('Modal element not found!');
+            this.showNotification('Error: Modal not found. Please reload the page.', 'error');
+            return;
+        }
         const modalContent = modal.querySelector('.modal-content');
+        if (!modalContent) {
+            console.error('Modal content element not found!');
+            this.showNotification('Error: Modal content not found. Please reload the page.', 'error');
+            return;
+        }
 
         // Map location POIs to their original indices for editing/deleting
         const locationPOIIndices = locationPOIs.map(poi => this.pois.indexOf(poi));
@@ -5406,6 +5450,16 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                 this.currentSiteStartTime = state.currentSiteStartTime ? new Date(state.currentSiteStartTime) : null;
                 this.currentPatrolStop = state.currentPatrolStop;
                 this.missionStartTime = state.missionStartTime ? new Date(state.missionStartTime) : null;
+                
+                // Convert date strings back to Date objects in currentPatrolStop
+                if (this.currentPatrolStop) {
+                    if (this.currentPatrolStop.arrivalTime) {
+                        this.currentPatrolStop.arrivalTime = new Date(this.currentPatrolStop.arrivalTime);
+                    }
+                    if (this.currentPatrolStop.departureTime) {
+                        this.currentPatrolStop.departureTime = new Date(this.currentPatrolStop.departureTime);
+                    }
+                }
                 
                 // Convert date strings back to Date objects
                 if (this.currentMission.startTime) {
