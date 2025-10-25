@@ -1620,3 +1620,117 @@ header {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* Menu System Styles */
+.popup-menu {
+    padding: 20px;
+}
+
+.popup-menu-title {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.menu-options {
+    display: grid;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.menu-option-card {
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+    padding: 20px;
+    border-radius: 8px;
+    position: relative;
+}
+
+.menu-option-card:hover {
+    transform: translateY(-3px);
+}
+
+.menu-option-icon {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.menu-option-title {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.menu-option-desc {
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+/* Desktop Menu Options */
+@media (min-width: 1024px) {
+    .menu-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .menu-option-card {
+        background: var(--desktop-bg-tertiary);
+        border: 2px solid var(--desktop-border);
+    }
+    
+    .menu-option-card:hover {
+        border-color: var(--desktop-accent);
+        box-shadow: 0 0 15px rgba(255, 107, 53, 0.3);
+    }
+    
+    .popup-menu-title {
+        color: var(--desktop-text-primary);
+        font-family: 'Courier New', monospace;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .menu-option-title {
+        color: var(--desktop-text-primary);
+        font-family: 'Courier New', monospace;
+        text-transform: uppercase;
+    }
+    
+    .menu-option-desc {
+        color: var(--desktop-text-muted);
+        font-family: 'Courier New', monospace;
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+}
+
+/* Mobile Menu Options */
+@media (max-width: 1023px) {
+    .menu-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .menu-option-card {
+        background: var(--mobile-bg-tertiary);
+        border: 1px solid var(--mobile-border);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .menu-option-card:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        border-color: var(--mobile-accent);
+    }
+    
+    .popup-menu-title {
+        color: var(--mobile-text-primary);
+    }
+    
+    .menu-option-title {
+        color: var(--mobile-text-primary);
+    }
+    
+    .menu-option-desc {
+        color: var(--mobile-text-muted);
+    }
+}
