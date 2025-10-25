@@ -582,10 +582,10 @@ class SecuritySpecialistApp {
                         View Patrol Stops
                     </button>
                     <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showCurrentLocationBolos()" disabled>
-                        BOLO's (Location)
+                        BOLO's
                     </button>
                     <button class="control-btn btn-warning" id="poiListBtn" onclick="app.showCurrentLocationPOIs()" disabled>
-                        POI's (Location)
+                        POI's
                     </button>
                     <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.confirmEndMission()" disabled>
                         End Mission
@@ -633,10 +633,10 @@ class SecuritySpecialistApp {
                         View Incidents
                     </button>
                     <button class="control-btn btn-warning" id="boloListBtn" onclick="app.showCurrentLocationBolos()" disabled>
-                        BOLO's (Location)
+                        BOLO's
                     </button>
                     <button class="control-btn btn-warning" id="poiListBtn" onclick="app.showCurrentLocationPOIs()" disabled>
-                        POI's (Location)
+                        POI's
                     </button>
                     <button class="control-btn btn-danger" id="endMissionBtn" onclick="app.confirmEndMission()" disabled>
                         End Mission
@@ -1065,6 +1065,12 @@ class SecuritySpecialistApp {
         document.getElementById('onSiteBtn').disabled = true;
         document.getElementById('offSiteBtn').disabled = false;
         document.getElementById('checkBtn').disabled = false; // Enable check button when on site
+        
+        // Enable BOLO and POI buttons when on site
+        const boloListBtn = document.getElementById('boloListBtn');
+        const poiListBtn = document.getElementById('poiListBtn');
+        if (boloListBtn) boloListBtn.disabled = false;
+        if (poiListBtn) poiListBtn.disabled = false;
         
         this.closeModal();
         this.showNotification('Now on site at ' + formData.get('siteLocation'));
