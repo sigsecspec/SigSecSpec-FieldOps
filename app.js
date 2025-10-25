@@ -527,27 +527,7 @@ class SecuritySpecialistApp {
             });
         }
         
-        const boloBtn = document.getElementById('boloBtn');
-        if (boloBtn) {
-            console.log('BOLO button found, adding event listener');
-            boloBtn.addEventListener('click', () => {
-                console.log('BOLO button clicked');
-                this.showBoloMenu();
-            });
-        } else {
-            console.log('BOLO button not found');
-        }
-        
-        const poiBtn = document.getElementById('poiBtn');
-        if (poiBtn) {
-            console.log('POI button found, adding event listener');
-            poiBtn.addEventListener('click', () => {
-                console.log('POI button clicked');
-                this.showPOIMenu();
-            });
-        } else {
-            console.log('POI button not found');
-        }
+        // BOLO and POI buttons now use inline onclick handlers for better reliability
     }
 
     loadMainPage() {
@@ -558,8 +538,8 @@ class SecuritySpecialistApp {
                     <button id="profileBtn" class="nav-btn">👤 Guard Profile</button>
                     <button id="viewLogsBtn" class="nav-btn">Database Records</button>
                     <button id="siteManagerBtn" class="nav-btn">Site Manager</button>
-                    <button id="boloBtn" class="nav-btn">BOLO Board</button>
-                    <button id="poiBtn" class="nav-btn">Person of Interest</button>
+                    <button id="boloBtn" class="nav-btn" onclick="app.showBoloMenu()">BOLO Board</button>
+                    <button id="poiBtn" class="nav-btn" onclick="app.showPOIMenu()">Person of Interest</button>
                 </div>
                 
                 <div class="mission-selection">
