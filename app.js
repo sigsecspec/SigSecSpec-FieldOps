@@ -798,39 +798,33 @@ class SecuritySpecialistApp {
         };
         
         this.missionStartTime = startTime;
-        
-        // Auto-set location for standing and desk missions
-        if (this.currentMission.type === 'standing') {
-            this.autoSetMissionLocation('Fixed Post Alpha', 'Assigned fixed security post');
-        } else if (this.currentMission.type === 'desk') {
-            this.autoSetMissionLocation('Security Station', 'Administrative desk duty assignment');
-        }
+        this.isOnSite = false; // Always start in transit
         
         this.saveCurrentMission();
         
-        // Update UI
-        this.safeUpdateStatus(this.isOnSite ? 'On Site' : 'Active', this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active');
+        // Update UI - Always show "In Transit" when mission starts
+        this.safeUpdateStatus('In Transit', 'mission-status status-active');
         this.safeSetButtonState('startMissionBtn', true);
         this.safeSetButtonState('missionReportBtn', false);
         this.safeSetButtonState('endMissionBtn', false);
         this.safeSetButtonState('incidentReportBtn', false); // Enable incident report when mission starts
         
-        // Enable/disable onSite button based on current status
-        this.safeSetButtonState('onSiteBtn', this.isOnSite);
-        this.safeSetButtonState('offSiteBtn', !this.isOnSite);
+        // Enable "Arrive On Scene" button, disable others since we're in transit
+        this.safeSetButtonState('onSiteBtn', false); // Enable arrive on scene button
+        this.safeSetButtonState('offSiteBtn', true); // Disable off-site button
         
-        // Enable BOLO and POI buttons if onsite
+        // Disable BOLO, POI, and Check buttons until on-site
         const boloListBtn = document.getElementById('boloListBtn');
         const poiListBtn = document.getElementById('poiListBtn');
         const checkBtn = document.getElementById('checkBtn');
-        if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
-        if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
-        if (checkBtn) checkBtn.disabled = !this.isOnSite;
+        if (boloListBtn) boloListBtn.disabled = true;
+        if (poiListBtn) poiListBtn.disabled = true;
+        if (checkBtn) checkBtn.disabled = true;
         
         this.enableViewButtons(); // Enable view buttons when mission starts
         this.addNavigationWarning();
         this.closeModal();
-        this.showNotification('Mission started successfully!');
+        this.showNotification('Mission started - In Transit');
         
         // Log to console as if command was executed
         this.consoleWrite(`Mission started for Specialist ${specialistName}`);
@@ -839,7 +833,8 @@ class SecuritySpecialistApp {
         if (notes) {
             this.consoleWrite(`Notes: ${notes}`);
         }
-        this.consoleWrite('Mission status: ACTIVE');
+        this.consoleWrite('Mission status: IN TRANSIT');
+        this.consoleWrite('Use "Arrive On Scene" button when at location');
     }
 
     startMission() {
@@ -925,34 +920,28 @@ class SecuritySpecialistApp {
         };
         
         this.missionStartTime = this.currentMission.startTime;
-        
-        // Auto-set location for standing and desk missions
-        if (this.currentMission.type === 'standing') {
-            this.autoSetMissionLocation('Fixed Post Alpha', 'Assigned fixed security post');
-        } else if (this.currentMission.type === 'desk') {
-            this.autoSetMissionLocation('Security Station', 'Administrative desk duty assignment');
-        }
+        this.isOnSite = false; // Always start in transit
         
         this.saveCurrentMission();
         
-        // Update UI
-        this.safeUpdateStatus(this.isOnSite ? 'On Site' : 'Active', this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active');
+        // Update UI - Always show "In Transit" when mission starts
+        this.safeUpdateStatus('In Transit', 'mission-status status-active');
         this.safeSetButtonState('startMissionBtn', true);
         this.safeSetButtonState('missionReportBtn', false);
         this.safeSetButtonState('endMissionBtn', false);
         this.safeSetButtonState('incidentReportBtn', false); // Enable incident report when mission starts
         
-        // Enable/disable onSite button based on current status
-        this.safeSetButtonState('onSiteBtn', this.isOnSite);
-        this.safeSetButtonState('offSiteBtn', !this.isOnSite);
+        // Enable "Arrive On Scene" button, disable others since we're in transit
+        this.safeSetButtonState('onSiteBtn', false); // Enable arrive on scene button
+        this.safeSetButtonState('offSiteBtn', true); // Disable off-site button
         
-        // Enable BOLO and POI buttons if onsite
+        // Disable BOLO, POI, and Check buttons until on-site
         const boloListBtn = document.getElementById('boloListBtn');
         const poiListBtn = document.getElementById('poiListBtn');
         const checkBtn = document.getElementById('checkBtn');
-        if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
-        if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
-        if (checkBtn) checkBtn.disabled = !this.isOnSite;
+        if (boloListBtn) boloListBtn.disabled = true;
+        if (poiListBtn) poiListBtn.disabled = true;
+        if (checkBtn) checkBtn.disabled = true;
         
         this.enableViewButtons(); // Enable view buttons when mission starts
         // Add navigation restriction indicator
@@ -998,34 +987,28 @@ class SecuritySpecialistApp {
         };
 
         this.missionStartTime = startTime;
-        
-        // Auto-set location for standing and desk missions
-        if (this.currentMission.type === 'standing') {
-            this.autoSetMissionLocation('Fixed Post Alpha', 'Assigned fixed security post');
-        } else if (this.currentMission.type === 'desk') {
-            this.autoSetMissionLocation('Security Station', 'Administrative desk duty assignment');
-        }
+        this.isOnSite = false; // Always start in transit
         
         this.saveCurrentMission();
 
-        // Update UI buttons
+        // Update UI buttons - Always show "In Transit" when mission starts
         this.safeSetButtonState('startMissionBtn', true);
-        this.safeUpdateStatus('Active', 'mission-status status-active');
+        this.safeUpdateStatus('In Transit', 'mission-status status-active');
         this.safeSetButtonState('missionReportBtn', false);
         this.safeSetButtonState('endMissionBtn', false);
         this.safeSetButtonState('incidentReportBtn', false);
 
-        // Enable/disable onSite button based on current status
-        this.safeSetButtonState('onSiteBtn', this.isOnSite);
-        this.safeSetButtonState('offSiteBtn', !this.isOnSite);
+        // Enable "Arrive On Scene" button, disable others since we're in transit
+        this.safeSetButtonState('onSiteBtn', false); // Enable arrive on scene button
+        this.safeSetButtonState('offSiteBtn', true); // Disable off-site button
         
-        // Enable BOLO and POI buttons if onsite
+        // Disable BOLO, POI, and Check buttons until on-site
         const boloListBtn = document.getElementById('boloListBtn');
         const poiListBtn = document.getElementById('poiListBtn');
         const checkBtn = document.getElementById('checkBtn');
-        if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
-        if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
-        if (checkBtn) checkBtn.disabled = !this.isOnSite;
+        if (boloListBtn) boloListBtn.disabled = true;
+        if (poiListBtn) poiListBtn.disabled = true;
+        if (checkBtn) checkBtn.disabled = true;
 
         // Add navigation restriction indicator
         this.addNavigationWarning();
@@ -3730,25 +3713,28 @@ class SecuritySpecialistApp {
             };
 
             this.missionStartTime = startTime;
-            
-            // Auto-set location for standing and desk missions
-            if (this.currentMission.type === 'standing') {
-                this.autoSetMissionLocation('Fixed Post Alpha', 'Assigned fixed security post');
-            } else if (this.currentMission.type === 'desk') {
-                this.autoSetMissionLocation('Security Station', 'Administrative desk duty assignment');
-            }
+            this.isOnSite = false; // Always start in transit
             
             this.saveCurrentMission();
             
-            // Update UI
-            this.safeUpdateStatus('Active', 'mission-status status-active');
+            // Update UI - Always show "In Transit" when mission starts
+            this.safeUpdateStatus('In Transit', 'mission-status status-active');
             this.safeSetButtonState('startMissionBtn', true);
             this.safeSetButtonState('missionReportBtn', false);
             this.safeSetButtonState('endMissionBtn', false);
             this.safeSetButtonState('incidentReportBtn', false); // Enable incident report when mission starts
             
-            // Enable onSite button for all mission types
-            this.safeSetButtonState('onSiteBtn', false);
+            // Enable "Arrive On Scene" button, disable off-site button
+            this.safeSetButtonState('onSiteBtn', false); // Enable arrive on scene button
+            this.safeSetButtonState('offSiteBtn', true); // Disable off-site button
+            
+            // Disable BOLO, POI, and Check buttons until on-site
+            const boloListBtn = document.getElementById('boloListBtn');
+            const poiListBtn = document.getElementById('poiListBtn');
+            const checkBtn = document.getElementById('checkBtn');
+            if (boloListBtn) boloListBtn.disabled = true;
+            if (poiListBtn) poiListBtn.disabled = true;
+            if (checkBtn) checkBtn.disabled = true;
             
             this.enableViewButtons(); // Enable view buttons when mission starts
             this.addNavigationWarning();
@@ -3760,8 +3746,9 @@ class SecuritySpecialistApp {
             this.consoleWrite(`✓ Duration: ${Math.round((endTime - startTime) / (1000 * 60 * 60))} hours`);
             this.consoleWrite(`✓ Assignment: ${details}`);
             this.consoleWrite('✓ System operational - All protocols active');
+            this.consoleWrite('✓ Status: IN TRANSIT');
             this.consoleWrite('');
-            this.consoleWrite('READY FOR DUTY - Use commands for operations');
+            this.consoleWrite('READY FOR DUTY - Use "Arrive On Scene" when at location');
             
         } catch (error) {
             this.consoleWrite('ERROR: Invalid time format. Use: start [HH:MM] [am/pm] end [HH:MM] [am/pm] [details]');
@@ -3954,34 +3941,28 @@ class SecuritySpecialistApp {
         };
         
         this.missionStartTime = now;
-        
-        // Auto-set location for standing and desk missions
-        if (this.currentMission.type === 'standing') {
-            this.autoSetMissionLocation('Fixed Post Alpha', 'Assigned fixed security post');
-        } else if (this.currentMission.type === 'desk') {
-            this.autoSetMissionLocation('Security Station', 'Administrative desk duty assignment');
-        }
+        this.isOnSite = false; // Always start in transit
         
         this.saveCurrentMission();
         
-        // Update UI
-        this.safeUpdateStatus(this.isOnSite ? 'On Site' : 'Active', this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active');
+        // Update UI - Always show "In Transit" when mission starts
+        this.safeUpdateStatus('In Transit', 'mission-status status-active');
         this.safeSetButtonState('startMissionBtn', true);
         this.safeSetButtonState('missionReportBtn', false);
         this.safeSetButtonState('endMissionBtn', false);
         this.safeSetButtonState('incidentReportBtn', false); // Enable incident report when mission starts
         
-        // Enable/disable onSite button based on current status
-        this.safeSetButtonState('onSiteBtn', this.isOnSite);
-        this.safeSetButtonState('offSiteBtn', !this.isOnSite);
+        // Enable "Arrive On Scene" button, disable others since we're in transit
+        this.safeSetButtonState('onSiteBtn', false); // Enable arrive on scene button
+        this.safeSetButtonState('offSiteBtn', true); // Disable off-site button
         
-        // Enable BOLO and POI buttons if onsite
+        // Disable BOLO, POI, and Check buttons until on-site
         const boloListBtn = document.getElementById('boloListBtn');
         const poiListBtn = document.getElementById('poiListBtn');
         const checkBtn = document.getElementById('checkBtn');
-        if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
-        if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
-        if (checkBtn) checkBtn.disabled = !this.isOnSite;
+        if (boloListBtn) boloListBtn.disabled = true;
+        if (poiListBtn) poiListBtn.disabled = true;
+        if (checkBtn) checkBtn.disabled = true;
         
         this.enableViewButtons(); // Enable view buttons when mission starts
         this.addNavigationWarning();
