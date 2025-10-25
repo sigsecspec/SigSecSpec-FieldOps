@@ -1,18 +1,18 @@
-# Field Officer Mission Log App
+# SigSecSpec - Signature Security Specialist Database
 
-A comprehensive web application for field officers to log their shift activities during Standing, Patrol, or Desk missions.
+A comprehensive web application for security specialists to log their shift activities during Fixed Post, Mobile Patrol, or Desk Duty missions.
 
 ## Features
 
 ### Mission Types
-- **Standing**: Fixed position security duty
-- **Patrol**: Mobile security patrol with multiple stops
-- **Desk**: Administrative and monitoring duties
+- **Fixed Post**: Stationary security assignment
+- **Mobile Patrol**: Vehicle patrol with checkpoint stops
+- **Desk Duty**: Administrative operations
 
 ### Core Functionality
 
 #### Mission Management
-- Start mission with officer details, start/end times, and optional notes
+- Start mission with specialist details, start/end times, and optional notes
 - Mission report required before ending mission
 - Early end protection (15-minute warning) with excuse form
 - Local storage for all mission logs

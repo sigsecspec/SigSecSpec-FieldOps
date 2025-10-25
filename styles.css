@@ -6,7 +6,7 @@
 
 /* Root variables for theme switching */
 :root {
-    /* Desktop Police Toughbook Theme */
+    /* Desktop Security Terminal Theme */
     --desktop-bg-primary: #1a1a1a;
     --desktop-bg-secondary: #2d2d2d;
     --desktop-bg-tertiary: #3a3a3a;
@@ -19,7 +19,7 @@
     --desktop-danger: #ff3333;
     --desktop-border: #555555;
     
-    /* Mobile Police Database Theme */
+    /* Mobile Security Database Theme */
     --mobile-bg-primary: #0a1929;
     --mobile-bg-secondary: #1e3a5f;
     --mobile-bg-tertiary: #2c5282;
@@ -39,7 +39,7 @@ body {
     transition: all 0.3s ease;
 }
 
-/* Desktop Police Toughbook Styling */
+/* Desktop Security Terminal Styling */
 @media (min-width: 1024px) {
     body {
         background: var(--desktop-bg-primary);
@@ -71,7 +71,7 @@ body {
     }
 }
 
-/* Mobile/Tablet Police Database Styling */
+/* Mobile/Tablet Security Database Styling */
 @media (max-width: 1023px) {
     body {
         background: linear-gradient(135deg, var(--mobile-bg-primary) 0%, var(--mobile-bg-secondary) 100%);
@@ -110,7 +110,7 @@ header {
     position: relative;
 }
 
-/* Desktop Header - Police Toughbook Style */
+/* Desktop Header - Security Terminal Style */
 @media (min-width: 1024px) {
     header {
         background: var(--desktop-bg-secondary);
@@ -159,12 +159,12 @@ header {
     }
     
     h1::before {
-        content: '[POLICE DB] ';
+        content: '[SIGSECSPEC] ';
         color: var(--desktop-accent);
     }
 }
 
-/* Mobile Header - Clean Police Database Style */
+/* Mobile Header - Clean Security Database Style */
 @media (max-width: 1023px) {
     header {
         background: var(--mobile-bg-secondary);
@@ -240,6 +240,19 @@ header {
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
+}
+
+.main-screen {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.database-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
 }
 
 .mission-selection {
@@ -1423,7 +1436,7 @@ header {
     }
 }
 
-/* Police Badge Animation for Desktop */
+/* Security Badge Animation for Desktop */
 @media (min-width: 1024px) {
     body::after {
         content: '🚔';
