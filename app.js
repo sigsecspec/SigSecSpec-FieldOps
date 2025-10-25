@@ -36,16 +36,31 @@ class SecuritySpecialistApp {
     }
     
     initializeAppData() {
-        this.currentMission = null;
-        this.missionLogs = this.loadMissionLogs();
-        this.sites = this.loadSites();
-        this.bolos = this.loadBolos();
-        this.pois = this.loadPOIs();
-        this.guardProfile = this.loadGuardProfile();
-        this.currentPatrolStops = [];
-        this.currentIncidents = [];
-        this.missionStartTime = null;
-        this.isOnSite = false;
+        try {
+            this.currentMission = null;
+            this.missionLogs = this.loadMissionLogs() || [];
+            this.sites = this.loadSites() || [];
+            this.bolos = this.loadBolos() || [];
+            this.pois = this.loadPOIs() || [];
+            this.guardProfile = this.loadGuardProfile() || {};
+            this.currentPatrolStops = [];
+            this.currentIncidents = [];
+            this.missionStartTime = null;
+            this.isOnSite = false;
+        } catch (e) {
+            console.error('Error initializing app data:', e);
+            // Initialize with empty arrays/objects as fallback
+            this.currentMission = null;
+            this.missionLogs = [];
+            this.sites = [];
+            this.bolos = [];
+            this.pois = [];
+            this.guardProfile = {};
+            this.currentPatrolStops = [];
+            this.currentIncidents = [];
+            this.missionStartTime = null;
+            this.isOnSite = false;
+        }
         this.currentSiteStartTime = null;
         this.currentPatrolStop = null;
         this.autoSaveInterval = null;
@@ -141,6 +156,11 @@ class SecuritySpecialistApp {
         const modal = document.getElementById('logsModal');
         const modalContent = modal.querySelector('.modal-content');
         
+        // Ensure missionLogs is available and is an array
+        if (!this.missionLogs || !Array.isArray(this.missionLogs)) {
+            this.missionLogs = this.loadMissionLogs() || [];
+        }
+        
         // Get all mission logs from the past week
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -227,6 +247,11 @@ class SecuritySpecialistApp {
             <div class="modal-body">
                 <div class="guard-overview">
         `;
+        
+        // Ensure missionLogs is available and is an array
+        if (!this.missionLogs || !Array.isArray(this.missionLogs)) {
+            this.missionLogs = this.loadMissionLogs() || [];
+        }
         
         // Show all guard profiles
         for (let i = 1; i <= 10; i++) {
@@ -981,6 +1006,11 @@ class SecuritySpecialistApp {
     loadMainPage() {
         const mainContent = document.getElementById('mainContent');
         
+        // Ensure app data is initialized for operations users
+        if (this.isOperationsUser && (!this.missionLogs || !this.sites || !this.bolos || !this.pois)) {
+            this.initializeAppData();
+        }
+        
         // Different interface for operations vs guards
         if (this.isOperationsUser) {
             mainContent.innerHTML = `
@@ -1003,17 +1033,17 @@ class SecuritySpecialistApp {
                     <div class="mission-selection">
                         <h2>Operations Management Dashboard</h2>
                         <div class="mission-cards">
-                            <div class="mission-card" onclick="app.showAllMissionLogs()">
+                            <div class="mission-card" id="opsAllMissionLogsCard">
                                 <div class="mission-icon">📊</div>
                                 <h3>Mission Reports</h3>
                                 <p>View all guard mission reports</p>
                             </div>
-                            <div class="mission-card" onclick="app.generateWeeklyReport()">
+                            <div class="mission-card" id="opsWeeklyReportCard">
                                 <div class="mission-icon">📋</div>
                                 <h3>Weekly Report</h3>
                                 <p>Generate comprehensive weekly report</p>
                             </div>
-                            <div class="mission-card" onclick="app.showGuardOverview()">
+                            <div class="mission-card" id="opsGuardOverviewCard">
                                 <div class="mission-icon">👮</div>
                                 <h3>Guard Overview</h3>
                                 <p>View all guard profiles and activity</p>
@@ -1086,6 +1116,21 @@ class SecuritySpecialistApp {
             }
             if (guardOverviewBtn) {
                 guardOverviewBtn.addEventListener('click', () => this.showGuardOverview());
+            }
+            
+            // Bind operations dashboard cards
+            const opsAllMissionLogsCard = document.getElementById('opsAllMissionLogsCard');
+            const opsWeeklyReportCard = document.getElementById('opsWeeklyReportCard');
+            const opsGuardOverviewCard = document.getElementById('opsGuardOverviewCard');
+            
+            if (opsAllMissionLogsCard) {
+                opsAllMissionLogsCard.addEventListener('click', () => this.showAllMissionLogs());
+            }
+            if (opsWeeklyReportCard) {
+                opsWeeklyReportCard.addEventListener('click', () => this.generateWeeklyReport());
+            }
+            if (opsGuardOverviewCard) {
+                opsGuardOverviewCard.addEventListener('click', () => this.showGuardOverview());
             }
         }
     }
@@ -5571,6 +5616,11 @@ class SecuritySpecialistApp {
         const modal = document.getElementById('logsModal');
         const modalContent = modal.querySelector('.modal-content');
         
+        // Ensure missionLogs is available and is an array
+        if (!this.missionLogs || !Array.isArray(this.missionLogs)) {
+            this.missionLogs = this.loadMissionLogs() || [];
+        }
+        
         let logsHtml = '';
         
         if (this.missionLogs.length === 0) {
@@ -7155,8 +7205,16 @@ Report Generated: ${this.formatDateTime(new Date())}`;
         const modal = document.getElementById('logsModal');
         const modalContent = modal.querySelector('.modal-content');
         
+        // Ensure required data is available
+        if (!this.missionLogs || !Array.isArray(this.missionLogs)) {
+            this.missionLogs = this.loadMissionLogs() || [];
+        }
+        if (!this.guardProfile) {
+            this.guardProfile = this.loadGuardProfile() || {};
+        }
+        
         // Filter mission logs by current guard
-        const guardName = `${this.guardProfile.firstName} ${this.guardProfile.lastName}`.trim();
+        const guardName = `${this.guardProfile.firstName || ''} ${this.guardProfile.lastName || ''}`.trim();
         const myReports = this.missionLogs.filter(log => 
             log.details && log.details.specialistName === guardName
         );
