@@ -8,28 +8,17 @@
 </head>
 <body>
     <div class="container">
-        <header>
+        <header data-unit="PATROL-01" data-badge="S-7734" role="banner">
             <h1>SigSecSpec Database</h1>
         </header>
 
-        <main id="mainContent">
-            <div class="mission-selection">
-                <h2>Select Operation Type</h2>
-                <div class="mission-cards">
-                    <div class="mission-card" data-mission="standing">
-                        <div class="mission-icon">🛡️</div>
-                        <h3>Fixed Post</h3>
-                        <p>Stationary patrol assignment</p>
-                    </div>
-                    <div class="mission-card" data-mission="patrol">
-                        <div class="mission-icon">🚔</div>
-                        <h3>Mobile Patrol</h3>
-                        <p>Vehicle patrol with checkpoint stops</p>
-                    </div>
-                    <div class="mission-card" data-mission="desk">
-                        <div class="mission-icon">📋</div>
-                        <h3>Desk Duty</h3>
-                        <p>Station administrative operations</p>
+        <main id="mainContent" role="main" aria-label="Main application content">
+            <div class="loading-screen">
+                <div class="loading-content">
+                    <div class="loading-icon">🚔</div>
+                    <h2>Initializing Security System...</h2>
+                    <div class="loading-bar">
+                        <div class="loading-progress"></div>
                     </div>
                 </div>
             </div>
@@ -37,13 +26,13 @@
     </div>
 
     <!-- Database Records Modal -->
-    <div id="logsModal" class="modal">
+    <div id="logsModal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-hidden="true">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Database Records</h2>
-                <span class="close">&times;</span>
+                <h2 id="modalTitle">Database Records</h2>
+                <span class="close" aria-label="Close modal" role="button" tabindex="0">&times;</span>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" role="document">
                 <div id="logsList"></div>
             </div>
         </div>

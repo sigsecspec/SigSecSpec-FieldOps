@@ -18,23 +18,53 @@ class SecuritySpecialistApp {
     }
 
     init() {
-        this.bindEvents();
-        this.restoreCurrentMission();
-        if (!this.currentMission) {
-            this.loadMainPage();
-        }
-        this.startAutoSave();
-        this.addBeforeUnloadListener();
-        this.addNavigationPrevention();
-        this.addSecurityTerminalFeatures();
-        
-        // Initialize prompt system for desktop
-        this.currentPrompt = null;
-        this.promptCallback = null;
+        // Show loading sequence
+        this.showLoadingSequence().then(() => {
+            this.bindEvents();
+            this.restoreCurrentMission();
+            if (!this.currentMission) {
+                this.loadMainPage();
+            }
+            this.startAutoSave();
+            this.addBeforeUnloadListener();
+            this.addNavigationPrevention();
+            this.addSecurityTerminalFeatures();
+            
+            // Initialize prompt system for desktop
+            this.currentPrompt = null;
+            this.promptCallback = null;
+        });
+    }
+
+    async showLoadingSequence() {
+        return new Promise((resolve) => {
+            const loadingSteps = [
+                'Initializing security protocols...',
+                'Loading database connections...',
+                'Verifying system integrity...',
+                'Establishing secure communications...',
+                'System ready for operations'
+            ];
+            
+            let currentStep = 0;
+            const loadingContent = document.querySelector('.loading-content h2');
+            
+            const stepInterval = setInterval(() => {
+                if (currentStep < loadingSteps.length) {
+                    if (loadingContent) {
+                        loadingContent.textContent = loadingSteps[currentStep];
+                    }
+                    currentStep++;
+                } else {
+                    clearInterval(stepInterval);
+                    resolve();
+                }
+            }, 400);
+        });
     }
 
     isMobileDevice() {
-        return window.innerWidth <= 1023;
+        return window.innerWidth <= 1023 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
     // Mobile-specific helper functions
@@ -439,6 +469,20 @@ class SecuritySpecialistApp {
             }
         });
 
+        // Keyboard support for modal close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('logsModal');
+                if (modal && modal.style.display === 'block') {
+                    this.closeModal();
+                }
+            }
+            // Enter key support for close button
+            if (e.key === 'Enter' && e.target.classList.contains('close')) {
+                this.closeModal();
+            }
+        });
+
         // Desktop command button handling
         document.addEventListener('click', (e) => {
             if (!this.isMobileDevice() && e.target.classList.contains('control-btn')) {
@@ -507,7 +551,7 @@ class SecuritySpecialistApp {
                             <p>Stationary security assignment</p>
                         </div>
                         <div class="mission-card" data-mission="patrol">
-                            <div class="mission-icon">🚗</div>
+                            <div class="mission-icon">🚔</div>
                             <h3>Mobile Patrol</h3>
                             <p>Vehicle patrol with check stops</p>
                         </div>
@@ -2574,7 +2618,11 @@ class SecuritySpecialistApp {
 
     consoleWrite(text, type = 'info') {
         const out = document.getElementById('consoleOutput');
-        if (!out) return;
+        if (!out) {
+            // Fallback for when console is not available
+            console.log(`[${type.toUpperCase()}] ${text}`);
+            return;
+        }
         
         const line = document.createElement('div');
         const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
