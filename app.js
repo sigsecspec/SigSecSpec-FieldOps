@@ -391,55 +391,38 @@ class SecuritySpecialistApp {
     }
     
     bindLoginEvents() {
-        const loginBtn = document.getElementById('loginBtn');
-        const badgeInput = document.getElementById('badgeInput');
+        // Bind all account button clicks
+        const accountButtons = document.querySelectorAll('.account-btn');
         
-        if (loginBtn) {
-            loginBtn.addEventListener('click', () => this.handleLogin());
-        }
-        
-        if (badgeInput) {
-            // Format input as user types
-            badgeInput.addEventListener('input', (e) => {
-                let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-                if (value.length > 2) value = value.slice(0, 2);
-                
-                e.target.value = value;
-                
-                // Remove any existing error messages when user starts typing
-                const existingError = document.querySelector('.login-error');
-                if (existingError) {
-                    existingError.remove();
-                }
+        accountButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const badge = e.target.getAttribute('data-badge');
+                this.handleAccountLogin(badge);
             });
-            
-            // Handle Enter key
-            badgeInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.handleLogin();
-                }
-            });
-            
-            // Focus on load
-            badgeInput.focus();
+        });
+    }
+    
+    handleAccountLogin(badge) {
+        // If Admin 99, prompt for password
+        if (badge === '99') {
+            this.promptAdminPassword(badge);
+        } else {
+            // Direct login for guard accounts
+            this.processLogin(badge);
         }
     }
     
-    handleLogin() {
-        const badgeInput = document.getElementById('badgeInput');
-        let badge = badgeInput ? badgeInput.value.trim() : '';
+    promptAdminPassword(badge) {
+        const password = prompt('Enter Admin Password:');
         
-        if (!badge) {
-            this.showLoginError('Please enter a badge number');
-            return;
+        if (password === '900281200') {
+            this.processLogin(badge);
+        } else if (password !== null) { // User didn't cancel
+            this.showLoginError('Invalid admin password');
         }
-        
-        // Format badge properly before validation
-        // If it's a single digit (1-9), pad with leading zero
-        if (badge.length === 1 && badge !== '0') {
-            badge = '0' + badge;
-        }
-        
+    }
+    
+    processLogin(badge) {
         const result = this.login(badge);
         
         if (result.success) {
