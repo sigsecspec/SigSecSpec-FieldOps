@@ -1,1 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SigSecSpec Database - Investor Presentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0e27;
+            color: #fff;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .tagline {
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            margin-bottom: 1rem;
+            font-weight: 300;
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 2vw, 1.3rem);
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 3rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 4rem;
+            flex-wrap: wrap;
+            margin-top: 3rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .section {
+            padding: 6rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-dark {
+            background: linear-gradient(180deg, #0a0e27 0%, #1a1f3a 100%);
+        }
+
+        .section-light {
+            background: linear-gradient(180deg, #1a1f3a 0%, #0a0e27 100%);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            font-size: clamp(1.1rem, 2vw, 1.5rem);
+            color: #a0aec0;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .problem-solution {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 4rem;
+        }
+
+        .problem-box, .solution-box {
+            padding: 3rem;
+            border-radius: 20px;
+            position: relative;
+        }
+
+        .problem-box {
+            background: linear-gradient(135deg, rgba(229, 57, 53, 0.1) 0%, rgba(229, 57, 53, 0.05) 100%);
+            border: 2px solid rgba(229, 57, 53, 0.3);
+        }
+
+        .solution-box {
+            background: linear-gradient(135deg, rgba(67, 160, 71, 0.1) 0%, rgba(67, 160, 71, 0.05) 100%);
+            border: 2px solid rgba(67, 160, 71, 0.3);
+        }
+
+        .box-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .box-title {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-showcase {
+            margin-bottom: 6rem;
+        }
+
+        .showcase-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            margin-bottom: 6rem;
+        }
+
+        .showcase-row:nth-child(even) {
+            direction: rtl;
+        }
+
+        .showcase-row:nth-child(even) > * {
+            direction: ltr;
+        }
+
+        .showcase-content {
+            padding: 2rem;
+        }
+
+        .showcase-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 0.5rem 1.5rem;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .showcase-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 1rem;
+        }
+
+        .showcase-description {
+            font-size: 1.1rem;
+            color: #a0aec0;
+            margin-bottom: 2rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .feature-list li {
+            padding: 0.75rem 0;
+            padding-left: 2rem;
+            position: relative;
+            font-size: 1.05rem;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #43a047;
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+
+        .phone-mockup {
+            position: relative;
+            max-width: 400px;
+            margin: 0 auto;
+            transition: transform 0.3s ease;
+        }
+
+        .phone-mockup:hover {
+            transform: scale(1.05);
+        }
+
+        .phone-frame {
+            background: #000;
+            border-radius: 50px;
+            padding: 15px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+        }
+
+        .phone-notch {
+            background: #000;
+            height: 30px;
+            width: 150px;
+            margin: 0 auto;
+            border-radius: 0 0 20px 20px;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: #666;
+        }
+
+        .phone-screen {
+            background: #1a2332;
+            border-radius: 35px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .status-bar {
+            background: #e53935;
+            color: #fff;
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+
+        .app-header {
+            background: #2c3e50;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .app-title {
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 15px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            margin-left: auto;
+        }
+
+        .status-inactive { background: #e53935; }
+        .status-transit { background: #43a047; }
+        .status-onsite { background: #fb8c00; }
+
+        .screen-content {
+            padding: 1rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            margin: 0.4rem 0;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .btn-primary { background: #2196f3; color: #fff; }
+        .btn-success { background: #43a047; color: #fff; }
+        .btn-warning { background: #fb8c00; color: #fff; }
+        .btn-light { background: rgba(255, 255, 255, 0.9); color: #1a2332; }
+        .btn-danger { background: #e53935; color: #fff; }
+        .btn-gray { background: #546e7a; color: #fff; opacity: 0.7; }
+
+        .modal-box {
+            background: #2c3e50;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            color: #999;
+            font-size: 1.5rem;
+        }
+
+        .warning-icon {
+            text-align: center;
+            font-size: 3rem;
+            margin: 1rem 0;
+        }
+
+        .warning-text {
+            color: #e53935;
+            font-size: 1rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .info-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(229, 57, 53, 0.5);
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-size: 0.8rem;
+        }
+
+        .info-box p {
+            margin: 0.3rem 0;
+        }
+
+        .form-field {
+            margin: 1rem 0;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 0.8rem;
+        }
+
+        .form-input::placeholder {
+            color: #7891a8;
+        }
+
+        textarea.form-input {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .value-props {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .value-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .value-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(102, 126, 234, 0.5);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+        }
+
+        .value-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .value-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .value-description {
+            color: #a0aec0;
+            font-size: 1.05rem;
+        }
+
+        .market-opportunity {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 4rem 0;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-button {
+            background: #fff;
+            color: #667eea;
+            padding: 1.5rem 4rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin: 1rem;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .cta-button-secondary {
+            background: transparent;
+            color: #fff;
+            border: 2px solid #fff;
+        }
+
+        @media (max-width: 968px) {
+            .problem-solution,
+            .showcase-row {
+                grid-template-columns: 1fr;
+            }
+
+            .showcase-row:nth-child(even) {
+                direction: ltr;
+            }
+
+            .stats {
+                gap: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="hero-content">
+            <div class="logo">🔐</div>
+            <h1>SigSecSpec Database</h1>
+            <p class="tagline">Mobile Patrol Operation System</p>
+            <p class="subtitle">Revolutionizing security patrol management with intelligent, real-time mission tracking and comprehensive reporting capabilities</p>
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">Mission Accuracy</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">50%</span>
+                    <span class="stat-label">Time Saved</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">Real-Time Tracking</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Problem & Solution Section -->
+    <div class="section section-dark">
+        <div class="section-header">
+            <h2 class="section-title">The Challenge We're Solving</h2>
+            <p class="section-subtitle">Security operations face critical inefficiencies in patrol management and incident documentation</p>
+        </div>
+        <div class="problem-solution">
+            <div class="problem-box">
+                <div class="box-icon">⚠️</div>
+                <h3 class="box-title">Current Problems</h3>
+                <ul class="feature-list" style="color: #ffcdd2;">
+                    <li style="color: #fff;">Manual paper-based reporting leads to data loss</li>
+                    <li style="color: #fff;">Incomplete mission records and accountability gaps</li>
+                    <li style="color: #fff;">No real-time visibility into patrol operations</li>
+                    <li style="color: #fff;">Difficulty tracking time on site and incidents</li>
+                    <li style="color: #fff;">Inefficient communication between specialists and management</li>
+                </ul>
+            </div>
+            <div class="solution-box">
+                <div class="box-icon">✅</div>
+                <h3 class="box-title">Our Solution</h3>
+                <ul class="feature-list" style="color: #c8e6c9;">
+                    <li style="color: #fff;">Digital mission tracking with automatic timestamps</li>
+                    <li style="color: #fff;">Comprehensive data protection and validation</li>
+                    <li style="color: #fff;">Real-time status updates and location tracking</li>
+                    <li style="color: #fff;">Automated incident and patrol stop logging</li>
+                    <li style="color: #fff;">Instant report generation with complete mission history</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Showcase 1: Mission Control -->
+    <div class="section section-light">
+        <div class="feature-showcase">
+            <div class="showcase-row">
+                <div class="showcase-content">
+                    <span class="showcase-badge">CORE FEATURE</span>
+                    <h2 class="showcase-title">Intelligent Mission Control</h2>
+                    <p class="showcase-description">Complete lifecycle management from mission start to completion with intelligent safeguards and data protection</p>
+                    <ul class="feature-list">
+                        <li>Begin operations with specialist identification and scheduled times</li>
+                        <li>Real-time status tracking: Inactive, In Transit, On Site</li>
+                        <li>Navigation restrictions during active missions prevent accidental exit</li>
+                        <li>Automatic warnings for incomplete mission data</li>
+                        <li>Comprehensive mission summary reports with observations</li>
+                    </ul>
+                </div>
+                <div class="phone-mockup">
+                    <div class="phone-frame">
+                        <div class="phone-notch">7:33 PM</div>
+                        <div class="phone-screen">
+                            <div class="modal-box">
+                                <div class="modal-header">
+                                    <h3 class="modal-title">Start Mission</h3>
+                                    <span class="close-btn">×</span>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Specialist Name:</label>
+                                    <input type="text" class="form-input" value="John Doe">
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Start Time:</label>
+                                    <input type="text" class="form-input" value="10/26/2025 02:33 AM">
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">End Time:</label>
+                                    <input type="text" class="form-input" value="10/26/2025 10:33 AM">
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Mission Notes (optional):</label>
+                                    <textarea class="form-input" placeholder="Any special instructions or notes..."></textarea>
+                                </div>
+                                <button class="btn btn-light">CANCEL</button>
+                                <button class="btn btn-primary">Start Mission</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="showcase-row">
+                <div class="showcase-content">
+                    <span class="showcase-badge">SAFETY FIRST</span>
+                    <h2 class="showcase-title">Active Mission Protection</h2>
+                    <p class="showcase-description">Comprehensive data protection system prevents incomplete records and accidental data loss</p>
+                    <ul class="feature-list">
+                        <li>Prominent navigation restrictions during active missions</li>
+                        <li>Multi-level confirmation system before force exit</li>
+                        <li>Clear mission status display with current details</li>
+                        <li>Recommended action prompts for proper completion</li>
+                        <li>Ensures 100% mission record completeness</li>
+                    </ul>
+                </div>
+                <div class="phone-mockup">
+                    <div class="phone-frame">
+                        <div class="phone-notch">7:38 PM</div>
+                        <div class="phone-screen">
+                            <div class="status-bar">⚠️ MISSION ACTIVE - NAVIGATION RESTRICTED ⚠️</div>
+                            <div class="modal-box">
+                                <div class="modal-header">
+                                    <h3 class="modal-title">⚠️ Active Mission Warning</h3>
+                                    <span class="close-btn">×</span>
+                                </div>
+                                <div class="warning-icon">🚨</div>
+                                <div class="warning-text">MISSION IN PROGRESS</div>
+                                <p style="margin: 1rem 0; text-align: center; font-size: 0.85rem;">You have an active mission that has not been completed.</p>
+                                <p style="margin: 1rem 0; text-align: center; font-size: 0.85rem;">Leaving now may result in data loss and incomplete mission records.</p>
+                                <div class="info-box">
+                                    <p><strong>Current Mission Status:</strong></p>
+                                    <p>• Type: Patrol</p>
+                                    <p>• Status: active</p>
+                                    <p>• Started: 12/31/1969, 4:00:00 PM</p>
+                                </div>
+                                <p style="margin: 1rem 0; font-size: 0.85rem;"><strong>Recommended actions:</strong></p>
+                                <p style="margin: 0.3rem 0; font-size: 0.8rem;">• Complete your mission report</p>
+                                <p style="margin: 0.3rem 0; font-size: 0.8rem;">• End the mission properly</p>
+                                <p style="margin: 0.3rem 0; font-size: 0.8rem;">• Ensure all data is saved</p>
+                                <button class="btn btn-light">STAY ON MISSION</button>
+                                <button class="btn btn-danger">Force Exit (Not Recommended)</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="showcase-row">
+                <div class="showcase-content">
+                    <span class="showcase-badge">LOCATION TRACKING</span>
+                    <h2 class="showcase-title">Site Management & Tracking</h2>
+                    <p class="showcase-description">Precise location tracking with automated time logging and seamless site transitions</p>
+                    <ul class="feature-list">
+                        <li>Log arrival with site selection or manual entry</li>
+                        <li>Automatic time-on-site calculation</li>
+                        <li>Status updates: In Transit → On Site → Clear Scene</li>
+                        <li>Site details and conditions documentation</li>
+                        <li>Historical patrol stop records with incident counts</li>
+                    </ul>
+                </div>
+                <div class="phone-mockup">
+                    <div class="phone-frame">
+                        <div class="phone-notch">7:34 PM</div>
+                        <div class="phone-screen">
+                            <div class="status-bar">⚠️ MISSION ACTIVE - NAVIGATION RESTRICTED ⚠️</div>
+                            <div class="modal-box">
+                                <div class="modal-header">
+                                    <h3 class="modal-title">Go On Site</h3>
+                                    <span class="close-btn">×</span>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Select Saved Site:</label>
+                                    <select class="form-input">
+                                        <option>-- Choose from Site Manager --</option>
+                                    </select>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Location (override or manual):</label>
+                                    <input type="text" class="form-input" placeholder="Name or address">
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Arrival Time:</label>
+                                    <input type="text" class="form-input" value="10/26/2025 02:33 AM">
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Site Details:</label>
+                                    <textarea class="form-input" placeholder="Describe the location, conditions, etc..."></textarea>
+                                </div>
+                                <button class="btn btn-light">CANCEL</button>
+                                <button class="btn btn-primary">Go On Site</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="showcase-row">
+                <div class="showcase-content">
+                    <span class="showcase-badge">DOCUMENTATION</span>
+                    <h2 class="showcase-title">Comprehensive Incident Reporting</h2>
+                    <p class="showcase-description">Detailed incident documentation with complete chain of custody and accountability</p>
+                    <ul class="feature-list">
+                        <li>Structured incident type categorization</li>
+                        <li>Location and timestamp auto-capture</li>
+                        <li>Detailed description and action taken fields</li>
+                        <li>Reporter identification with badge numbers</li>
+                        <li>Edit and delete capabilities with full audit trail</li>
+                    </ul>
+                </div>
+                <div class="phone-mockup">
+                    <div class="phone-frame">
+                        <div class="phone-notch">7:35 PM</div>
+                        <div class="phone-screen">
+                            <div class="status-bar">⚠️ MISSION ACTIVE - NAVIGATION RESTRICTED ⚠️</div>
+                            <div class="modal-box">
+                                <div class="modal-header">
+                                    <h3 class="modal-title">Incident Report</h3>
+                                    <span class="close-btn">×</span>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Incident Type:</label>
+                                    <select class="form-input">
+                                        <option>Select incident type...</option>
+                                    </select>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Location:</label>
+                                    <input type="text" class="form-input" placeholder="Where did this occur?">
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Description:</label>
+                                    <textarea class="form-input" placeholder="Describe what happened..."></textarea>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Action Taken (optional):</label>
+                                    <textarea class="form-input" placeholder="What action was taken?"></textarea>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Reported By:</label>
+                                    <input type="text" class="form-input" value="John Doe">
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Badge Number:</label>
+                                    <input type="text" class="form-input" value="123">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="showcase-row">
+                <div class="showcase-content">
+                    <span class="showcase-badge">STATUS DASHBOARD</span>
+                    <h2 class="showcase-title">Real-Time Operational Status</h2>
+                    <p class="showcase-description">Live status updates with color-coded indicators for instant operational visibility</p>
+                    <ul class="feature-list">
+                        <li>Three distinct status states: Inactive, In Transit, On Site</li>
+                        <li>Visual status badges with color coding</li>
+                        <li>Context-aware button activation/deactivation</li>
+                        <li>One-tap access to all mission functions</li>
+                        <li>Integrated BOLO's and POI's management</li>
+                    </ul>
+                </div>
+                <div class="phone-mockup">
+                    <div class="phone-frame">
+                        <div class="phone-notch">7:34 PM</div>
+                        <div class="phone-screen">
+                            <div class="status-bar">⚠️ MISSION ACTIVE - NAVIGATION RESTRICTED ⚠️</div>
+                            <div class="app-header">
+                                <span>🔐</span>
+                                <span class="app-title">SigSecSpec Database</span>
+                            </div>
+                            <div style="padding: 1rem; background: #2c3e50;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <h3 style="font-size: 1rem;">Mobile Patrol Operation</h3>
+                                    <span class="status-badge status-onsite">ON SITE</span>
+                                </div>
+                                <button class="btn btn-primary">← Back to Home</button>
+                            </div>
+                            <div class="screen-content">
+                                <button class="btn btn-gray">BEGIN OPERATION</button>
+                                <button class="btn btn-success">ARRIVE ON SCENE</button>
+                                <button class="btn btn-warning">CLEAR SCENE</button>
+                                <button class="btn btn-primary">INCIDENT REPORT</button>
+                                <button class="btn btn-primary">ADD CHECK</button>
+                                <button class="btn btn-light">VIEW INCIDENTS</button>
+                                <button class="btn btn-light">VIEW PATROL STOPS</button>
+                                <button class="btn btn-warning">BOLO'S</button>
+                                <button class="btn btn-warning">POI'S</button>
+                                <button class="btn btn-danger">END MISSION</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="showcase-row">
+                <div class="showcase-content">
+                    <span class="showcase-badge">REPORTING</span>
+                    <h2 class="showcase-title">Professional Mission Reports</h2>
+                    <p class="showcase-description">Generate comprehensive mission summaries with observations and recommendations for management review</p>
+                    <ul class="feature-list">
+                        <li>Required mission summary field ensures completion</li>
+                        <li>Optional key observations documentation</li>
+                        <li>Recommendations for future operations</li>
+                        <li>Automatic compilation of all mission data</li>
+                        <li>Professional format for stakeholder reporting</li>
+                    </ul>
+                </div>
+                <div class="phone-mockup">
+                    <div class="phone-frame">
+                        <div class="phone-notch">7:38 PM</div>
+                        <div class="phone-screen">
+                            <div class="status-bar">⚠️ MISSION ACTIVE - NAVIGATION RESTRICTED ⚠️</div>
+                            <div class="modal-box">
+                                <div class="modal-header">
+                                    <h3 class="modal-title">Mission Report</h3>
+                                    <span class="close-btn">×</span>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Mission Summary (required):</label>
+                                    <textarea class="form-input" placeholder="Provide a summary of the mission..."></textarea>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Key Observations (optional):</label>
+                                    <textarea class="form-input" placeholder="Any notable observations during the mission..."></textarea>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Recommendations (optional):</label>
+                                    <textarea class="form-input" placeholder="Any recommendations for future missions..."></textarea>
+                                </div>
+                                <button class="btn btn-light">CANCEL</button>
+                                <button class="btn btn-primary">Save Report</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Value Proposition Section -->
+    <div class="section section-dark">
+        <div class="section-header">
+            <h2 class="section-title">Business Value & ROI</h2>
+            <p class="section-subtitle">Measurable improvements across operational efficiency, compliance, and accountability</p>
+        </div>
+        <div class="value-props">
+            <div class="value-card">
+                <div class="value-icon">⏱️</div>
+                <h3 class="value-title">50% Time Savings</h3>
+                <p class="value-description">Eliminate manual paperwork and streamline reporting processes. Security specialists spend less time on administration and more time on patrol.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">📊</div>
+                <h3 class="value-title">100% Data Accuracy</h3>
+                <p class="value-description">Automated timestamps and location tracking ensure perfect record accuracy. No more lost paperwork or incomplete reports.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">🛡️</div>
+                <h3 class="value-title">Enhanced Accountability</h3>
+                <p class="value-description">Complete chain of custody with reporter identification, badge numbers, and automatic audit trails for every action.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">📱</div>
+                <h3 class="value-title">Mobile-First Design</h3>
+                <p class="value-description">Purpose-built for field operations with offline capability and intuitive interface requiring minimal training.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">🔒</div>
+                <h3 class="value-title">Data Protection</h3>
+                <p class="value-description">Multi-level safeguards prevent data loss with active mission warnings and forced completion protocols.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">📈</div>
+                <h3 class="value-title">Scalable Platform</h3>
+                <p class="value-description">Cloud-based architecture supports unlimited users and locations with enterprise-grade security and reliability.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Opportunity -->
+    <div class="section section-light">
+        <div class="market-opportunity">
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <h2 style="font-size: 3rem; margin-bottom: 1rem;">Market Opportunity</h2>
+                <p style="font-size: 1.3rem; color: #a0aec0;">A Multi-Billion Dollar Addressable Market</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem; margin-top: 3rem;">
+                <div style="text-align: center;">
+                    <div style="font-size: 3.5rem; font-weight: 700; color: #667eea; margin-bottom: 0.5rem;">$52B</div>
+                    <div style="font-size: 1.2rem; color: #a0aec0;">Global Security Services Market</div>
+                    <div style="font-size: 0.9rem; color: #718096; margin-top: 0.5rem;">Growing at 8.1% CAGR</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 3.5rem; font-weight: 700; color: #667eea; margin-bottom: 0.5rem;">2.3M</div>
+                    <div style="font-size: 1.2rem; color: #a0aec0;">Security Guards in US</div>
+                    <div style="font-size: 0.9rem; color: #718096; margin-top: 0.5rem;">Potential user base</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 3.5rem; font-weight: 700; color: #667eea; margin-bottom: 0.5rem;">15K+</div>
+                    <div style="font-size: 1.2rem; color: #a0aec0;">Security Companies in US</div>
+                    <div style="font-size: 0.9rem; color: #718096; margin-top: 0.5rem;">Target customers</div>
+                </div>
+            </div>
+            <div style="margin-top: 4rem; padding: 2rem; background: rgba(0,0,0,0.2); border-radius: 15px;">
+                <h3 style="font-size: 1.8rem; margin-bottom: 1rem; text-align: center;">Why Now?</h3>
+                <ul class="feature-list" style="max-width: 800px; margin: 0 auto;">
+                    <li>Rapid digital transformation in security industry</li>
+                    <li>Increasing regulatory requirements for documentation</li>
+                    <li>Rising demand for real-time operational visibility</li>
+                    <li>Growing emphasis on data-driven security management</li>
+                    <li>Mobile-first workforce expects modern tools</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technology & Innovation -->
+    <div class="section section-dark">
+        <div class="section-header">
+            <h2 class="section-title">Technology Stack</h2>
+            <p class="section-subtitle">Built for reliability, scalability, and performance</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 3rem;">
+            <div style="background: rgba(255,255,255,0.05); padding: 2.5rem; border-radius: 20px; border: 2px solid rgba(255,255,255,0.1);">
+                <h3 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: #667eea;">📱 Mobile Platform</h3>
+                <ul class="feature-list">
+                    <li>Progressive Web App (PWA) technology</li>
+                    <li>Works offline with automatic sync</li>
+                    <li>Native app performance in browser</li>
+                    <li>No app store approval delays</li>
+                    <li>Instant updates across all devices</li>
+                </ul>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); padding: 2.5rem; border-radius: 20px; border: 2px solid rgba(255,255,255,0.1);">
+                <h3 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: #667eea;">☁️ Cloud Infrastructure</h3>
+                <ul class="feature-list">
+                    <li>Enterprise-grade security and encryption</li>
+                    <li>Auto-scaling for unlimited growth</li>
+                    <li>99.9% uptime SLA</li>
+                    <li>Real-time data synchronization</li>
+                    <li>Automatic backups and disaster recovery</li>
+                </ul>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); padding: 2.5rem; border-radius: 20px; border: 2px solid rgba(255,255,255,0.1);">
+                <h3 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: #667eea;">🔐 Security First</h3>
+                <ul class="feature-list">
+                    <li>End-to-end encryption for all data</li>
+                    <li>Role-based access control (RBAC)</li>
+                    <li>Complete audit logging</li>
+                    <li>SOC 2 Type II compliance ready</li>
+                    <li>GDPR and privacy regulation compliant</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Business Model -->
+    <div class="section section-light">
+        <div class="section-header">
+            <h2 class="section-title">Revenue Model</h2>
+            <p class="section-subtitle">Predictable, scalable SaaS revenue with multiple monetization streams</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%); padding: 2.5rem; border-radius: 20px; border: 2px solid rgba(102, 126, 234, 0.3); text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 1rem;">💼</div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Subscription Tiers</h3>
+                <p style="color: #a0aec0; margin-bottom: 1.5rem;">$15-50 per user/month</p>
+                <ul style="list-style: none; text-align: left;">
+                    <li style="padding: 0.5rem 0; font-size: 1rem;">✓ Basic: Essential features</li>
+                    <li style="padding: 0.5rem 0; font-size: 1rem;">✓ Pro: Advanced analytics</li>
+                    <li style="padding: 0.5rem 0; font-size: 1rem;">✓ Enterprise: Custom integration</li>
+                </ul>
+            </div>
+            <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%); padding: 2.5rem; border-radius: 20px; border: 2px solid rgba(102, 126, 234, 0.3); text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 1rem;">🎯</div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Enterprise Solutions</h3>
+                <p style="color: #a0aec0; margin-bottom: 1.5rem;">Custom pricing</p>
+                <ul style="list-style: none; text-align: left;">
+                    <li style="padding: 0.5rem 0; font-size: 1rem;">✓ White-label options</li>
+                    <li style="padding: 0.5rem 0; font-size: 1rem;">✓ API access</li>
+                    <li style="padding: 0.5rem 0; font-size: 1rem;">✓ Dedicated support</li>
+                </ul>
+            </div>
+            <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%); padding: 2.5rem; border-radius: 20px; border: 2px solid rgba(102, 126, 234, 0.3); text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 1rem;">📈</div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Add-On Services</h3>
+                <p style="color: #a0aec0; margin-bottom: 1.5rem;">Additional revenue streams</p>
+                <ul style="list-style: none; text-align: left;">
+                    <li style="padding: 0.5rem 0; font-size: 1rem;">✓ Training & onboarding</li>
+                    <li style="padding: 0.5rem 0; font-size: 1rem;">✓ Custom integrations</li>
+                    <li style="padding: 0.5rem 0; font-size: 1rem;">✓ Advanced analytics</li>
+                </ul>
+            </div>
+        </div>
+        <div style="margin-top: 4rem; text-align: center; background: rgba(0,0,0,0.2); padding: 3rem; border-radius: 20px;">
+            <h3 style="font-size: 2rem; margin-bottom: 1rem;">Projected 5-Year Growth</h3>
+            <div style="display: flex; justify-content: center; gap: 4rem; flex-wrap: wrap; margin-top: 2rem;">
+                <div>
+                    <div style="font-size: 2.5rem; font-weight: 700; color: #667eea;">$2M</div>
+                    <div style="color: #a0aec0;">Year 1 ARR</div>
+                </div>
+                <div>
+                    <div style="font-size: 2.5rem; font-weight: 700; color: #667eea;">$15M</div>
+                    <div style="color: #a0aec0;">Year 3 ARR</div>
+                </div>
+                <div>
+                    <div style="font-size: 2.5rem; font-weight: 700; color: #667eea;">$50M+</div>
+                    <div style="color: #a0aec0;">Year 5 ARR</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Competitive Advantage -->
+    <div class="section section-dark">
+        <div class="section-header">
+            <h2 class="section-title">Competitive Advantage</h2>
+            <p class="section-subtitle">What sets SigSecSpec apart from traditional solutions</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; max-width: 1200px; margin: 0 auto;">
+            <div>
+                <h3 style="font-size: 2rem; margin-bottom: 2rem; color: #e53935;">❌ Legacy Solutions</h3>
+                <ul style="list-style: none;">
+                    <li style="padding: 1rem; margin-bottom: 1rem; background: rgba(229, 57, 53, 0.1); border-left: 4px solid #e53935; border-radius: 8px;">Paper-based or outdated software</li>
+                    <li style="padding: 1rem; margin-bottom: 1rem; background: rgba(229, 57, 53, 0.1); border-left: 4px solid #e53935; border-radius: 8px;">No real-time tracking capabilities</li>
+                    <li style="padding: 1rem; margin-bottom: 1rem; background: rgba(229, 57, 53, 0.1); border-left: 4px solid #e53935; border-radius: 8px;">Complex interfaces requiring extensive training</li>
+                    <li style="padding: 1rem; margin-bottom: 1rem; background: rgba(229, 57, 53, 0.1); border-left: 4px solid #e53935; border-radius: 8px;">Poor mobile experience</li>
+                    <li style="padding: 1rem; margin-bottom: 1rem; background: rgba(229, 57, 53, 0.1); border-left: 4px solid #e53935; border-radius: 8px;">Limited data protection safeguards</li>
+                </ul>
+            </div>
+            <div>
+                <h3 style="font-size: 2rem; margin-bottom: 2rem; color: #43a047;">✅ SigSecSpec</h3>
+                <ul style="list-style: none;">
+                    <li style="padding: 1rem; margin-bottom: 1rem; background: rgba(67, 160, 71, 0.1); border-left: 4px solid #43a047; border-radius: 8px;">Modern, cloud-based platform</li>
+                    <li style="padding: 1rem; margin-bottom: 1rem; background: rgba(67, 160, 71, 0.1); border-left: 4px solid #43a047; border-radius: 8px;">Real-time status updates and location tracking</li>
+                    <li style="padding: 1rem; margin-bottom: 1rem; background: rgba(67, 160, 71, 0.1); border-left: 4px solid #43a047; border-radius: 8px;">Intuitive design with minimal training needed</li>
+                    <li style="padding: 1rem; margin-bottom: 1rem; background: rgba(67, 160, 71, 0.1); border-left: 4px solid #43a047; border-radius: 8px;">Mobile-first, works offline</li>
+                    <li style="padding: 1rem; margin-bottom: 1rem; background: rgba(67, 160, 71, 0.1); border-left: 4px solid #43a047; border-radius: 8px;">Multi-level data protection system</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roadmap -->
+    <div class="section section-light">
+        <div class="section-header">
+            <h2 class="section-title">Product Roadmap</h2>
+            <p class="section-subtitle">Strategic vision for platform expansion and feature development</p>
+        </div>
+        <div style="max-width: 1000px; margin: 0 auto;">
+            <div style="position: relative; padding-left: 3rem;">
+                <div style="position: absolute; left: 1rem; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);"></div>
+                
+                <div style="position: relative; margin-bottom: 4rem;">
+                    <div style="position: absolute; left: -2.3rem; width: 40px; height: 40px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">Q1</div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 15px; border: 2px solid rgba(102, 126, 234, 0.3);">
+                        <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Core Platform Launch</h3>
+                        <p style="color: #a0aec0;">Mission control, incident reporting, site management, and basic reporting features</p>
+                    </div>
+                </div>
+
+                <div style="position: relative; margin-bottom: 4rem;">
+                    <div style="position: absolute; left: -2.3rem; width: 40px; height: 40px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">Q2</div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 15px; border: 2px solid rgba(102, 126, 234, 0.3);">
+                        <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Advanced Features</h3>
+                        <p style="color: #a0aec0;">AI-powered analytics, photo/video attachment, GPS heatmaps, and advanced scheduling</p>
+                    </div>
+                </div>
+
+                <div style="position: relative; margin-bottom: 4rem;">
+                    <div style="position: absolute; left: -2.3rem; width: 40px; height: 40px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">Q3</div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 15px; border: 2px solid rgba(102, 126, 234, 0.3);">
+                        <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Enterprise Integration</h3>
+                        <p style="color: #a0aec0;">API platform, third-party integrations (payroll, CAD systems), white-label options</p>
+                    </div>
+                </div>
+
+                <div style="position: relative;">
+                    <div style="position: absolute; left: -2.3rem; width: 40px; height: 40px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">Q4</div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 15px; border: 2px solid rgba(102, 126, 234, 0.3);">
+                        <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">AI & Predictive Analytics</h3>
+                        <p style="color: #a0aec0;">Predictive incident modeling, automated report generation, smart scheduling optimization</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="cta-section">
+        <div class="cta-content">
+            <h2 style="font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 1rem;">Join Us in Revolutionizing Security Operations</h2>
+            <p style="font-size: clamp(1.1rem, 2vw, 1.5rem); margin-bottom: 3rem; opacity: 0.9;">We're seeking strategic partners to scale SigSecSpec across the security industry</p>
+            <div>
+                <button class="cta-button">Schedule a Demo</button>
+                <button class="cta-button cta-button-secondary">Download Pitch Deck</button>
+            </div>
+            <div style="margin-top: 3rem; display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap;">
+                <div>
+                    <div style="font-size: 1rem; opacity: 0.8;">Contact</div>
+                    <div style="font-size: 1.2rem; font-weight: 600;">investors@sigsecspec.com</div>
+                </div>
+                <div>
+                    <div style="font-size: 1rem; opacity: 0.8;">Investment Target</div>
+                    <div style="font-size: 1.2rem; font-weight: 600;">$2M Seed Round</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
