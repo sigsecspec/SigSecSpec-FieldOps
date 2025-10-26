@@ -1,508 +1,42 @@
 class SecuritySpecialistApp {
     constructor() {
-        // User management properties
-        this.currentUser = null;
-        this.isLoggedIn = false;
-        this.isOperationsUser = false;
-        
-        // Initialize user session
-        this.initializeUserSession();
-        
-        // Only initialize app data if user is logged in
-        if (this.isLoggedIn) {
-            this.initializeAppData();
-        }
-        
-        this.init();
-    }
-    
-    initializeUserSession() {
-        // Check for existing session
-        const savedSession = localStorage.getItem('currentUserSession');
-        if (savedSession) {
-            try {
-                const session = JSON.parse(savedSession);
-                // Validate session (could add expiration logic here)
-                if (session.badge && this.isValidBadge(session.badge)) {
-                    this.currentUser = session;
-                    this.isLoggedIn = true;
-                    this.isOperationsUser = session.badge === '99';
-                }
-            } catch (e) {
-                console.error('Invalid session data:', e);
-                localStorage.removeItem('currentUserSession');
-            }
-        }
-    }
-    
-    initializeAppData() {
-        try {
-            this.currentMission = null;
-            this.missionLogs = this.loadMissionLogs() || [];
-            this.sites = this.loadSites() || [];
-            this.bolos = this.loadBolos() || [];
-            this.pois = this.loadPOIs() || [];
-            this.guardProfile = this.loadGuardProfile() || {};
-            this.currentPatrolStops = [];
-            this.currentIncidents = [];
-            this.missionStartTime = null;
-            this.isOnSite = false;
-        } catch (e) {
-            console.error('Error initializing app data:', e);
-            // Initialize with empty arrays/objects as fallback
-            this.currentMission = null;
-            this.missionLogs = [];
-            this.sites = [];
-            this.bolos = [];
-            this.pois = [];
-            this.guardProfile = {};
-            this.currentPatrolStops = [];
-            this.currentIncidents = [];
-            this.missionStartTime = null;
-            this.isOnSite = false;
-        }
+        this.currentMission = null;
+        this.missionLogs = this.loadMissionLogs();
+        this.sites = this.loadSites();
+        this.bolos = this.loadBolos();
+        this.pois = this.loadPOIs();
+        this.guardProfile = this.loadGuardProfile();
+        this.currentPatrolStops = [];
+        this.currentIncidents = [];
+        this.missionStartTime = null;
+        this.isOnSite = false;
         this.currentSiteStartTime = null;
         this.currentPatrolStop = null;
         this.autoSaveInterval = null;
-    }
-    
-    isValidBadge(badge) {
-        // Validate badge format and range
-        if (!badge || typeof badge !== 'string') return false;
         
-        // Operations badge
-        if (badge === '99') return true;
-        
-        // Guard badges (01-10 or 1-10)
-        const num = parseInt(badge, 10);
-        if (isNaN(num) || num < 1 || num > 10) return false;
-        
-        // Accept both "01" and "1" formats for single digits
-        return (badge.length === 1 && num >= 1 && num <= 9) || 
-               (badge.length === 2 && badge === num.toString().padStart(2, '0'));
-    }
-    
-    login(badge) {
-        if (!this.isValidBadge(badge)) {
-            return { success: false, message: 'Invalid badge number. Please enter 01-10 or 99.' };
-        }
-        
-        // Create user session
-        const user = {
-            badge: badge,
-            loginTime: new Date().toISOString(),
-            isOperations: badge === '99'
-        };
-        
-        // Save session
-        localStorage.setItem('currentUserSession', JSON.stringify(user));
-        
-        // Update app state
-        this.currentUser = user;
-        this.isLoggedIn = true;
-        this.isOperationsUser = user.isOperations;
-        
-        // Initialize app data for this user
-        this.initializeAppData();
-        
-        return { success: true, user: user };
-    }
-    
-    logout() {
-        // Save any pending data
-        if (this.isLoggedIn) {
-            this.saveAllData();
-        }
-        
-        // Clear session
-        localStorage.removeItem('currentUserSession');
-        
-        // Reset app state
-        this.currentUser = null;
-        this.isLoggedIn = false;
-        this.isOperationsUser = false;
-        
-        // Clear auto-save interval
-        if (this.autoSaveInterval) {
-            clearInterval(this.autoSaveInterval);
-            this.autoSaveInterval = null;
-        }
-        
-        // Show login screen
-        this.showLoginScreen();
-    }
-    
-    getUserStorageKey(baseKey) {
-        // Create user-specific storage keys
-        if (!this.currentUser) return baseKey;
-        return `${baseKey}_badge_${this.currentUser.badge}`;
-    }
-    
-    saveAllData() {
-        // Save all current data
-        if (this.isLoggedIn && !this.isOperationsUser) {
-            this.saveMissionLogs();
-            this.saveGuardProfile();
-        }
-        // Sites, BOLOs, and POIs are shared, so always save them
-        this.saveSites();
-        this.saveBolos();
-        this.savePOIs();
-    }
-    
-    // Operations-specific functions
-    showAllMissionLogs() {
-        // This will show all mission logs from all guards
-        this.showMissionLogs();
-    }
-    
-    generateWeeklyReport() {
-        const modal = document.getElementById('logsModal');
-        const modalContent = modal.querySelector('.modal-content');
-        
-        // Ensure missionLogs is available and is an array
-        if (!this.missionLogs || !Array.isArray(this.missionLogs)) {
-            this.missionLogs = this.loadMissionLogs() || [];
-        }
-        
-        // Get all mission logs from the past week
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        
-        const weeklyLogs = this.missionLogs.filter(log => 
-            new Date(log.startTime) >= oneWeekAgo
-        );
-        
-        // Group by guard badge
-        const logsByGuard = {};
-        weeklyLogs.forEach(log => {
-            const badge = log.guardBadge || 'Unknown';
-            if (!logsByGuard[badge]) {
-                logsByGuard[badge] = [];
-            }
-            logsByGuard[badge].push(log);
-        });
-        
-        let reportHtml = `
-            <div class="modal-header">
-                <h2>Weekly Operations Report</h2>
-                <span class="close">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="copy-area" id="weeklyReportText">
-                    <h3>WEEKLY SECURITY OPERATIONS REPORT</h3>
-                    <p>Report Period: ${oneWeekAgo.toLocaleDateString()} - ${new Date().toLocaleDateString()}</p>
-                    <p>Generated: ${new Date().toLocaleString()}</p>
-                    <hr>
-        `;
-        
-        // Summary statistics
-        const totalMissions = weeklyLogs.length;
-        const totalIncidents = weeklyLogs.reduce((sum, log) => sum + (log.incidents?.length || 0), 0);
-        const totalPatrolStops = weeklyLogs.reduce((sum, log) => sum + (log.patrolStops?.length || 0), 0);
-        
-        reportHtml += `
-                    <h4>SUMMARY STATISTICS</h4>
-                    <p>Total Missions: ${totalMissions}</p>
-                    <p>Total Incidents: ${totalIncidents}</p>
-                    <p>Total Patrol Stops: ${totalPatrolStops}</p>
-                    <p>Active Guards: ${Object.keys(logsByGuard).length}</p>
-                    <hr>
-        `;
-        
-        // Guard activity breakdown
-        reportHtml += `<h4>GUARD ACTIVITY BREAKDOWN</h4>`;
-        Object.keys(logsByGuard).sort().forEach(badge => {
-            const guardLogs = logsByGuard[badge];
-            const guardIncidents = guardLogs.reduce((sum, log) => sum + (log.incidents?.length || 0), 0);
-            const guardPatrolStops = guardLogs.reduce((sum, log) => sum + (log.patrolStops?.length || 0), 0);
-            
-            reportHtml += `
-                        <p><strong>Badge ${badge}:</strong></p>
-                        <p>  - Missions: ${guardLogs.length}</p>
-                        <p>  - Incidents: ${guardIncidents}</p>
-                        <p>  - Patrol Stops: ${guardPatrolStops}</p>
-                        <br>
-            `;
-        });
-        
-        reportHtml += `
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-primary" onclick="app.copyToClipboard('weeklyReportText')">Copy Report</button>
-                    <button type="button" class="btn-secondary" onclick="app.closeModal()">Close</button>
-                </div>
-            </div>
-        `;
-        
-        modalContent.innerHTML = reportHtml;
-        modal.style.display = 'block';
-    }
-    
-    showGuardOverview() {
-        const modal = document.getElementById('logsModal');
-        const modalContent = modal.querySelector('.modal-content');
-        
-        let overviewHtml = `
-            <div class="modal-header">
-                <h2>Guard Overview</h2>
-                <span class="close">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="guard-overview">
-        `;
-        
-        // Ensure missionLogs is available and is an array
-        if (!this.missionLogs || !Array.isArray(this.missionLogs)) {
-            this.missionLogs = this.loadMissionLogs() || [];
-        }
-        
-        // Show all guard profiles
-        for (let i = 1; i <= 10; i++) {
-            const badge = i.toString().padStart(2, '0');
-            const profileKey = `guardProfile_badge_${badge}`;
-            
-            try {
-                const profileData = localStorage.getItem(profileKey);
-                const profile = profileData ? JSON.parse(profileData) : null;
-                
-                // Get recent activity for this guard
-                const guardLogs = this.missionLogs.filter(log => log.guardBadge === badge);
-                const recentLogs = guardLogs.slice(0, 3); // Last 3 missions
-                
-                overviewHtml += `
-                            <div class="guard-card">
-                                <h4>Badge ${badge}</h4>
-                `;
-                
-                if (profile && profile.firstName) {
-                    overviewHtml += `
-                                    <p><strong>Name:</strong> ${profile.firstName} ${profile.lastName}</p>
-                                    <p><strong>Department:</strong> ${profile.department || 'Not Set'}</p>
-                                    <p><strong>Contact:</strong> ${profile.contactNumber || 'Not Set'}</p>
-                    `;
-                } else {
-                    overviewHtml += `<p><em>Profile not configured</em></p>`;
-                }
-                
-                overviewHtml += `
-                                <p><strong>Total Missions:</strong> ${guardLogs.length}</p>
-                                <p><strong>Recent Activity:</strong></p>
-                `;
-                
-                if (recentLogs.length > 0) {
-                    recentLogs.forEach(log => {
-                        overviewHtml += `<p>  - ${log.type} (${new Date(log.startTime).toLocaleDateString()})</p>`;
-                    });
-                } else {
-                    overviewHtml += `<p>  - No recent activity</p>`;
-                }
-                
-                overviewHtml += `</div>`;
-                
-            } catch (e) {
-                console.error(`Error loading profile for badge ${badge}:`, e);
-                overviewHtml += `
-                            <div class="guard-card">
-                                <h4>Badge ${badge}</h4>
-                                <p><em>Error loading profile</em></p>
-                            </div>
-                `;
-            }
-        }
-        
-        overviewHtml += `
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="app.closeModal()">Close</button>
-                </div>
-            </div>
-        `;
-        
-        modalContent.innerHTML = overviewHtml;
-        modal.style.display = 'block';
-    }
-    
-    closeModal() {
-        const modal = document.getElementById('logsModal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
+        this.init();
     }
 
     init() {
-        if (!this.isLoggedIn) {
-            // Show login screen if not logged in
-            this.showLoginScreen();
-            this.bindLoginEvents();
-        } else {
-            // Show loading sequence for logged in users
-            this.showLoadingSequence().then(() => {
-                this.bindEvents();
-                this.restoreCurrentMission();
-                if (!this.currentMission) {
-                    this.loadMainPage();
-                }
-                this.startAutoSave();
-                this.addBeforeUnloadListener();
-                this.addNavigationPrevention();
-                this.addSecurityTerminalFeatures();
-                
-                // Initialize prompt system for desktop
-                this.currentPrompt = null;
-                this.promptCallback = null;
-                
-                // Update header with user info
-                this.updateHeaderUserInfo();
-            });
-        }
-    }
-    
-    showLoginScreen() {
-        const mainContent = document.getElementById('mainContent');
-        const loginScreen = document.getElementById('loginScreen');
-        const loadingScreen = document.querySelector('.loading-screen');
-        
-        if (loginScreen) {
-            loginScreen.style.display = 'flex';
-        }
-        if (loadingScreen) {
-            loadingScreen.style.display = 'none';
-        }
-        
-        // Clear any existing content
-        const existingScreens = mainContent.querySelectorAll('.main-screen, .dashboard');
-        existingScreens.forEach(screen => screen.remove());
-    }
-    
-    hideLoginScreen() {
-        const loginScreen = document.getElementById('loginScreen');
-        if (loginScreen) {
-            loginScreen.style.display = 'none';
-        }
-    }
-    
-    showMainContent() {
-        const mainContent = document.getElementById('mainContent');
-        if (mainContent) {
-            mainContent.style.display = 'flex';
-            mainContent.style.flexDirection = 'column';
-        }
-    }
-    
-    bindLoginEvents() {
-        // Bind all account button clicks
-        const accountButtons = document.querySelectorAll('.account-btn');
-        
-        accountButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const badge = e.target.getAttribute('data-badge');
-                this.handleAccountLogin(badge);
-            });
-        });
-    }
-    
-    handleAccountLogin(badge) {
-        // If Admin 99, prompt for password
-        if (badge === '99') {
-            this.promptAdminPassword(badge);
-        } else {
-            // Direct login for guard accounts
-            this.processLogin(badge);
-        }
-    }
-    
-    promptAdminPassword(badge) {
-        const password = prompt('Enter Admin Password:');
-        
-        if (password === '900281200') {
-            this.processLogin(badge);
-        } else if (password !== null) { // User didn't cancel
-            this.showLoginError('Invalid admin password');
-        }
-    }
-    
-    processLogin(badge) {
-        const result = this.login(badge);
-        
-        if (result.success) {
-            this.hideLoginScreen();
-            this.showLoadingSequence().then(() => {
-                this.bindEvents();
-                this.restoreCurrentMission();
-                if (!this.currentMission) {
-                    this.loadMainPage();
-                }
-                this.startAutoSave();
-                this.addBeforeUnloadListener();
-                this.addNavigationPrevention();
-                this.addSecurityTerminalFeatures();
-                
-                // Initialize prompt system for desktop
-                this.currentPrompt = null;
-                this.promptCallback = null;
-                
-                // Update header with user info
-                this.updateHeaderUserInfo();
-            });
-        } else {
-            this.showLoginError(result.message);
-        }
-    }
-    
-    showLoginError(message) {
-        // Remove any existing error
-        const existingError = document.querySelector('.login-error');
-        if (existingError) {
-            existingError.remove();
-        }
-        
-        // Create error element
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'login-error';
-        errorDiv.textContent = message;
-        
-        // Insert after badge input
-        const badgeInput = document.getElementById('badgeInput');
-        if (badgeInput && badgeInput.parentNode) {
-            badgeInput.parentNode.insertBefore(errorDiv, badgeInput.nextSibling);
-        }
-        
-        // Remove error after 3 seconds
-        setTimeout(() => {
-            if (errorDiv.parentNode) {
-                errorDiv.parentNode.removeChild(errorDiv);
+        // Show loading sequence
+        this.showLoadingSequence().then(() => {
+            this.bindEvents();
+            this.restoreCurrentMission();
+            if (!this.currentMission) {
+                this.loadMainPage();
             }
-        }, 3000);
-    }
-    
-    updateHeaderUserInfo() {
-        const header = document.querySelector('header');
-        if (header && this.currentUser) {
-            const userType = this.isOperationsUser ? 'OPERATIONS' : 'GUARD';
-            header.setAttribute('data-badge', this.currentUser.badge);
-            header.setAttribute('data-unit', `${userType}-${this.currentUser.badge}`);
-        }
-    }
-
-    showLoadingScreen() {
-        const loadingScreen = document.querySelector('.loading-screen');
-        if (loadingScreen) {
-            loadingScreen.style.display = 'flex';
-        }
-    }
-    
-    hideLoadingScreen() {
-        const loadingScreen = document.querySelector('.loading-screen');
-        if (loadingScreen) {
-            loadingScreen.style.display = 'none';
-        }
+            this.startAutoSave();
+            this.addBeforeUnloadListener();
+            this.addNavigationPrevention();
+            this.addSecurityTerminalFeatures();
+            
+            // Initialize prompt system for desktop
+            this.currentPrompt = null;
+            this.promptCallback = null;
+        });
     }
 
     async showLoadingSequence() {
-        // Show the loading screen first
-        this.showLoadingScreen();
-        
         return new Promise((resolve) => {
             const loadingSteps = [
                 'Initializing security protocols...',
@@ -523,9 +57,6 @@ class SecuritySpecialistApp {
                     currentStep++;
                 } else {
                     clearInterval(stepInterval);
-                    // Hide loading screen and show main content when done
-                    this.hideLoadingScreen();
-                    this.showMainContent();
                     resolve();
                 }
             }, 400);
@@ -1021,272 +552,44 @@ class SecuritySpecialistApp {
 
     loadMainPage() {
         const mainContent = document.getElementById('mainContent');
-        
-        // Ensure app data is initialized for operations users
-        if (this.isOperationsUser && (!this.missionLogs || !this.sites || !this.bolos || !this.pois)) {
-            this.initializeAppData();
-        }
-        
-        // Different interface for operations vs guards
-        if (this.isOperationsUser) {
-            mainContent.innerHTML = `
-                <div class="main-screen">
-                    <div class="user-info">
-                        <div class="user-badge">Badge: ${this.currentUser.badge} (Operations)</div>
-                        <button id="logoutBtn" class="nav-btn btn-danger">🚪 Logout</button>
-                    </div>
-                    
-                    <div class="database-buttons">
-                        <button id="profileBtn" class="nav-btn">👤 Operations Profile</button>
-                        <button id="viewLogsBtn" class="nav-btn">📊 All Mission Reports</button>
-                        <button id="siteManagerBtn" class="nav-btn">🏢 Site Manager</button>
-                        <button id="boloBtn" class="nav-btn">🚨 BOLO Board</button>
-                        <button id="poiBtn" class="nav-btn">👥 Person of Interest</button>
-                        <button id="weeklyReportBtn" class="nav-btn">📋 Weekly Reports</button>
-                        <button id="guardOverviewBtn" class="nav-btn">👮 Guard Overview</button>
-                    </div>
-                    
-                    <div class="mission-selection">
-                        <h2>Operations Management Dashboard</h2>
-                        <div class="mission-cards">
-                            <div class="mission-card" id="opsAllMissionLogsCard">
-                                <div class="mission-icon">📊</div>
-                                <h3>Mission Reports</h3>
-                                <p>View all guard mission reports</p>
-                            </div>
-                            <div class="mission-card" id="opsWeeklyReportCard">
-                                <div class="mission-icon">📋</div>
-                                <h3>Weekly Report</h3>
-                                <p>Generate comprehensive weekly report</p>
-                            </div>
-                            <div class="mission-card" id="opsGuardOverviewCard">
-                                <div class="mission-icon">👮</div>
-                                <h3>Guard Overview</h3>
-                                <p>View all guard profiles and activity</p>
-                            </div>
+        mainContent.innerHTML = `
+            <div class="main-screen">
+                <div class="database-buttons">
+                    <button id="profileBtn" class="nav-btn">👤 Guard Profile</button>
+                    <button id="viewLogsBtn" class="nav-btn">Database Records</button>
+                    <button id="siteManagerBtn" class="nav-btn">Site Manager</button>
+                    <button id="boloBtn" class="nav-btn">BOLO Board</button>
+                    <button id="poiBtn" class="nav-btn">Person of Interest</button>
+                </div>
+                
+                <div class="mission-selection">
+                    <h2>Select Operation Type</h2>
+                    <div class="mission-cards">
+                        <div class="mission-card" data-mission="standing">
+                            <div class="mission-icon">🛡️</div>
+                            <h3>Fixed Post</h3>
+                            <p>Stationary security assignment</p>
+                        </div>
+                        <div class="mission-card" data-mission="patrol">
+                            <div class="mission-icon">🚔</div>
+                            <h3>Mobile Patrol</h3>
+                            <p>Vehicle patrol with check stops</p>
+                        </div>
+                        <div class="mission-card" data-mission="desk">
+                            <div class="mission-icon">📋</div>
+                            <h3>Desk Duty</h3>
+                            <p>Administrative operations</p>
                         </div>
                     </div>
                 </div>
-            `;
-        } else {
-            mainContent.innerHTML = `
-                <div class="main-screen">
-                    <div class="user-info">
-                        <div class="user-badge">Badge: ${this.currentUser.badge} (Guard)</div>
-                        <button id="logoutBtn" class="nav-btn btn-danger">🚪 Logout</button>
-                    </div>
-                    
-                    <div class="database-buttons">
-                        <button id="profileBtn" class="nav-btn">👤 Guard Profile</button>
-                        <button id="viewLogsBtn" class="nav-btn">📊 My Mission Reports</button>
-                        <button id="siteManagerBtn" class="nav-btn">🏢 Site Manager</button>
-                        <button id="boloBtn" class="nav-btn">🚨 BOLO Board</button>
-                        <button id="poiBtn" class="nav-btn">👥 Person of Interest</button>
-                    </div>
-                    
-                    <div class="mission-selection">
-                        <h2>Select Operation Type</h2>
-                        <div class="mission-cards">
-                            <div class="mission-card" data-mission="standing">
-                                <div class="mission-icon">🛡️</div>
-                                <h3>Fixed Post</h3>
-                                <p>Stationary security assignment</p>
-                            </div>
-                            <div class="mission-card" data-mission="patrol">
-                                <div class="mission-icon">🚔</div>
-                                <h3>Mobile Patrol</h3>
-                                <p>Vehicle patrol with check stops</p>
-                            </div>
-                            <div class="mission-card" data-mission="desk">
-                                <div class="mission-icon">📋</div>
-                                <h3>Desk Duty</h3>
-                                <p>Administrative operations</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Check if there's a restored mission and show notification
-        if (this.currentMission && this.currentMission.status === 'active') {
-            this.showRestoredMissionNotification();
-        }
+            </div>
+        `;
         
         // Re-bind the database button events since they're now on the main page
         this.bindDatabaseButtons();
-        
-        // Bind logout button
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => this.logout());
-        }
-        
-        // Bind operations-specific buttons
-        if (this.isOperationsUser) {
-            const weeklyReportBtn = document.getElementById('weeklyReportBtn');
-            const guardOverviewBtn = document.getElementById('guardOverviewBtn');
-            
-            if (weeklyReportBtn) {
-                weeklyReportBtn.addEventListener('click', () => this.generateWeeklyReport());
-            }
-            if (guardOverviewBtn) {
-                guardOverviewBtn.addEventListener('click', () => this.showGuardOverview());
-            }
-            
-            // Bind operations dashboard cards
-            const opsAllMissionLogsCard = document.getElementById('opsAllMissionLogsCard');
-            const opsWeeklyReportCard = document.getElementById('opsWeeklyReportCard');
-            const opsGuardOverviewCard = document.getElementById('opsGuardOverviewCard');
-            
-            if (opsAllMissionLogsCard) {
-                opsAllMissionLogsCard.addEventListener('click', () => this.showAllMissionLogs());
-            }
-            if (opsWeeklyReportCard) {
-                opsWeeklyReportCard.addEventListener('click', () => this.generateWeeklyReport());
-            }
-            if (opsGuardOverviewCard) {
-                opsGuardOverviewCard.addEventListener('click', () => this.showGuardOverview());
-            }
-        }
-    }
-
-    showRestoredMissionNotification() {
-        // Create a notification banner for restored mission
-        const mainScreen = document.querySelector('.main-screen');
-        if (!mainScreen) return;
-        
-        const notification = document.createElement('div');
-        notification.id = 'restoredMissionNotification';
-        notification.style.cssText = `
-            background: var(--desktop-warning, var(--mobile-warning));
-            color: white;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            border: 2px solid var(--desktop-border, var(--mobile-border));
-            text-align: center;
-            font-weight: bold;
-        `;
-        
-        const missionTypeText = this.currentMission.type.charAt(0).toUpperCase() + this.currentMission.type.slice(1);
-        
-        notification.innerHTML = `
-            <div style="margin-bottom: 10px;">
-                ⚠️ Active ${missionTypeText} Mission Found
-            </div>
-            <div style="font-size: 14px; margin-bottom: 15px; opacity: 0.9;">
-                You have an active mission from a previous session. Would you like to continue or start fresh?
-            </div>
-            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                <button id="continueMissionBtn" style="
-                    background: var(--desktop-success, var(--mobile-success));
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    font-weight: bold;
-                ">Continue Mission</button>
-                <button id="startFreshBtn" style="
-                    background: var(--desktop-danger, var(--mobile-danger));
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    font-weight: bold;
-                ">Start Fresh</button>
-                <button id="dismissNotificationBtn" style="
-                    background: var(--desktop-text-muted, var(--mobile-text-muted));
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    font-weight: bold;
-                ">Dismiss</button>
-            </div>
-        `;
-        
-        // Insert at the top of main screen
-        mainScreen.insertBefore(notification, mainScreen.firstChild);
-        
-        // Bind button events
-        const continueMissionBtn = document.getElementById('continueMissionBtn');
-        const startFreshBtn = document.getElementById('startFreshBtn');
-        const dismissNotificationBtn = document.getElementById('dismissNotificationBtn');
-        
-        if (continueMissionBtn) {
-            continueMissionBtn.addEventListener('click', () => {
-                this.continuePreviousMission();
-                notification.remove();
-            });
-        }
-        
-        if (startFreshBtn) {
-            startFreshBtn.addEventListener('click', () => {
-                this.clearPreviousMission();
-                notification.remove();
-            });
-        }
-        
-        if (dismissNotificationBtn) {
-            dismissNotificationBtn.addEventListener('click', () => {
-                notification.remove();
-            });
-        }
-    }
-
-    continuePreviousMission() {
-        // Restore the mission dashboard
-        if (this.currentMission.type === 'patrol') {
-            this.showPatrolDashboard();
-        } else {
-            this.showGenericDashboard(this.currentMission.type);
-        }
-        
-        // Restore UI state
-        if (this.currentMission.status === 'active') {
-            this.safeUpdateStatus(this.isOnSite ? 'On Site' : 'Active', this.isOnSite ? 'mission-status status-onsite' : 'mission-status status-active');
-            this.safeSetButtonState('startMissionBtn', true);
-            this.safeSetButtonState('missionReportBtn', false);
-            this.safeSetButtonState('endMissionBtn', false);
-            this.safeSetButtonState('incidentReportBtn', false);
-            this.safeSetButtonState('checkBtn', !this.isOnSite);
-            
-            // Enable BOLO and POI buttons only when on site
-            const boloListBtn = document.getElementById('boloListBtn');
-            const poiListBtn = document.getElementById('poiListBtn');
-            if (boloListBtn) boloListBtn.disabled = !this.isOnSite;
-            if (poiListBtn) poiListBtn.disabled = !this.isOnSite;
-        }
-        
-        this.showNotification('Previous mission restored successfully', 'success');
-    }
-
-    clearPreviousMission() {
-        // Clear the saved mission
-        this.currentMission = null;
-        this.isOnSite = false;
-        this.currentSiteStartTime = null;
-        this.currentPatrolStop = null;
-        this.missionStartTime = null;
-        
-        // Clear localStorage
-        localStorage.removeItem('fieldOfficerCurrentMission');
-        sessionStorage.removeItem('fieldOfficerCurrentMission');
-        
-        this.showNotification('Previous mission cleared. You can now start a new mission.', 'success');
     }
 
     startMissionType(type) {
-        // Operations users cannot start missions
-        if (this.isOperationsUser) {
-            this.showNotification('Operations users cannot start missions. This is for guard use only.', 'error');
-            return;
-        }
-        
         this.currentMission = {
             type: type,
             status: 'inactive',
@@ -2297,35 +1600,17 @@ class SecuritySpecialistApp {
     // =====================
     loadSites() {
         try {
-            // Operations can see all sites, guards see shared sites
-            if (this.isOperationsUser) {
-                return this.loadAllSites();
-            }
-            
-            // Sites are shared among all guards
-            const raw = localStorage.getItem('fieldOfficerSites_shared');
+            const raw = localStorage.getItem('fieldOfficerSites');
             return raw ? JSON.parse(raw) : [];
         } catch (e) {
             console.error('Error loading sites:', e);
             return [];
         }
     }
-    
-    loadAllSites() {
-        // Operations can see all sites from all sources
-        try {
-            const shared = localStorage.getItem('fieldOfficerSites_shared');
-            return shared ? JSON.parse(shared) : [];
-        } catch (e) {
-            console.error('Error loading all sites:', e);
-            return [];
-        }
-    }
 
     saveSites() {
         try {
-            // Sites are shared among all users
-            localStorage.setItem('fieldOfficerSites_shared', JSON.stringify(this.sites));
+            localStorage.setItem('fieldOfficerSites', JSON.stringify(this.sites));
         } catch (e) {
             console.error('Error saving sites:', e);
         }
@@ -3065,8 +2350,7 @@ class SecuritySpecialistApp {
     // =====================
     loadBolos() {
         try {
-            // BOLOs are shared among all users (security alerts)
-            const raw = localStorage.getItem('fieldOfficerBolos_shared');
+            const raw = localStorage.getItem('fieldOfficerBolos');
             const bolos = raw ? JSON.parse(raw) : [];
             
             // Ensure all BOLOs have IDs and migrate old data
@@ -3098,11 +2382,10 @@ class SecuritySpecialistApp {
     saveBolos(bolosData = null) {
         try {
             const dataToSave = bolosData || this.bolos;
-            // BOLOs are shared among all users
-            localStorage.setItem('fieldOfficerBolos_shared', JSON.stringify(dataToSave));
+            localStorage.setItem('fieldOfficerBolos', JSON.stringify(dataToSave));
             if (!bolosData) {
                 // Also save the next ID counter
-                localStorage.setItem('fieldOfficerBoloNextId_shared', JSON.stringify(this.getNextBoloId()));
+                localStorage.setItem('fieldOfficerBoloNextId', JSON.stringify(this.getNextBoloId()));
             }
         } catch (e) {
             console.error('Error saving BOLOs:', e);
@@ -3111,7 +2394,7 @@ class SecuritySpecialistApp {
 
     getNextBoloId() {
         try {
-            const stored = localStorage.getItem('fieldOfficerBoloNextId_shared');
+            const stored = localStorage.getItem('fieldOfficerBoloNextId');
             if (stored) {
                 return JSON.parse(stored);
             }
@@ -3481,8 +2764,7 @@ class SecuritySpecialistApp {
     // =====================
     loadPOIs() {
         try {
-            // POIs are shared among all users (persons of interest)
-            const raw = localStorage.getItem('fieldOfficerPOIs_shared');
+            const raw = localStorage.getItem('fieldOfficerPOIs');
             const pois = raw ? JSON.parse(raw) : [];
             
             // Ensure all POIs have IDs and migrate old data
@@ -3518,10 +2800,9 @@ class SecuritySpecialistApp {
     savePOIs(poisData = null) {
         try {
             const dataToSave = poisData || this.pois;
-            // POIs are shared among all users
-            localStorage.setItem('fieldOfficerPOIs_shared', JSON.stringify(dataToSave));
+            localStorage.setItem('fieldOfficerPOIs', JSON.stringify(dataToSave));
             if (!poisData) {
-                localStorage.setItem('fieldOfficerPOINextId_shared', JSON.stringify(this.getNextPOIId()));
+                localStorage.setItem('fieldOfficerPOINextId', JSON.stringify(this.getNextPOIId()));
             }
         } catch (e) {
             console.error('Error saving POIs:', e);
@@ -3530,7 +2811,7 @@ class SecuritySpecialistApp {
 
     getNextPOIId() {
         try {
-            const stored = localStorage.getItem('fieldOfficerPOINextId_shared');
+            const stored = localStorage.getItem('fieldOfficerPOINextId');
             if (stored) {
                 return JSON.parse(stored);
             }
@@ -5632,11 +4913,6 @@ class SecuritySpecialistApp {
         const modal = document.getElementById('logsModal');
         const modalContent = modal.querySelector('.modal-content');
         
-        // Ensure missionLogs is available and is an array
-        if (!this.missionLogs || !Array.isArray(this.missionLogs)) {
-            this.missionLogs = this.loadMissionLogs() || [];
-        }
-        
         let logsHtml = '';
         
         if (this.missionLogs.length === 0) {
@@ -5900,14 +5176,7 @@ Report Generated: ${this.formatDateTime(new Date())}`;
 
     loadMissionLogs() {
         try {
-            // For operations users, load all mission logs from all guards
-            if (this.isOperationsUser) {
-                return this.loadAllMissionLogs();
-            }
-            
-            // For guards, load their own logs
-            const storageKey = this.getUserStorageKey('fieldOfficerMissionLogs');
-            const saved = localStorage.getItem(storageKey);
+            const saved = localStorage.getItem('fieldOfficerMissionLogs');
             return saved ? JSON.parse(saved) : [];
         } catch (e) {
             console.error('Error loading mission logs:', e);
@@ -5915,43 +5184,10 @@ Report Generated: ${this.formatDateTime(new Date())}`;
             return [];
         }
     }
-    
-    loadAllMissionLogs() {
-        // Operations can see all guard mission logs
-        const allLogs = [];
-        
-        // Load logs from all guard badges (01-10)
-        for (let i = 1; i <= 10; i++) {
-            const badge = i.toString().padStart(2, '0');
-            const storageKey = `fieldOfficerMissionLogs_badge_${badge}`;
-            try {
-                const saved = localStorage.getItem(storageKey);
-                if (saved) {
-                    const logs = JSON.parse(saved);
-                    // Add badge info to each log
-                    logs.forEach(log => {
-                        log.guardBadge = badge;
-                    });
-                    allLogs.push(...logs);
-                }
-            } catch (e) {
-                console.error(`Error loading logs for badge ${badge}:`, e);
-            }
-        }
-        
-        // Sort by date (newest first)
-        return allLogs.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
-    }
 
     saveMissionLogs() {
         try {
-            // Don't save if operations user (they only view, don't create)
-            if (this.isOperationsUser) {
-                return true;
-            }
-            
-            const storageKey = this.getUserStorageKey('fieldOfficerMissionLogs');
-            localStorage.setItem(storageKey, JSON.stringify(this.missionLogs));
+            localStorage.setItem('fieldOfficerMissionLogs', JSON.stringify(this.missionLogs));
             return true;
         } catch (e) {
             console.error('Error saving mission logs:', e);
@@ -5959,8 +5195,7 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                 this.showNotification('Storage full! Please clear old mission logs.', 'error');
                 // Try to save to sessionStorage as emergency backup
                 try {
-                    const backupKey = this.getUserStorageKey('fieldOfficerMissionLogs_backup');
-                    sessionStorage.setItem(backupKey, JSON.stringify(this.missionLogs));
+                    sessionStorage.setItem('fieldOfficerMissionLogs_backup', JSON.stringify(this.missionLogs));
                     this.showNotification('Emergency backup created in session storage', 'error');
                 } catch (e2) {
                     console.error('Emergency backup failed:', e2);
@@ -5974,30 +5209,11 @@ Report Generated: ${this.formatDateTime(new Date())}`;
 
     loadGuardProfile() {
         try {
-            // Operations users don't have individual profiles
-            if (this.isOperationsUser) {
-                return {
-                    firstName: 'Operations',
-                    lastName: 'Manager',
-                    badgeNumber: '99',
-                    employeeId: 'OPS-99',
-                    department: 'Operations',
-                    supervisor: 'N/A',
-                    contactNumber: '',
-                    emergencyContact: '',
-                    certifications: ['Operations Management', 'System Administration'],
-                    notes: 'Operations and Management Account',
-                    createdAt: new Date(),
-                    lastUpdated: new Date()
-                };
-            }
-            
-            const storageKey = this.getUserStorageKey('guardProfile');
-            const saved = localStorage.getItem(storageKey);
-            const profile = saved ? JSON.parse(saved) : {
+            const saved = localStorage.getItem('guardProfile');
+            return saved ? JSON.parse(saved) : {
                 firstName: '',
                 lastName: '',
-                badgeNumber: this.currentUser ? this.currentUser.badge : '',
+                badgeNumber: '',
                 employeeId: '',
                 department: '',
                 supervisor: '',
@@ -6008,20 +5224,13 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                 createdAt: new Date(),
                 lastUpdated: new Date()
             };
-            
-            // Ensure badge number matches current user
-            if (this.currentUser && profile.badgeNumber !== this.currentUser.badge) {
-                profile.badgeNumber = this.currentUser.badge;
-            }
-            
-            return profile;
         } catch (e) {
             console.error('Error loading guard profile:', e);
             this.showNotification('Error loading guard profile', 'error');
             return {
                 firstName: '',
                 lastName: '',
-                badgeNumber: this.currentUser ? this.currentUser.badge : '',
+                badgeNumber: '',
                 employeeId: '',
                 department: '',
                 supervisor: '',
@@ -6037,14 +5246,8 @@ Report Generated: ${this.formatDateTime(new Date())}`;
 
     saveGuardProfile() {
         try {
-            // Don't save if operations user
-            if (this.isOperationsUser) {
-                return true;
-            }
-            
             this.guardProfile.lastUpdated = new Date();
-            const storageKey = this.getUserStorageKey('guardProfile');
-            localStorage.setItem(storageKey, JSON.stringify(this.guardProfile));
+            localStorage.setItem('guardProfile', JSON.stringify(this.guardProfile));
             return true;
         } catch (e) {
             console.error('Error saving guard profile:', e);
@@ -6114,9 +5317,14 @@ Report Generated: ${this.formatDateTime(new Date())}`;
                     this.currentMission.endTime = new Date(this.currentMission.endTime);
                 }
                 
-                // Don't automatically restore dashboard - let user choose
-                // Store the mission data but show main page first
-                console.log('Previous mission found:', this.currentMission.type, 'Status:', this.currentMission.status);
+                // Restore the appropriate dashboard
+                if (this.currentMission.type === 'patrol') {
+                    this.showPatrolDashboard();
+                    // Patrol stops now shown in modal
+                } else {
+                    this.showGenericDashboard(this.currentMission.type);
+                }
+                // Incidents now shown in modal
                 
                 // Restore UI state
                 if (this.currentMission.status === 'active') {
@@ -7221,16 +6429,8 @@ Report Generated: ${this.formatDateTime(new Date())}`;
         const modal = document.getElementById('logsModal');
         const modalContent = modal.querySelector('.modal-content');
         
-        // Ensure required data is available
-        if (!this.missionLogs || !Array.isArray(this.missionLogs)) {
-            this.missionLogs = this.loadMissionLogs() || [];
-        }
-        if (!this.guardProfile) {
-            this.guardProfile = this.loadGuardProfile() || {};
-        }
-        
         // Filter mission logs by current guard
-        const guardName = `${this.guardProfile.firstName || ''} ${this.guardProfile.lastName || ''}`.trim();
+        const guardName = `${this.guardProfile.firstName} ${this.guardProfile.lastName}`.trim();
         const myReports = this.missionLogs.filter(log => 
             log.details && log.details.specialistName === guardName
         );
@@ -7345,7 +6545,5 @@ Report Generated: ${this.formatDateTime(new Date())}`;
     }
 }
 
-// Initialize the app when DOM is ready and expose to global scope for onclick handlers
-document.addEventListener('DOMContentLoaded', function() {
-    window.app = new SecuritySpecialistApp();
-});
+// Initialize the app and expose to global scope for onclick handlers
+window.app = new SecuritySpecialistApp();
