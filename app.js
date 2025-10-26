@@ -73,9 +73,13 @@ class SecuritySpecialistApp {
         // Operations badge
         if (badge === '99') return true;
         
-        // Guard badges (01-10)
+        // Guard badges (01-10 or 1-10)
         const num = parseInt(badge, 10);
-        return badge.length === 2 && num >= 1 && num <= 10 && badge === num.toString().padStart(2, '0');
+        if (isNaN(num) || num < 1 || num > 10) return false;
+        
+        // Accept both "01" and "1" formats for single digits
+        return (badge.length === 1 && num >= 1 && num <= 9) || 
+               (badge.length === 2 && badge === num.toString().padStart(2, '0'));
     }
     
     login(badge) {
@@ -400,11 +404,6 @@ class SecuritySpecialistApp {
                 let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
                 if (value.length > 2) value = value.slice(0, 2);
                 
-                // Auto-format single digits (except 9 which could be part of 99)
-                if (value.length === 1 && value !== '9' && value !== '0') {
-                    value = '0' + value;
-                }
-                
                 e.target.value = value;
                 
                 // Remove any existing error messages when user starts typing
@@ -428,11 +427,17 @@ class SecuritySpecialistApp {
     
     handleLogin() {
         const badgeInput = document.getElementById('badgeInput');
-        const badge = badgeInput ? badgeInput.value.trim() : '';
+        let badge = badgeInput ? badgeInput.value.trim() : '';
         
         if (!badge) {
             this.showLoginError('Please enter a badge number');
             return;
+        }
+        
+        // Format badge properly before validation
+        // If it's a single digit (1-9), pad with leading zero
+        if (badge.length === 1 && badge !== '0') {
+            badge = '0' + badge;
         }
         
         const result = this.login(badge);
